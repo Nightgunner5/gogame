@@ -2,8 +2,8 @@ package entity
 
 import (
 	"encoding/gob"
-	"sync/atomic"
 	"github.com/Nightgunner5/gogame/log"
+	"sync/atomic"
 )
 
 type EntityID uint64
@@ -49,7 +49,7 @@ func (b *Base) AcceptEvent(data EventData) {
 		removeFromEntList(b.ID())
 
 	default:
-		log.Panic("Entity %d: Unknown event type %q", b.ID(), data.Type)
+		log.Warning("Entity %d: Unknown event type %q", b.ID(), data.Type)
 	}
 }
 

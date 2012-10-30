@@ -1,6 +1,9 @@
 package entity
 
-import ("runtime";"sync")
+import (
+	"runtime"
+	"sync"
+)
 
 type EventData struct {
 	Type string
@@ -54,7 +57,7 @@ func QueueEvent(target Entity, data EventData) {
 
 	eventQueue = append(eventQueue, queuedEvent{
 		target: target,
-		data: data,
+		data:   data,
 	})
 
 	queueCond.Signal()

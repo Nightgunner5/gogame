@@ -2,8 +2,8 @@ package entity
 
 import (
 	"encoding/gob"
-	"io"
 	"fmt"
+	"io"
 	"sync"
 )
 
