@@ -20,6 +20,6 @@ type Event struct {
 }
 
 // Embed this to silently discard all events
-type NoEvents struct {}
+type NoEvents struct{}
 
 func (NoEvents) AcceptEvent(Event) {}

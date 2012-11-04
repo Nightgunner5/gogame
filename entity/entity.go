@@ -12,9 +12,12 @@ var idLock sync.Mutex
 func (id *EntityID) ID() EntityID {
 	if *id == 0 {
 		idLock.Lock()
+		defer idLock.Unlock()
+		if *id != 0 {
+			return *id
+		}
 		nextID++
 		*id = nextID
-		idLock.Unlock()
 	}
 	return *id
 }

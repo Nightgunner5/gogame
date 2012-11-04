@@ -30,7 +30,7 @@ func TestEntityID(t *testing.T) {
 
 	for i := range entIDCounts {
 		if entIDCounts[i] != 1 {
-			t.Errorf("Entity ID %d has %d uses, but expected 1", i + 1, entIDCounts[i])
+			t.Errorf("Entity ID %d has %d uses, but expected 1", i+1, entIDCounts[i])
 		}
 	}
 }
