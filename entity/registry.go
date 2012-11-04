@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"log"
 	"sort"
 	"sync"
 )
@@ -147,4 +148,62 @@ func NewEntityList(capacity int) EntityList {
 func ConcurrentEntityList(capacity int) EntityList {
 	list := make(entityList, 0, capacity)
 	return &concurrentEntityList{l: list}
+}
+
+type readOnlyEntityList struct {
+	EntityList
+}
+
+func (readOnlyEntityList) Add(Entity) bool {
+	return false
+}
+
+func (readOnlyEntityList) Remove(EntityID) Entity {
+	return nil
+}
+
+var globalEntityList EntityList = ConcurrentEntityList(1)
+
+func GlobalEntityList() EntityList {
+	return readOnlyEntityList{globalEntityList}
+}
+
+func Spawn(entity Entity) {
+	if !globalEntityList.Add(entity) {
+		log.Printf("SpawnEntity called twice on entity %v", entity)
+	}
+}
+
+func Despawn(entity Entity) {
+	if e := globalEntityList.Remove(entity.ID()); e != entity {
+		if e == nil {
+			log.Printf("DespawnEntity called on non-spawned entity %v", entity)
+		} else {
+			log.Panicf("DespawnEntity: Entity ID %d is used multiple times: %v %v", entity.ID(), e, entity)
+		}
+	}
+}
+
+func Get(id EntityID) Entity {
+	return globalEntityList.Get(id)
+}
+
+func ForAll(f func(Entity)) {
+	globalEntityList.All(f)
+}
+
+func ForAllNearby(target Positioner, distance float64, f func(Entity)) {
+	sX, sY, sZ := target.Position()
+	d2 := distance * distance
+	globalEntityList.All(func(e Entity) {
+		if p, ok := e.(Positioner); ok {
+			x, y, z := p.Position()
+			x, y, z = sX-x, sY-y, sZ-z
+			x, y, z = x*x, y*y, z*z
+
+			if x+y+z <= d2 {
+				f(e)
+			}
+		}
+	})
 }
