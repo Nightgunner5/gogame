@@ -1,64 +1,25 @@
 package entity
 
-import (
-	"runtime"
-	"sync"
-)
+type EventType string
 
-type EventData struct {
-	Type string
+type Event struct {
+	// Simple example: X damages Y and Z sees. Z is the Target,
+	// Y is the Caller, and X is the Sender. EventType might be
+	// something like "saw combat"
 
-	// The Entity that caused the event (attacker)
-	Activator Entity
+	// The target of the event (who the event is given to)
+	Target EntityID
 
-	// The Entity that sent this input (victim)
-	Caller Entity
+	// The caller of the event (who the event was triggered on)
+	Caller EntityID
 
-	// The (optional) data parameter
-	Value interface{}
+	// The sender of the event (who triggered the event)
+	Sender EntityID
+
+	EventType EventType
 }
 
-type queuedEvent struct {
-	target Entity
-	data   EventData
-}
+// Embed this to silently discard all events
+type NoEvents struct {}
 
-var eventQueue []queuedEvent
-var queueCond = sync.NewCond(new(sync.Mutex))
-
-func queueHandler() {
-	for {
-		queueCond.L.Lock()
-		saveLock.RLock()
-		for len(eventQueue) == 0 {
-			saveLock.RUnlock()
-			queueCond.Wait()
-			saveLock.RLock()
-		}
-		var event queuedEvent
-		event, eventQueue = eventQueue[0], eventQueue[1:]
-		queueCond.L.Unlock()
-
-		event.target.AcceptEvent(event.data)
-
-		saveLock.RUnlock()
-	}
-}
-
-func init() {
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go queueHandler()
-	}
-}
-
-func QueueEvent(target Entity, data EventData) {
-	queueCond.L.Lock()
-	defer queueCond.L.Unlock()
-
-	eventQueue = append(eventQueue, queuedEvent{
-		target: target,
-		data:   data,
-	})
-
-	queueCond.Signal()
-}
+func (NoEvents) AcceptEvent(Event) {}
