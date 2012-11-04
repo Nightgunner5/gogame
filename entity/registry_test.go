@@ -1,6 +1,9 @@
 package entity
 
-import "testing"
+import (
+	"sync/atomic"
+	"testing"
+)
 
 // TestEntity defined in entity_test.go
 
@@ -91,10 +94,10 @@ func TestEntityListConcurrent(t *testing.T) {
 		}
 	}
 
-	count := 0
+	var count uint32
 
 	list.All(func(e Entity) {
-		count++
+		atomic.AddUint32(&count, 1)
 
 		if removed := list.Remove(e.ID()); removed != e {
 			t.Errorf("Tried to remove entity %v but got %v", e, removed)
