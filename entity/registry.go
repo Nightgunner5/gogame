@@ -49,7 +49,8 @@ func (list *entityList) Remove(id EntityID) Entity {
 
 	var ret Entity
 	if found {
-		ret, *list = (*list)[i], append((*list)[:i], (*list)[i+1:]...)
+		ret = (*list)[i]
+		*list = append((*list)[:i], (*list)[i+1:]...)
 	}
 	return ret
 }
