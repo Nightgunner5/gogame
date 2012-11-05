@@ -1,6 +1,9 @@
 package entity
 
-import "encoding/gob"
+import (
+	"encoding/gob"
+	"io"
+)
 
 func Save(w io.Writer) (err error) {
 	enc := gob.NewEncoder(w)
@@ -16,7 +19,7 @@ func Save(w io.Writer) (err error) {
 		return
 	}
 
-	err = enc.Encode(uint64(len(entities)))
+	err = enc.Encode(uint64(len(entities.l)))
 	if err != nil {
 		return
 	}
@@ -27,6 +30,7 @@ func Save(w io.Writer) (err error) {
 			return
 		}
 	}
+	return
 }
 
 func Load(r io.Reader) (err error) {
@@ -49,13 +53,14 @@ func Load(r io.Reader) (err error) {
 		return
 	}
 
-	*entities.l = make(entityList, 0, entityListSize)
+	entities.l = make(entityList, 0, entityListSize)
 	for i := uint64(0); i < entityListSize; i++ {
-		var ent interface{}
+		var ent Entity
 		err = dec.Decode(&ent)
 		if err != nil {
 			return
 		}
 		entities.l.Add(ent)
 	}
+	return
 }
