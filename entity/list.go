@@ -268,7 +268,7 @@ func ForAllNearby(target Positioner, distance float64, f func(Entity)) {
 	sX, sY, sZ := target.Position()
 	d2 := distance * distance
 	globalEntityList.All(func(e Entity) {
-		if p, ok := e.(Positioner); ok {
+		if p, ok := e.(Positioner); ok && target != p {
 			x, y, z := p.Position()
 			x, y, z = sX-x, sY-y, sZ-z
 			x, y, z = x*x, y*y, z*z

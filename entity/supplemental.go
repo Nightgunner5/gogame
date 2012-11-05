@@ -11,3 +11,7 @@ type Healther interface {
 type TakeDamager interface {
 	TakeDamage(amount float64, attacker Entity)
 }
+
+type Thinker interface {
+	Think(delta float64)
+}
