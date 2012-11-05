@@ -1,8 +1,6 @@
 package entity
 
-import (
-	"sync"
-)
+import "sync"
 
 type EntityID uint64
 
@@ -23,7 +21,9 @@ func (id *EntityID) ID() EntityID {
 }
 
 type Entity interface {
+	// Entities have unique IDs. This can most easily be accomplished
+	// by embedding EntityID and always using the ID method instead of
+	// accessing the EntityID directly. EntityID.ID() handles locking
+	// and initializing on its own.
 	ID() EntityID
-
-	AcceptEvent(Event)
 }

@@ -4,8 +4,6 @@ import "testing"
 
 type TestEntity struct {
 	EntityID
-
-	NoEvents
 }
 
 func TestEntityID(t *testing.T) {

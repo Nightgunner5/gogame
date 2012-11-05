@@ -11,3 +11,9 @@ type Healther interface {
 
 	Health() float64
 }
+
+type TakeDamager interface {
+	Entity
+
+	TakeDamage(amount float64, )
+}
