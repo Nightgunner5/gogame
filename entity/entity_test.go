@@ -6,6 +6,10 @@ type TestEntity struct {
 	EntityID
 }
 
+func (TestEntity) Parent() Entity {
+	return World
+}
+
 func TestEntityID(t *testing.T) {
 	nextID = 0
 

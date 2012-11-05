@@ -26,4 +26,8 @@ type Entity interface {
 	// accessing the EntityID directly. EntityID.ID() handles locking
 	// and initializing on its own.
 	ID() EntityID
+
+	// The parent of this entity. Top-level entities have a parent of
+	// the World entity. Only the World entity has a nil parent.
+	Parent() Entity
 }

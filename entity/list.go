@@ -7,12 +7,31 @@ import (
 )
 
 type EntityList interface {
+	// Returns the entity with the given ID or nil if that entity is not
+	// in this list.
 	Get(EntityID) Entity
+	// Attempt to add the given entity to the list. Always returns true
+	// unless the entity is already in the list.
 	Add(Entity) bool
+	// Remove the entity with the given ID from the list. Returns the
+	// removed entity or nil if the ID does not occur on this list.
 	Remove(EntityID) Entity
+	// Remove the given entity and all entities that reference it as
+	// their parent entity, recursively.
+	RemoveRecursive(EntityID)
 
+	// Returns the number of entities on this list.
 	Count() int
+	// Loops through each element of this entity list in order of ID,
+	// calling the given function for each of them in sequence. Use
+	// this only if you need the entities in order or if the given
+	// function cannot be run in parallel with itself.
 	Each(func(Entity))
+	// Calls the given function for each entity in the list without
+	// waiting for one call to finish before starting the next.
+	// The function returns after all calls have completed. In
+	// concurrent lists, this allows modification of the list from
+	// the given function whereas Each does not.
 	All(func(Entity))
 }
 
@@ -54,6 +73,21 @@ func (list *entityList) Remove(id EntityID) Entity {
 		*list = append((*list)[:i], (*list)[i+1:]...)
 	}
 	return ret
+}
+
+func (list *entityList) RemoveRecursive(id EntityID) {
+	parent := list.Remove(id)
+	var toRemove []Entity // No need to order it
+	list.Each(func(e Entity) {
+		if e.Parent() == parent {
+			toRemove = append(toRemove, e)
+		}
+	})
+
+	for _, e := range toRemove {
+		list.RemoveRecursive(e.ID())
+	}
+
 }
 
 func (list entityList) Count() int {
@@ -105,6 +139,15 @@ func (c *concurrentEntityList) Remove(id EntityID) Entity {
 	defer c.m.Unlock()
 
 	return c.l.Remove(id)
+}
+
+func (c *concurrentEntityList) RemoveRecursive(id EntityID) {
+	parent := c.Remove(id)
+	c.All(func(e Entity) {
+		if e.Parent() == parent {
+			c.RemoveRecursive(e.ID())
+		}
+	})
 }
 
 func (c *concurrentEntityList) Count() int {
