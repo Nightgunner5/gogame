@@ -26,8 +26,9 @@ func TestEntityID(t *testing.T) {
 		id := ents[i].ID()
 		if id < 1 || id > 250 {
 			t.Errorf("Entity ID out of range [1,250]: %d", id)
+		} else {
+			entIDCounts[int(id-1)]++
 		}
-		entIDCounts[int(id-1)]++
 	}
 
 	for i := range entIDCounts {
