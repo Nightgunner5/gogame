@@ -50,7 +50,7 @@ func Load(r io.Reader) (err error) {
 	}
 
 	*entities.l = make(entityList, 0, entityListSize)
-	for var i uint64; i < entityListSize; i++ {
+	for i := uint64(0); i < entityListSize; i++ {
 		var ent interface{}
 		err = dec.Decode(&ent)
 		if err != nil {
