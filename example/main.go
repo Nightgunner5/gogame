@@ -3,23 +3,23 @@ package main
 import (
 	"github.com/Nightgunner5/gogame/entity"
 	"log"
-	"runtime"
 	"math/rand"
+	"runtime"
 )
 
 const (
-	maxHealth = 100
+	maxHealth    = 100
 	manaForSpell = 10
 
-	castTime     = 1
-	spellDamage  = 75
+	castTime    = 1
+	spellDamage = 75
 
 	healCastTime = 0.9
 	spellHealing = 25
 )
 
 func variance() float64 {
-	return rand.Float64() / 2 + 0.5
+	return rand.Float64()/2 + 0.5
 }
 
 type (
@@ -104,7 +104,7 @@ func (p *person) Think(delta float64) {
 
 		if target == nil {
 			log.Printf("%d: Spell failed: No target", p.ID())
-			notarget<-true
+			notarget <- true
 			return
 		}
 
@@ -118,8 +118,8 @@ func (p *person) Think(delta float64) {
 			}
 		} else {
 			p.spell = &spellCast{
-				damage: -spellHealing * variance(),
-				target: p.ID(),
+				damage:   -spellHealing * variance(),
+				target:   p.ID(),
 				timeLeft: healCastTime,
 			}
 		}
@@ -135,7 +135,7 @@ func main() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		entity.Spawn(&person{
 			health: maxHealth,
-			mana: 10 * variance(),
+			mana:   10 * variance(),
 		})
 	}
 
