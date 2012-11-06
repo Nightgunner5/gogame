@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var TimeScale float64 = 1
+
 func think() {
 	const (
 		seconds = 1 / float64(time.Second)
@@ -13,7 +15,7 @@ func think() {
 
 	then := time.Now()
 	for now := range time.Tick(delay) {
-		δ := float64(now.Sub(then)) * seconds // I felt like being cool and using a Greek letter today.
+		δ := float64(now.Sub(then)) * seconds * TimeScale // I felt like being cool and using a Greek letter today.
 		globalEntityList.All(func(e Entity) {
 			if t, ok := e.(Thinker); ok {
 				start := time.Now()
