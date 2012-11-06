@@ -15,7 +15,7 @@ func think() {
 
 	then := time.Now()
 	for now := range time.Tick(delay) {
-		Δtime := float64(now.Sub(then)) * seconds * TimeScale // I felt like being cool and using a Greek letter today.
+		Δtime := float64(now.Sub(then)) * seconds * TimeScale
 		globalEntityList.All(func(e Entity) {
 			if t, ok := e.(Thinker); ok {
 				start := time.Now()
