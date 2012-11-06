@@ -93,7 +93,7 @@ func (p *person) Think(delta float64) {
 		p.mana = maxMana
 	}
 
-	if p.SpellCaster.Tick(delta) {
+	if p.CasterThink(delta) {
 		// do nothing; spell is casting
 	} else if p.Health() < maxHealth-spellHealing {
 		if p.mana >= manaForHealingSpell {

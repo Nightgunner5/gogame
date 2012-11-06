@@ -24,7 +24,7 @@ type SpellCaster struct {
 	current Spell
 }
 
-func (c *SpellCaster) Tick(delta float64) bool {
+func (c *SpellCaster) CasterThink(delta float64) bool {
 	spell := c.current
 	if spell == nil {
 		return false
