@@ -2,6 +2,7 @@ package entity
 
 import (
 	"log"
+	"math/rand"
 	"sort"
 	"sync"
 )
@@ -267,6 +268,7 @@ func ForAll(f func(Entity)) {
 func ForAllNearby(target Positioner, distance float64, f func(Entity)) {
 	sX, sY, sZ := target.Position()
 	d2 := distance * distance
+
 	globalEntityList.All(func(e Entity) {
 		if p, ok := e.(Positioner); ok && target != p {
 			x, y, z := p.Position()
@@ -278,4 +280,33 @@ func ForAllNearby(target Positioner, distance float64, f func(Entity)) {
 			}
 		}
 	})
+}
+
+func ForOneNearby(target Positioner, distance float64, allowed func(Entity) bool, f func(Entity)) {
+	sX, sY, sZ := target.Position()
+	d2 := distance * distance
+
+	var (
+		ent Entity
+		count int
+	)
+
+	globalEntityList.Each(func(e Entity) {
+		if p, ok := e.(Positioner); ok && target != p && allowed(e) {
+			x, y, z := p.Position()
+			x, y, z = sX-x, sY-y, sZ-z
+			x, y, z = x*x, y*y, z*z
+
+			if x+y+z <= d2 {
+				count++
+				if ent == nil || rand.Intn(count) == 0 {
+					ent = e
+				}
+			}
+		}
+	})
+
+	if ent != nil {
+		f(ent)
+	}
 }
