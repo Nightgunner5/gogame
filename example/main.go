@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
-	//"log"
 	"math"
 	"math/rand"
 	"runtime"
 	"strings"
-	"time"
 	"sync"
 )
 
 const (
-	maxHealth = 100
-	maxMana   = 20
-
+	maxHealth     = 100
+	maxMana       = 20
+	manaPerSecond = 1
 	initialHealth = 100
 	initialMana   = 10
 
@@ -25,8 +23,8 @@ const (
 	spellDamage        = 75
 
 	manaForHealingSpell = 3
-	healCastTime        = 0.7
-	spellHealing        = 25
+	healCastTime        = 4
+	spellHealing        = 5
 )
 
 func variance() float64 {
@@ -40,6 +38,7 @@ type (
 		entity.Healther
 		entity.TakeDamager
 		entity.Thinker
+		spell.Caster
 		Mana() float64
 		Action() string
 	}
@@ -58,18 +57,6 @@ type (
 		action string
 	}
 )
-
-func damageSpell(target, caster entity.Entity) {
-	damage := spellDamage * variance()
-	//log.Printf("%d: Hit %d for %0.1f damage", caster.ID(), target.ID(), damage)
-	target.(entity.TakeDamager).TakeDamage(damage, caster)
-}
-
-func healingSpell(target, caster entity.Entity) {
-	healing := spellHealing * variance()
-	//log.Printf("%d: Healed %d for %0.1f", caster.ID(), target.ID(), healing)
-	target.(entity.TakeDamager).TakeDamage(-healing, caster)
-}
 
 func (p *person) Health() float64 {
 	if p.health > maxHealth {
@@ -125,73 +112,87 @@ func (p *person) Action() string {
 	return p.action
 }
 
-func (p *person) Think(Δ float64) {
+func (p *person) Think(Δtime float64) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	p.mana += Δ
-	if p.mana > maxMana {
-		p.mana = maxMana
-	}
-
-	if p.CasterThink(Δ) {
+	if p.CasterThink(Δtime) {
 		// do nothing; spell is casting
-	} else if p.Health() < maxHealth-spellHealing {
-		if p.mana >= manaForHealingSpell {
-			//log.Printf("%d: H%d M%d", p.ID(), int(p.Health()), int(p.mana))
-
-			p.mana -= manaForHealingSpell
-
-			p.Cast(&spell.BasicSpell{
-				CastTime:      healCastTime,
-				Interruptable: true,
-				Caster_:       p.ID(),
-				Target_:       p.ID(),
-				Action:        healingSpell,
-			})
-			//log.Printf("%d: Started healing self", p.ID())
-
-			p.action = "Healing"
-		} else {
-			p.action = ""
-		}
 	} else {
-		if p.mana >= manaForDamageSpell {
-			var target entity.Entity
-			entity.ForOneNearby(p, 1, func(e entity.Entity) bool {
-				_, ok := e.(Person)
-				return ok
-			}, func(e entity.Entity) {
-				target = e
-			})
+		p.mana += Δtime * manaPerSecond
+		if p.mana > maxMana {
+			p.mana = maxMana
+		}
 
-			if target == nil {
-				//log.Printf("%d: Spell failed: No target", p.ID())
-				notarget <- true
-				return
+		if p.Health() < maxHealth-spellHealing {
+			if p.mana >= manaForHealingSpell {
+				//log.Printf("%d: H%d M%d", p.ID(), int(p.Health()), int(p.mana))
+
+				p.mana -= manaForHealingSpell
+
+				p.Cast(spell.HealingOverTimeSpell(healCastTime, spellHealing, p, p, true))
+				//log.Printf("%d: Started healing self", p.ID())
+
+				p.action = "Healing"
+			} else {
+				p.action = ""
 			}
-
-			p.mana -= manaForDamageSpell
-
-			p.Cast(&spell.BasicSpell{
-				CastTime:      damageCastTime,
-				Interruptable: true,
-				Target_:       target.ID(),
-				Caster_:       p.ID(),
-				Action:        damageSpell,
-			})
-			//log.Printf("%d: Started casting spell on %d", p.ID(), target.ID())
-			p.action = fmt.Sprintf("Spell:%d", target.ID())
 		} else {
-			p.action = ""
+			if p.mana >= manaForDamageSpell {
+				var target entity.Entity
+				entity.ForOneNearby(p, 1, func(e entity.Entity) bool {
+					_, ok := e.(Person)
+					return ok
+				}, func(e entity.Entity) {
+					target = e
+				})
+
+				if target == nil {
+					//log.Printf("%d: Spell failed: No target", p.ID())
+					notarget <- true
+					return
+				}
+
+				p.mana -= manaForDamageSpell
+
+				p.Cast(spell.DamageSpell(damageCastTime, spellDamage*variance(), p, target, true))
+				//log.Printf("%d: Started casting spell on %d", p.ID(), target.ID())
+				p.action = fmt.Sprintf("Spell:%d", target.ID())
+			} else {
+				p.action = ""
+			}
 		}
 	}
 }
 
-var notarget = make(chan bool)
+var (
+	notarget    = make(chan bool)
+	maxPersonID int
+	format      string
+)
+
+type printer struct {
+	entity.EntityID
+}
+
+func (printer) Parent() entity.Entity {
+	return entity.World
+}
+
+func (printer) Think(Δtime float64) {
+	fmt.Println()
+	for i := 1; i <= maxPersonID; i++ {
+		if e := entity.Get(entity.EntityID(i)); e != nil {
+			p := e.(Person)
+			fmt.Printf(format, i, strings.Repeat("H", int(p.Health()/2)), strings.Repeat("M", int(p.Mana())), p.Action())
+		} else {
+			fmt.Printf(format, i, "", "", "Dead")
+		}
+	}
+}
 
 func main() {
-	maxPersonID := runtime.GOMAXPROCS(0)
+	maxPersonID = runtime.GOMAXPROCS(0)
 	for i := 0; i < maxPersonID; i++ {
 		entity.Spawn(&person{
 			health: initialHealth * variance(),
@@ -199,23 +200,9 @@ func main() {
 		})
 	}
 
-	format := fmt.Sprintf("%%%dd: [%%-%ds] [%%-%ds] %%s\n", int(math.Ceil(math.Log10(float64(maxPersonID)))), maxHealth/2, maxMana)
+	format = fmt.Sprintf("%%%dd: [%%-%ds] [%%-%ds] %%s\n", int(math.Ceil(math.Log10(float64(maxPersonID)))), maxHealth/2, maxMana)
 
-	for {
-		select {
-		case <-notarget:
-			return
-		default:
-			fmt.Println()
-			for i := 1; i <= maxPersonID; i++ {
-				if e := entity.Get(entity.EntityID(i)); e != nil {
-					p := e.(Person)
-					fmt.Printf(format, i, strings.Repeat("H", int(p.Health()/2)), strings.Repeat("M", int(p.Mana())), p.Action())
-				} else {
-					fmt.Printf(format, i, "", "", "Dead")
-				}
-			}
-			time.Sleep(time.Second / 2)
-		}
-	}
+	entity.Spawn(new(printer))
+
+	<-notarget
 }

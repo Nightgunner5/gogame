@@ -15,11 +15,11 @@ func think() {
 
 	then := time.Now()
 	for now := range time.Tick(delay) {
-		Δ := float64(now.Sub(then)) * seconds * TimeScale // I felt like being cool and using a Greek letter today.
+		Δtime := float64(now.Sub(then)) * seconds * TimeScale // I felt like being cool and using a Greek letter today.
 		globalEntityList.All(func(e Entity) {
 			if t, ok := e.(Thinker); ok {
 				start := time.Now()
-				t.Think(Δ)
+				t.Think(Δtime)
 				end := time.Now()
 				if diff := end.Sub(start); diff > delay/2 {
 					log.Printf("Entity %d (%T) thinking for %v", e.ID(), e, diff)
