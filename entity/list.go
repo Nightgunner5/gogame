@@ -25,14 +25,12 @@ type EntityList interface {
 	Count() int
 	// Loops through each element of this entity list in order of ID,
 	// calling the given function for each of them in sequence. Use
-	// this only if you need the entities in order or if the given
+	// this if you need the entities in order or if the given
 	// function cannot be run in parallel with itself.
 	Each(func(Entity))
 	// Calls the given function for each entity in the list without
 	// waiting for one call to finish before starting the next.
-	// The function returns after all calls have completed. In
-	// concurrent lists, this allows modification of the list from
-	// the given function whereas Each does not.
+	// The function returns after all calls have completed.
 	All(func(Entity))
 }
 
@@ -118,70 +116,56 @@ func (list entityList) All(f func(Entity)) {
 
 type concurrentEntityList struct {
 	l entityList
-	m sync.RWMutex
+	m sync.Mutex
+}
+
+func (c *concurrentEntityList) update(f func(*entityList) interface{}) interface{} {
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	l := make(entityList, len(c.l), cap(c.l))
+	copy(l, c.l)
+
+	defer func() {
+		c.l = l
+	}()
+
+	return f(&l)
 }
 
 func (c *concurrentEntityList) Get(id EntityID) Entity {
-	c.m.RLock()
-	defer c.m.RUnlock()
-
 	return c.l.Get(id)
 }
 
 func (c *concurrentEntityList) Add(entity Entity) bool {
-	c.m.Lock()
-	defer c.m.Unlock()
-
-	return c.l.Add(entity)
+	return c.update(func(l *entityList) interface{} {
+		return l.Add(entity)
+	}).(bool)
 }
 
 func (c *concurrentEntityList) Remove(id EntityID) Entity {
-	c.m.Lock()
-	defer c.m.Unlock()
-
-	return c.l.Remove(id)
+	return c.update(func(l *entityList) interface{} {
+		return l.Remove(id)
+	}).(Entity)
 }
 
 func (c *concurrentEntityList) RemoveRecursive(id EntityID) {
-	parent := c.Remove(id)
-	c.All(func(e Entity) {
-		if e.Parent() == parent {
-			c.RemoveRecursive(e.ID())
-		}
+	c.update(func(l *entityList) interface{} {
+		l.RemoveRecursive(id)
+		return nil
 	})
 }
 
 func (c *concurrentEntityList) Count() int {
-	c.m.RLock()
-	defer c.m.RUnlock()
-
 	return c.l.Count()
 }
 
 func (c *concurrentEntityList) Each(f func(Entity)) {
-	c.m.RLock()
-	defer c.m.RUnlock()
-
 	c.l.Each(f)
 }
 
 func (c *concurrentEntityList) All(f func(Entity)) {
-	c.m.RLock()
-
-	var wg sync.WaitGroup
-
-	wg.Add(c.l.Count())
-
-	c.l.Each(func(e Entity) {
-		go func() {
-			f(e)
-			wg.Done()
-		}()
-	})
-
-	c.m.RUnlock()
-
-	wg.Wait()
+	c.l.All(f)
 }
 
 // Creates a new, empty EntityList. This list is not synchronized and should
@@ -287,7 +271,7 @@ func ForOneNearby(target Positioner, distance float64, allowed func(Entity) bool
 	d2 := distance * distance
 
 	var (
-		ent Entity
+		ent   Entity
 		count int
 	)
 
