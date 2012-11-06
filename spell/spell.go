@@ -4,7 +4,7 @@ import "github.com/Nightgunner5/gogame/entity"
 
 type Spell interface {
 	// Returns true if the spell has ended, false if it has not.
-	Tick(delta float64) bool
+	Tick(Δ float64) bool
 
 	Caster() entity.Entity
 	Target() entity.Entity
@@ -24,12 +24,12 @@ type SpellCaster struct {
 	current Spell
 }
 
-func (c *SpellCaster) CasterThink(delta float64) bool {
+func (c *SpellCaster) CasterThink(Δ float64) bool {
 	spell := c.current
 	if spell == nil {
 		return false
 	}
-	if spell.Tick(delta) {
+	if spell.Tick(Δ) {
 		c.current = nil
 		return false
 	}

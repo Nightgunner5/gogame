@@ -13,5 +13,5 @@ type TakeDamager interface {
 }
 
 type Thinker interface {
-	Think(delta float64)
+	Think(Δ float64)
 }

@@ -125,16 +125,16 @@ func (p *person) Action() string {
 	return p.action
 }
 
-func (p *person) Think(delta float64) {
+func (p *person) Think(Δ float64) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	p.mana += delta
+	p.mana += Δ
 	if p.mana > maxMana {
 		p.mana = maxMana
 	}
 
-	if p.CasterThink(delta) {
+	if p.CasterThink(Δ) {
 		// do nothing; spell is casting
 	} else if p.Health() < maxHealth-spellHealing {
 		if p.mana >= manaForHealingSpell {

@@ -31,11 +31,11 @@ func (s *BasicSpell) TimeLeft() float64 {
 	return s.CastTime - s.currentTime
 }
 
-func (s *BasicSpell) Tick(delta float64) bool {
+func (s *BasicSpell) Tick(Δ float64) bool {
 	if s.currentTime >= s.CastTime {
 		return true
 	}
-	s.currentTime += delta
+	s.currentTime += Δ
 	if s.currentTime >= s.CastTime {
 		s.currentTime = s.CastTime
 		target, caster := s.Target(), s.Caster()
