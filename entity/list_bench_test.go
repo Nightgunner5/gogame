@@ -1,17 +1,16 @@
 package entity
 
 import (
-	"github.com/Nightgunner5/gogame/entity"
 	"sync"
 	"testing"
 )
 
 type nullEntity struct {
-	entity.EntityID
+	EntityID
 }
 
-func (nullEntity) Parent() entity.Entity {
-	return entity.World
+func (nullEntity) Parent() Entity {
+	return World
 }
 
 func concurrentBench(b *testing.B, f func(int)) {
@@ -33,34 +32,34 @@ func concurrentBench(b *testing.B, f func(int)) {
 
 func BenchmarkGet(b *testing.B) {
 	b.StopTimer()
-	entity.NukeForTesting()
+	NukeForTesting()
 	for i := 0; i < 10000; i++ {
-		entity.Spawn(new(nullEntity))
+		Spawn(new(nullEntity))
 	}
 
 	concurrentBench(b, func(i int) {
-		_ = entity.Get(1)
+		_ = Get(1)
 	})
 }
 
 func BenchmarkSpawn(b *testing.B) {
 	b.StopTimer()
-	entity.NukeForTesting()
+	NukeForTesting()
 
 	concurrentBench(b, func(i int) {
-		entity.Spawn(new(nullEntity))
+		Spawn(new(nullEntity))
 	})
 }
 
 func BenchmarkDespawn(b *testing.B) {
 	b.StopTimer()
-	entity.NukeForTesting()
+	NukeForTesting()
 	entities := make([]nullEntity, b.N)
 	for i := 0; i < b.N; i++ {
-		entity.Spawn(&entities[i])
+		Spawn(&entities[i])
 	}
 
 	concurrentBench(b, func(i int) {
-		entity.Despawn(&entities[i])
+		Despawn(&entities[i])
 	})
 }
