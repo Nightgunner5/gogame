@@ -7,6 +7,7 @@ import (
 	"github.com/go-gl/glfw"
 	"log"
 	"math/rand"
+	"runtime"
 )
 
 const (
@@ -35,8 +36,8 @@ func main() {
 			entity.Spawn(&mage{
 				health: initialHealth * variance(),
 				mana:   initialMana * variance(),
-				x:      rand.Float64()*10 - 5,
-				y:      rand.Float64()*10 - 5,
+				x:      rand.Float64()*20 - 10,
+				y:      rand.Float64()*20 - 10,
 			})
 		}
 	}()
@@ -69,6 +70,8 @@ func main() {
 		render()
 
 		glfw.SwapBuffers()
+
+		runtime.Gosched()
 	}
 }
 

@@ -31,6 +31,10 @@ func (s *ChanneledSpell) TimeLeft() float64 {
 	return s.CastTime - s.currentTime
 }
 
+func (s *ChanneledSpell) TotalTime() float64 {
+	return s.CastTime
+}
+
 func (s *ChanneledSpell) Tick(Δtime float64) bool {
 	if s.currentTime >= s.CastTime {
 		return true

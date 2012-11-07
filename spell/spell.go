@@ -9,6 +9,7 @@ type Spell interface {
 	Caster() entity.Entity
 	Target() entity.Entity
 
+	TotalTime() float64
 	TimeLeft() float64
 
 	// Interrupts the spell and returns true. If the spell is not

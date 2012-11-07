@@ -27,6 +27,10 @@ func (s *BasicSpell) Interrupt() bool {
 	return true
 }
 
+func (s *BasicSpell) TotalTime() float64 {
+	return s.CastTime
+}
+
 func (s *BasicSpell) TimeLeft() float64 {
 	return s.CastTime - s.currentTime
 }
