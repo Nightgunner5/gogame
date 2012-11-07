@@ -76,17 +76,21 @@ func (list *entityList) Remove(id EntityID) Entity {
 
 func (list *entityList) RemoveRecursive(id EntityID) {
 	parent := list.Remove(id)
-	var toRemove []Entity // No need to order it twice
-	list.Each(func(e Entity) {
-		if e.Parent() == parent {
-			toRemove = append(toRemove, e)
-		}
-	})
 
-	for _, e := range toRemove {
-		list.RemoveRecursive(e.ID())
+	if parent == nil {
+		return
 	}
 
+	var toRemove []EntityID
+	for _, ent := range *list {
+		if ent.Parent() == parent {
+			toRemove = append(toRemove, ent.ID())
+		}
+	}
+
+	for _, remove := range toRemove {
+		list.RemoveRecursive(remove)
+	}
 }
 
 func (list entityList) Count() int {
@@ -232,19 +236,7 @@ func Spawn(entity Entity) {
 
 // Remove an entity from the global entity list, along with any entity with it as its parent, recursively.
 func Despawn(entity Entity) {
-	if e := globalEntityList.Remove(entity.ID()); e != entity {
-		if e == nil {
-			log.Printf("DespawnEntity called on non-spawned entity %v", entity)
-		} else {
-			log.Panicf("DespawnEntity: Entity ID %d is used multiple times: %v %v", entity.ID(), e, entity)
-		}
-	} else {
-		globalEntityList.All(func(child Entity) {
-			if child.Parent() == entity {
-				Despawn(child)
-			}
-		})
-	}
+	globalEntityList.RemoveRecursive(entity.ID())
 }
 
 // Returns the entity for a given ID. nil will be returned if no entity is
