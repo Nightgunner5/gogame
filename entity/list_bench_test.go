@@ -1,4 +1,4 @@
-package bench
+package entity
 
 import (
 	"github.com/Nightgunner5/gogame/entity"
