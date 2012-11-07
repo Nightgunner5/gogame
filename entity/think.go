@@ -7,7 +7,8 @@ import (
 
 var TimeScale float64 = 1
 
-func think() {
+// The entity list is passed as a parameter to prevent benchmarks from being fouled up.
+func think(global EntityList) {
 	const (
 		seconds = 1 / float64(time.Second)
 		delay   = time.Second / 10
@@ -16,7 +17,7 @@ func think() {
 	then := time.Now()
 	for now := range time.Tick(delay) {
 		Δtime := float64(now.Sub(then)) * seconds * TimeScale
-		globalEntityList.All(func(e Entity) {
+		global.All(func(e Entity) {
 			if t, ok := e.(Thinker); ok {
 				start := time.Now()
 				t.Think(Δtime)
@@ -31,5 +32,5 @@ func think() {
 }
 
 func init() {
-	go think()
+	go think(globalEntityList)
 }

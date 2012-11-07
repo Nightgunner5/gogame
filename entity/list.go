@@ -119,13 +119,6 @@ type concurrentEntityList struct {
 	m sync.RWMutex
 }
 
-func (c *concurrentEntityList) update(f func(*entityList) interface{}) interface{} {
-	c.m.Lock()
-	defer c.m.Unlock()
-
-	return f(&c.l)
-}
-
 func (c *concurrentEntityList) Get(id EntityID) Entity {
 	c.m.RLock()
 	defer c.m.RUnlock()
@@ -134,22 +127,24 @@ func (c *concurrentEntityList) Get(id EntityID) Entity {
 }
 
 func (c *concurrentEntityList) Add(entity Entity) bool {
-	return c.update(func(l *entityList) interface{} {
-		return l.Add(entity)
-	}).(bool)
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	return c.l.Add(entity)
 }
 
 func (c *concurrentEntityList) Remove(id EntityID) Entity {
-	return c.update(func(l *entityList) interface{} {
-		return l.Remove(id)
-	}).(Entity)
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	return c.l.Remove(id)
 }
 
 func (c *concurrentEntityList) RemoveRecursive(id EntityID) {
-	c.update(func(l *entityList) interface{} {
-		l.RemoveRecursive(id)
-		return nil
-	})
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	c.l.RemoveRecursive(id)
 }
 
 func (c *concurrentEntityList) Count() int {

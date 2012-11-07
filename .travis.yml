@@ -2,7 +2,7 @@ language: go
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libglfw-dev
+  - sudo apt-get install -qq libglfw-dev libglew-dev
   - go get -u github.com/go-gl/{gl,glfw}
 install: go build -v github.com/Nightgunner5/gogame/...
 script: go test -v -cpu 1,2,4,8,16,32,64 -bench . -benchmem github.com/Nightgunner5/gogame/...
