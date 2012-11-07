@@ -8,6 +8,8 @@ import (
 	"log"
 	"math/rand"
 	"runtime"
+	_ "net/http/pprof"
+	"net/http"
 )
 
 const (
@@ -30,6 +32,8 @@ var mageCount = flag.Int("mages", 4, "The number of mages at the start")
 
 func main() {
 	flag.Parse()
+
+	go http.ListenAndServe("localhost:6060", nil)
 
 	go func() {
 		for i := 0; i < *mageCount; i++ {
@@ -57,10 +61,6 @@ func main() {
 	glfw.SetWindowTitle("GoGame")
 	glfw.SetSwapInterval(1)
 	glfw.SetWindowSizeCallback(windowSize)
-	glfw.OpenWindowHint(glfw.FsaaSamples, 4)
-
-	const GL_MULTISAMPLE_ARB = 0x809D
-	gl.Enable(GL_MULTISAMPLE_ARB)
 
 	gl.ClearColor(1, 1, 1, 1)
 

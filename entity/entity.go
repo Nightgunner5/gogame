@@ -7,6 +7,13 @@ type EntityID uint64
 var nextID EntityID
 var idLock sync.Mutex
 
+// DO NOT call this outside of testing.
+func NukeForTesting() {
+	nextID = 0
+	globalEntityList = ConcurrentEntityList(1)
+	globalEntityList.Add(World)
+}
+
 func (id *EntityID) ID() EntityID {
 	if *id == 0 {
 		idLock.Lock()

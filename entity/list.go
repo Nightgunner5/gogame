@@ -116,24 +116,20 @@ func (list entityList) All(f func(Entity)) {
 
 type concurrentEntityList struct {
 	l entityList
-	m sync.Mutex
+	m sync.RWMutex
 }
 
 func (c *concurrentEntityList) update(f func(*entityList) interface{}) interface{} {
 	c.m.Lock()
 	defer c.m.Unlock()
 
-	l := make(entityList, len(c.l), cap(c.l))
-	copy(l, c.l)
-
-	defer func() {
-		c.l = l
-	}()
-
-	return f(&l)
+	return f(&c.l)
 }
 
 func (c *concurrentEntityList) Get(id EntityID) Entity {
+	c.m.RLock()
+	defer c.m.RUnlock()
+
 	return c.l.Get(id)
 }
 
@@ -157,15 +153,36 @@ func (c *concurrentEntityList) RemoveRecursive(id EntityID) {
 }
 
 func (c *concurrentEntityList) Count() int {
+        c.m.RLock()
+        defer c.m.RUnlock()
+
 	return c.l.Count()
 }
 
 func (c *concurrentEntityList) Each(f func(Entity)) {
+        c.m.RLock()
+        defer c.m.RUnlock()
+
 	c.l.Each(f)
 }
 
 func (c *concurrentEntityList) All(f func(Entity)) {
-	c.l.All(f)
+        c.m.RLock()
+
+	var wg sync.WaitGroup
+
+	wg.Add(c.l.Count())
+
+	c.l.Each(func(e Entity) {
+		go func() {
+			f(e)
+			wg.Done()
+		}()
+	})
+
+	c.m.RUnlock()
+
+	wg.Wait()
 }
 
 // Creates a new, empty EntityList. This list is not synchronized and should
