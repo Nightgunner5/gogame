@@ -45,9 +45,10 @@ func BenchmarkGet(b *testing.B) {
 func BenchmarkSpawn(b *testing.B) {
 	b.StopTimer()
 	NukeForTesting()
+	entities := make([]nullEntity, b.N)
 
 	concurrentBench(b, func(i int) {
-		Spawn(new(nullEntity))
+		Spawn(&entities[i])
 	})
 }
 
