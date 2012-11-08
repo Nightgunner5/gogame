@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
 	"math/rand"
@@ -21,7 +20,6 @@ type (
 		entity.Thinker
 		spell.Caster
 		Mana() float64
-		Action() string
 	}
 
 	mage struct {
@@ -33,14 +31,14 @@ type (
 		health  float64
 		mana    float64
 
-		sync.Mutex
-
-		action string
-		target entity.Entity
+		sync.RWMutex
 	}
 )
 
 func (p *mage) Health() float64 {
+	p.RLock()
+	defer p.RUnlock()
+
 	if p.health > maxHealth {
 		return maxHealth
 	}
@@ -51,6 +49,9 @@ func (p *mage) Health() float64 {
 }
 
 func (p *mage) Mana() float64 {
+	p.RLock()
+	defer p.RUnlock()
+
 	if p.mana > maxMana {
 		return maxMana
 	}
@@ -69,11 +70,13 @@ func (p *mage) Position() (x, y, z float64) {
 }
 
 func (p *mage) TakeDamage(amount float64, attacker entity.Entity) {
+	p.Lock()
+	defer p.Unlock()
+
 	if p.health <= 0 {
 		return
 	}
-	p.Lock()
-	defer p.Unlock()
+
 
 	p.health -= amount
 	if p.health > maxHealth {
@@ -83,23 +86,16 @@ func (p *mage) TakeDamage(amount float64, attacker entity.Entity) {
 		p.Interrupt()
 	}
 	if p.health <= 0 {
-		//log.Printf("%d: Killed by %d", p.ID(), attacker.ID())
+		// killed
 		p.health = 0
 		entity.Despawn(p)
 	}
-}
-
-func (p *mage) Action() string {
-	return p.action
 }
 
 func (p *mage) Think(Δtime float64) {
 	if p.CasterThink(Δtime) {
 		// do nothing; spell is casting
 	} else {
-		p.Lock()
-		defer p.Unlock()
-
 		p.mana += Δtime * manaPerSecond
 		if p.mana > maxMana {
 			p.mana = maxMana
@@ -107,42 +103,33 @@ func (p *mage) Think(Δtime float64) {
 
 		if p.health < maxHealth-spellHealing {
 			if p.mana >= manaForHealingSpell {
-				//log.Printf("%d: H%d M%d", p.ID(), int(p.Health()), int(p.mana))
-
-				p.target = p
+				p.Lock()
+				defer p.Unlock()
 
 				p.mana -= manaForHealingSpell
 
 				p.Cast(spell.HealingOverTimeSpell(healCastTime, spellHealing, p, p, true))
-				//log.Printf("%d: Started healing self", p.ID())
-
-				p.action = "Healing"
-			} else {
-				p.action = ""
-				p.target = nil
 			}
 		} else {
 			if p.mana >= manaForDamageSpell {
+				var target entity.Entity
 				entity.ForOneNearby(p, 100, func(e entity.Entity) bool {
 					_, ok := e.(Mage)
 					return ok
 				}, func(e entity.Entity) {
-					p.target = e
+					target = e
 				})
 
-				if p.target == nil {
-					//log.Printf("%d: Spell failed: No target", p.ID())
+				if target == nil {
 					return
 				}
 
+				p.Lock()
+				defer p.Unlock()
+
 				p.mana -= manaForDamageSpell
 
-				p.Cast(spell.DamageSpell(damageCastTime, spellDamage*variance(), p, p.target, true))
-				//log.Printf("%d: Started casting spell on %d", p.ID(), target.ID())
-				p.action = fmt.Sprintf("Spell:%d", p.target.ID())
-			} else {
-				p.action = ""
-				p.target = nil
+				p.Cast(spell.DamageSpell(damageCastTime, spellDamage*variance(), p, target, true))
 			}
 		}
 	}

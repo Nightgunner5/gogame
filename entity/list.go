@@ -43,7 +43,7 @@ func (list entityList) search(id EntityID) (i int, found bool) {
 	for i < j {
 		h := i + (j-i)/2 // avoid overflow when computing h
 		// i ≤ h < j
-		if list[i].ID() < id {
+		if list[h].ID() < id {
 			i = h + 1 // preserves f(i-1) == false
 		} else {
 			j = h // preserves f(j) == true
