@@ -3,7 +3,6 @@ package entity
 import (
 	"log"
 	"math/rand"
-	"sort"
 	"sync"
 )
 
@@ -36,10 +35,21 @@ type EntityList interface {
 
 type entityList []Entity
 
+// Copied from http://golang.org/src/pkg/sort/search.go to avoid closure memory allocation
 func (list entityList) search(id EntityID) (i int, found bool) {
-	i = sort.Search(len(list), func(i int) bool {
-		return list[i].ID() >= id
-	})
+	// Define f(-1) == false and f(n) == true.
+	// Invariant: f(i-1) == false, f(j) == true.
+	j := len(list)
+	for i < j {
+		h := i + (j-i)/2 // avoid overflow when computing h
+		// i ≤ h < j
+		if list[i].ID() < id {
+			i = h + 1 // preserves f(i-1) == false
+		} else {
+			j = h // preserves f(j) == true
+		}
+	}
+	// i == j, f(i-1) == false, and f(j) (= f(i)) == true  =>  answer is i.
 	found = i < len(list) && list[i].ID() == id
 	return
 }

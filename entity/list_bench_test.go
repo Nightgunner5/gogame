@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"sync"
 	"testing"
 )
 
@@ -13,43 +12,28 @@ func (nullEntity) Parent() Entity {
 	return World
 }
 
-func concurrentBench(b *testing.B, f func(int)) {
-	var wg sync.WaitGroup
-
-	wg.Add(b.N)
-
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		go func(i int) {
-			f(i)
-			wg.Done()
-		}(i)
-	}
-
-	wg.Wait()
-}
-
 func BenchmarkGet(b *testing.B) {
 	b.StopTimer()
 	NukeForTesting()
 	for i := 0; i < 10000; i++ {
 		Spawn(new(nullEntity))
 	}
+	b.StartTimer()
 
-	concurrentBench(b, func(i int) {
-		_ = Get(1)
-	})
+	for i := 0; i < b.N; i++ {
+		_ = Get(EntityID(i % 10000))
+	}
 }
 
 func BenchmarkSpawn(b *testing.B) {
 	b.StopTimer()
 	NukeForTesting()
 	entities := make([]nullEntity, b.N)
+	b.StartTimer()
 
-	concurrentBench(b, func(i int) {
+	for i := 0; i < b.N; i++ {
 		Spawn(&entities[i])
-	})
+	}
 }
 
 func BenchmarkDespawn(b *testing.B) {
@@ -59,8 +43,9 @@ func BenchmarkDespawn(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Spawn(&entities[i])
 	}
+	b.StartTimer()
 
-	concurrentBench(b, func(i int) {
+	for i := 0; i < b.N; i++ {
 		Despawn(&entities[i])
-	})
+	}
 }
