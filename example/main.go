@@ -46,6 +46,8 @@ func main() {
 		}
 	}()
 
+	runtime.LockOSThread() // OpenGL doesn't like thread switches
+
 	if err := glfw.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -70,8 +72,6 @@ func main() {
 		render()
 
 		glfw.SwapBuffers()
-
-		runtime.Gosched()
 	}
 }
 
