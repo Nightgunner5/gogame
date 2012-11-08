@@ -1,6 +1,9 @@
 package spell
 
-import "github.com/Nightgunner5/gogame/entity"
+import (
+	"github.com/Nightgunner5/gogame/entity"
+	"sync"
+)
 
 type BasicSpell struct {
 	CastTime      float64
@@ -9,6 +12,8 @@ type BasicSpell struct {
 	Caster_       entity.EntityID
 	Target_       entity.EntityID
 	Action        func(target, caster entity.Entity)
+
+	m sync.Mutex
 }
 
 func (s *BasicSpell) Caster() entity.Entity {
@@ -20,6 +25,9 @@ func (s *BasicSpell) Target() entity.Entity {
 }
 
 func (s *BasicSpell) Interrupt() bool {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	if !s.Interruptable || s.currentTime >= s.CastTime {
 		return false
 	}
@@ -32,10 +40,16 @@ func (s *BasicSpell) TotalTime() float64 {
 }
 
 func (s *BasicSpell) TimeLeft() float64 {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	return s.CastTime - s.currentTime
 }
 
 func (s *BasicSpell) Tick(Δtime float64) bool {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	if s.currentTime >= s.CastTime {
 		return true
 	}

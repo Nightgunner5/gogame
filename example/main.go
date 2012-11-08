@@ -7,9 +7,9 @@ import (
 	"github.com/go-gl/glfw"
 	"log"
 	"math/rand"
-	"runtime"
-	_ "net/http/pprof"
 	"net/http"
+	_ "net/http/pprof"
+	"runtime"
 )
 
 const (

@@ -48,23 +48,23 @@ func render() {
 	gl.Begin(gl.QUADS)
 	for _, r := range mages {
 		if r != nil {
-			v := func(x, y, z float64) { gl.Vertex3d(r.x+x-0.5, r.y+y-0.5, r.z+z-0.5) }
+			v := func(x, y, z float64) { gl.Vertex3d(r.x+x-0.5, r.y+y-0.175, r.z+z) }
 			gl.Color3d(0, 0, 0)
 			v(0, 0, 0)
-			v(0, 1, 0)
-			v(1, 1, 0)
+			v(0, 0.35, 0)
+			v(1, 0.35, 0)
 			v(1, 0, 0)
 
 			gl.Color3d(0, 1, 0)
-			v(0.05, 0.55, 0.1)
-			v(0.05, 0.95, 0.1)
-			v(r.health/maxHealth*0.9+0.05, 0.95, 0.1)
-			v(r.health/maxHealth*0.9+0.05, 0.55, 0.1)
+			v(0.05, 0.2, 0.1)
+			v(0.05, 0.3, 0.1)
+			v(r.health/maxHealth*0.9+0.05, 0.3, 0.1)
+			v(r.health/maxHealth*0.9+0.05, 0.2, 0.1)
 
 			gl.Color3d(0, 0, 1)
 			v(0.05, 0.05, 0.1)
-			v(0.05, 0.45, 0.1)
-			v(r.mana/maxMana*0.9+0.05, 0.45, 0.1)
+			v(0.05, 0.15, 0.1)
+			v(r.mana/maxMana*0.9+0.05, 0.15, 0.1)
 			v(r.mana/maxMana*0.9+0.05, 0.05, 0.1)
 		}
 	}

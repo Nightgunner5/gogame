@@ -77,7 +77,6 @@ func (p *mage) TakeDamage(amount float64, attacker entity.Entity) {
 		return
 	}
 
-
 	p.health -= amount
 	if p.health > maxHealth {
 		p.health = maxHealth
@@ -96,12 +95,14 @@ func (p *mage) Think(Δtime float64) {
 	if p.CasterThink(Δtime) {
 		// do nothing; spell is casting
 	} else {
+		p.Lock()
 		p.mana += Δtime * manaPerSecond
 		if p.mana > maxMana {
 			p.mana = maxMana
 		}
+		p.Unlock()
 
-		if p.health < maxHealth-spellHealing {
+		if p.Health() < maxHealth-spellHealing {
 			if p.mana >= manaForHealingSpell {
 				p.Lock()
 				defer p.Unlock()

@@ -162,21 +162,21 @@ func (c *concurrentEntityList) RemoveRecursive(id EntityID) {
 }
 
 func (c *concurrentEntityList) Count() int {
-        c.m.RLock()
-        defer c.m.RUnlock()
+	c.m.RLock()
+	defer c.m.RUnlock()
 
 	return c.l.Count()
 }
 
 func (c *concurrentEntityList) Each(f func(Entity)) {
-        c.m.RLock()
-        defer c.m.RUnlock()
+	c.m.RLock()
+	defer c.m.RUnlock()
 
 	c.l.Each(f)
 }
 
 func (c *concurrentEntityList) All(f func(Entity)) {
-        c.m.RLock()
+	c.m.RLock()
 
 	var wg sync.WaitGroup
 

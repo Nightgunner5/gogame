@@ -1,6 +1,9 @@
 package spell
 
-import "github.com/Nightgunner5/gogame/entity"
+import (
+	"github.com/Nightgunner5/gogame/entity"
+	"sync"
+)
 
 type Spell interface {
 	// Returns true if the spell has ended, false if it has not.
@@ -24,9 +27,13 @@ type Caster interface {
 
 type SpellCaster struct {
 	current Spell
+	m       sync.Mutex
 }
 
 func (c *SpellCaster) CasterThink(Δtime float64) bool {
+	c.m.Lock()
+	defer c.m.Unlock()
+
 	spell := c.current
 	if spell == nil {
 		return false
@@ -39,14 +46,23 @@ func (c *SpellCaster) CasterThink(Δtime float64) bool {
 }
 
 func (c *SpellCaster) CurrentSpell() Spell {
+	c.m.Lock()
+	defer c.m.Unlock()
+
 	return c.current
 }
 
 func (c *SpellCaster) Cast(spell Spell) {
+	c.m.Lock()
+	defer c.m.Unlock()
+
 	c.current = spell
 }
 
 func (c *SpellCaster) Interrupt() bool {
+	c.m.Lock()
+	defer c.m.Unlock()
+
 	spell := c.current
 	if spell != nil && spell.Interrupt() {
 		c.current = nil
