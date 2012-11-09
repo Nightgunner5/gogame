@@ -1,20 +1,12 @@
 package entity
 
-import (
-	"testing"
-)
+import "testing"
 
-type nullEntity struct {
-	EntityID
-}
-
-func (nullEntity) Parent() Entity {
-	return World
-}
+// nullEntity defined in entity_test.go
 
 func BenchmarkGet(b *testing.B) {
 	b.StopTimer()
-	NukeForTesting()
+	nukeForTesting()
 	for i := 0; i < 10000; i++ {
 		Spawn(new(nullEntity))
 	}
@@ -27,7 +19,7 @@ func BenchmarkGet(b *testing.B) {
 
 func BenchmarkSpawn(b *testing.B) {
 	b.StopTimer()
-	NukeForTesting()
+	nukeForTesting()
 	entities := make([]nullEntity, b.N)
 	b.StartTimer()
 
@@ -38,7 +30,7 @@ func BenchmarkSpawn(b *testing.B) {
 
 func BenchmarkDespawn(b *testing.B) {
 	b.StopTimer()
-	NukeForTesting()
+	nukeForTesting()
 	entities := make([]nullEntity, b.N)
 	for i := 0; i < b.N; i++ {
 		Spawn(&entities[i])

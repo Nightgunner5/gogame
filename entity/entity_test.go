@@ -2,18 +2,24 @@ package entity
 
 import "testing"
 
-type TestEntity struct {
+func nukeForTesting() {
+	nextID = 0
+	globalEntityList = ConcurrentEntityList(1)
+	globalEntityList.Add(World)
+}
+
+type nullEntity struct {
 	EntityID
 }
 
-func (TestEntity) Parent() Entity {
+func (nullEntity) Parent() Entity {
 	return World
 }
 
 func TestEntityID(t *testing.T) {
-	nextID = 0
+	nukeForTesting()
 
-	var ents [250]TestEntity
+	var ents [250]nullEntity
 
 	// Assign IDs in a nondeterministic order.
 	for i := range ents {

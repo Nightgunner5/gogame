@@ -5,12 +5,12 @@ import (
 	"testing"
 )
 
-// TestEntity defined in entity_test.go
+// nullEntity defined in entity_test.go
 
 func TestEntityListInsertRemove(t *testing.T) {
-	nextID = 0
+	nukeForTesting()
 
-	var ent TestEntity
+	var ent nullEntity
 
 	list := NewEntityList(1)
 
@@ -58,7 +58,7 @@ func TestEntityListInsertRemove(t *testing.T) {
 func TestEntityListInsertionOrder(t *testing.T) {
 	nextID = 0
 
-	var entities [250]TestEntity
+	var entities [250]nullEntity
 
 	list := NewEntityList(250)
 
@@ -84,7 +84,7 @@ func TestEntityListInsertionOrder(t *testing.T) {
 func TestEntityListConcurrent(t *testing.T) {
 	nextID = 0
 
-	var entities [250]TestEntity
+	var entities [250]nullEntity
 
 	list := ConcurrentEntityList(250)
 

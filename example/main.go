@@ -7,8 +7,6 @@ import (
 	"github.com/go-gl/glfw"
 	"log"
 	"math/rand"
-	"net/http"
-	_ "net/http/pprof"
 	"runtime"
 )
 
@@ -32,8 +30,6 @@ var mageCount = flag.Int("mages", 4, "The number of mages at the start")
 
 func main() {
 	flag.Parse()
-
-	go http.ListenAndServe("localhost:6060", nil)
 
 	go func() {
 		for i := 0; i < *mageCount; i++ {
