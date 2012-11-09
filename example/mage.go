@@ -16,10 +16,9 @@ type (
 		entity.Entity
 		entity.Positioner
 		entity.Healther
-		entity.TakeDamager
+		entity.Resourcer
 		entity.Thinker
 		spell.Caster
-		Mana() float64
 	}
 
 	mage struct {
@@ -28,38 +27,14 @@ type (
 		spell.SpellCaster
 
 		x, y, z float64
-		health  float64
-		mana    float64
+		entity.BaseHealth
+		entity.BaseResource
 
 		sync.RWMutex
 	}
 )
 
-func (p *mage) Health() float64 {
-	p.RLock()
-	defer p.RUnlock()
-
-	if p.health > maxHealth {
-		return maxHealth
-	}
-	if p.health < 0 {
-		return 0
-	}
-	return p.health
-}
-
-func (p *mage) Mana() float64 {
-	p.RLock()
-	defer p.RUnlock()
-
-	if p.mana > maxMana {
-		return maxMana
-	}
-	if p.mana < 0 {
-		return 0
-	}
-	return p.mana
-}
+var _ Mage = new(mage)
 
 func (p *mage) Parent() entity.Entity {
 	return entity.World
@@ -69,69 +44,38 @@ func (p *mage) Position() (x, y, z float64) {
 	return p.x, p.y, p.z
 }
 
-func (p *mage) TakeDamage(amount float64, attacker entity.Entity) {
-	p.Lock()
-	defer p.Unlock()
-
-	if p.health <= 0 {
+func (p *mage) Think(Δtime float64) {
+	if p.Health() <= 0 {
+		// we are dead
+		entity.Despawn(p)
+		return
+	}
+	if p.CasterThink(Δtime) {
+		// do nothing; spell is casting
 		return
 	}
 
-	p.health -= amount
-	if p.health > maxHealth {
-		p.health = maxHealth
-	}
-	if amount > 0 {
-		p.Interrupt()
-	}
-	if p.health <= 0 {
-		// killed
-		p.health = 0
-		entity.Despawn(p)
-	}
-}
+	p.UseResource(-Δtime * manaPerSecond)
 
-func (p *mage) Think(Δtime float64) {
-	if p.CasterThink(Δtime) {
-		// do nothing; spell is casting
-	} else {
-		p.Lock()
-		p.mana += Δtime * manaPerSecond
-		if p.mana > maxMana {
-			p.mana = maxMana
+	if p.Health() < maxHealth-spellHealing {
+		if p.UseResource(manaForHealingSpell) {
+			p.Cast(spell.HealingOverTimeSpell(healCastTime, spellHealing, p, p, true))
 		}
-		p.Unlock()
+	} else {
+		var target entity.Entity
+		entity.ForOneNearby(p, 100, func(e entity.Entity) bool {
+			_, ok := e.(Mage)
+			return ok
+		}, func(e entity.Entity) {
+			target = e
+		})
 
-		if p.Health() < maxHealth-spellHealing {
-			if p.mana >= manaForHealingSpell {
-				p.Lock()
-				defer p.Unlock()
+		if target == nil {
+			return
+		}
 
-				p.mana -= manaForHealingSpell
-
-				p.Cast(spell.HealingOverTimeSpell(healCastTime, spellHealing, p, p, true))
-			}
-		} else {
-			if p.mana >= manaForDamageSpell {
-				var target entity.Entity
-				entity.ForOneNearby(p, 100, func(e entity.Entity) bool {
-					_, ok := e.(Mage)
-					return ok
-				}, func(e entity.Entity) {
-					target = e
-				})
-
-				if target == nil {
-					return
-				}
-
-				p.Lock()
-				defer p.Unlock()
-
-				p.mana -= manaForDamageSpell
-
-				p.Cast(spell.DamageSpell(damageCastTime, spellDamage*variance(), p, target, true))
-			}
+		if p.UseResource(manaForDamageSpell) {
+			p.Cast(spell.DamageSpell(damageCastTime, spellDamage*variance(), p, target, true))
 		}
 	}
 }

@@ -14,8 +14,6 @@ const (
 	maxHealth     = 100
 	maxMana       = 20
 	manaPerSecond = 1
-	initialHealth = 100
-	initialMana   = 10
 
 	manaForDamageSpell = 10
 	damageCastTime     = 1
@@ -34,12 +32,15 @@ func main() {
 	go func() {
 		for i := 0; i < *mageCount; i++ {
 			entity.Spawn(&mage{
-				health: initialHealth * variance(),
-				mana:   initialMana * variance(),
+				BaseHealth: entity.BaseHealth{Max: maxHealth},
+				BaseResource: entity.BaseResource{Max: maxMana},
 				x:      rand.Float64()*20 - 10,
 				y:      rand.Float64()*20 - 10,
 			})
 		}
+		entity.Spawn(&spawner{
+			BaseResource: entity.BaseResource{Max: 10},
+		})
 	}()
 
 	runtime.LockOSThread() // OpenGL doesn't like thread switches

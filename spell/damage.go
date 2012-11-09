@@ -7,7 +7,7 @@ func DamageSpell(delay, damage float64, caster, target entity.Entity, interrupta
 		return nil
 	}
 
-	if _, ok := target.(entity.TakeDamager); !ok {
+	if _, ok := target.(entity.Healther); !ok {
 		return nil
 	}
 
@@ -17,7 +17,7 @@ func DamageSpell(delay, damage float64, caster, target entity.Entity, interrupta
 		Caster_:       caster.ID(),
 		Target_:       target.ID(),
 		Action: func(target, caster entity.Entity) {
-			target.(entity.TakeDamager).TakeDamage(damage, caster)
+			target.(entity.Healther).TakeDamage(damage, caster)
 		},
 	}
 }
@@ -31,7 +31,7 @@ func DamageOverTimeSpell(duration, damagePerSecond float64, caster, target entit
 		return nil
 	}
 
-	if _, ok := target.(entity.TakeDamager); !ok {
+	if _, ok := target.(entity.Healther); !ok {
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func DamageOverTimeSpell(duration, damagePerSecond float64, caster, target entit
 		Caster_:       caster.ID(),
 		Target_:       target.ID(),
 		Action: func(target, caster entity.Entity, Δtime float64) {
-			target.(entity.TakeDamager).TakeDamage(damagePerSecond*Δtime, caster)
+			target.(entity.Healther).TakeDamage(damagePerSecond*Δtime, caster)
 		},
 	}
 }

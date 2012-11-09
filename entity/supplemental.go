@@ -1,17 +1,32 @@
 package entity
 
-type Positioner interface {
-	Position() (x, y, z float64)
-}
+type (
+	Positioner interface {
+		Position() (x, y, z float64)
+	}
 
-type Healther interface {
-	Health() float64
-}
+	Healther interface {
+		Health() float64
 
-type TakeDamager interface {
-	TakeDamage(amount float64, attacker Entity)
-}
+		TakeDamage(amount float64, attacker Entity)
+	}
 
-type Thinker interface {
-	Think(Δtime float64)
-}
+	Resourcer interface {
+		Resource() float64
+
+		UseResource(amount float64) bool
+	}
+
+	Targeter interface {
+		Target() Entity
+
+		SetTarget(Entity)
+	}
+
+	Thinker interface {
+		// This method will be called on all Spawned Entities
+		// approximately once per 100ms with the amount of time
+		// since the previous call times the value of TimeScale.
+		Think(Δtime float64)
+	}
+)
