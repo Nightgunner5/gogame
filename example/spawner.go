@@ -40,8 +40,8 @@ func (s *spawner) Think(Δtime float64) {
 					entity.Spawn(&mage{
 						BaseHealth:   entity.BaseHealth{Max: maxHealth},
 						BaseResource: entity.BaseResource{Max: maxMana},
-						x:            rand.Float64()*20 - 10,
-						y:            rand.Float64()*20 - 10,
+						x:            rand.Float64()*2*visWidth - visWidth,
+						y:            rand.Float64()*2*visHeight - visHeight,
 					})
 				},
 			})

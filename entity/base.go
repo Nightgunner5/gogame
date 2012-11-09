@@ -19,6 +19,7 @@ type (
 		baseCounter
 	}
 )
+
 var _ Healther = new(BaseHealth)
 var _ Resourcer = new(BaseResource)
 

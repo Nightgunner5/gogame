@@ -21,7 +21,10 @@ const (
 
 	manaForHealingSpell = 3
 	healCastTime        = 4
-	spellHealing        = 5
+	spellHealing        = 10
+
+	visWidth  = 10
+	visHeight = 10
 )
 
 var mageCount = flag.Int("mages", 4, "The number of mages at the start")
@@ -32,10 +35,10 @@ func main() {
 	go func() {
 		for i := 0; i < *mageCount; i++ {
 			entity.Spawn(&mage{
-				BaseHealth: entity.BaseHealth{Max: maxHealth},
+				BaseHealth:   entity.BaseHealth{Max: maxHealth},
 				BaseResource: entity.BaseResource{Max: maxMana},
-				x:      rand.Float64()*20 - 10,
-				y:      rand.Float64()*20 - 10,
+				x:            rand.Float64()*2*visWidth - visWidth,
+				y:            rand.Float64()*2*visHeight - visHeight,
 			})
 		}
 		entity.Spawn(&spawner{
@@ -83,9 +86,9 @@ func windowSize(width, height int) {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
 	if aspect < 1 {
-		gl.Ortho(-10, 10, -10/aspect, 10/aspect, -10, 10)
+		gl.Ortho(-visWidth, visWidth, -visHeight/aspect, visHeight/aspect, -10, 10)
 	} else {
-		gl.Ortho(-10*aspect, 10*aspect, -10, 10, -10, 10)
+		gl.Ortho(-visWidth*aspect, visWidth*aspect, -visHeight, visHeight, -10, 10)
 	}
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
