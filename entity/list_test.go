@@ -1,9 +1,6 @@
 package entity
 
-import (
-	"sync/atomic"
-	"testing"
-)
+import "testing"
 
 // nullEntity defined in entity_test.go
 
@@ -79,36 +76,4 @@ func TestEntityListInsertionOrder(t *testing.T) {
 		}
 		prev = ent.ID()
 	})
-}
-
-func TestEntityListConcurrent(t *testing.T) {
-	nextID = 0
-
-	var entities [250]nullEntity
-
-	list := ConcurrentEntityList(250)
-
-	for i := range entities {
-		if !list.Add(&entities[i]) {
-			t.Errorf("Could not add entity %d", entities[i].ID())
-		}
-	}
-
-	var count uint32
-
-	list.All(func(e Entity) {
-		atomic.AddUint32(&count, 1)
-
-		if removed := list.Remove(e.ID()); removed != e {
-			t.Errorf("Tried to remove entity %v but got %v", e, removed)
-		}
-	})
-
-	if count != 250 {
-		t.Errorf("ConcurrentEntityList.All on 250 entities only hit %d entities", count)
-	}
-
-	if list.Count() != 0 {
-		t.Errorf("Removal of all entities left %d entities", list.Count())
-	}
 }

@@ -51,21 +51,6 @@ func BenchmarkDespawn(b *testing.B) {
 	}
 }
 
-func BenchmarkForAll(b *testing.B) {
-	b.StopTimer()
-	nukeForTesting()
-	for i := 0; i < 10000; i++ {
-		Spawn(new(nullEntity))
-	}
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		ForAll(func(e Entity) {
-			// empty function
-		})
-	}
-}
-
 func BenchmarkForEach(b *testing.B) {
 	b.StopTimer()
 	nukeForTesting()
@@ -75,7 +60,7 @@ func BenchmarkForEach(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		GlobalEntityList().Each(func(e Entity) {
+		ForEach(func(e Entity) {
 			// empty function
 		})
 	}

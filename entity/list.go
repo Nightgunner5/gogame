@@ -27,10 +27,6 @@ type EntityList interface {
 	// this if you need the entities in order or if the given
 	// function cannot be run in parallel with itself.
 	Each(func(Entity))
-	// Calls the given function for each entity in the list without
-	// waiting for one call to finish before starting the next.
-	// The function returns after all calls have completed.
-	All(func(Entity))
 }
 
 type entityList []Entity
@@ -113,21 +109,6 @@ func (list entityList) Each(f func(Entity)) {
 	}
 }
 
-func (list entityList) All(f func(Entity)) {
-	var wg sync.WaitGroup
-
-	wg.Add(list.Count())
-
-	list.Each(func(e Entity) {
-		go func() {
-			f(e)
-			wg.Done()
-		}()
-	})
-
-	wg.Wait()
-}
-
 type concurrentEntityList struct {
 	l entityList
 	m sync.RWMutex
@@ -170,28 +151,12 @@ func (c *concurrentEntityList) Count() int {
 
 func (c *concurrentEntityList) Each(f func(Entity)) {
 	c.m.RLock()
-	defer c.m.RUnlock()
 
-	c.l.Each(f)
-}
-
-func (c *concurrentEntityList) All(f func(Entity)) {
-	c.m.RLock()
-
-	var wg sync.WaitGroup
-
-	wg.Add(c.l.Count())
-
-	c.l.Each(func(e Entity) {
-		go func() {
-			f(e)
-			wg.Done()
-		}()
-	})
+	for _, e := range c.l {
+		f(e)
+	}
 
 	c.m.RUnlock()
-
-	wg.Wait()
 }
 
 // Creates a new, empty EntityList. This list is not synchronized and should
@@ -255,19 +220,19 @@ func Get(id EntityID) Entity {
 	return globalEntityList.Get(id)
 }
 
-// Calls the given function for each currently spawned entity concurrently.
+// Calls the given function for each currently spawned entity in order.
 // Returns when all the function calls are complete.
-func ForAll(f func(Entity)) {
-	globalEntityList.All(f)
+func ForEach(f func(Entity)) {
+	globalEntityList.Each(f)
 }
 
 // Calls the given function for each currently spawned Positioner Entity
 // within [distance] of [target].
-func ForAllNearby(target Positioner, distance float64, f func(Entity)) {
+func ForEachNearby(target Positioner, distance float64, f func(Entity)) {
 	sX, sY, sZ := target.Position()
 	d2 := distance * distance
 
-	globalEntityList.All(func(e Entity) {
+	globalEntityList.Each(func(e Entity) {
 		if p, ok := e.(Positioner); ok && target != p {
 			x, y, z := p.Position()
 			x, y, z = sX-x, sY-y, sZ-z

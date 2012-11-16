@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/go-gl/gl"
-	"sync"
 )
 
 type renderMage struct {
@@ -19,19 +18,16 @@ func render() {
 	var (
 		mages  []renderMage
 		spells []renderSpell
-		lock   sync.Mutex
 	)
 
-	entity.ForAll(func(e entity.Entity) {
+	entity.ForEach(func(e entity.Entity) {
 		if p, ok := e.(Mage); ok {
 			var r renderMage
 
 			r.x, r.y, r.z = p.Position()
 			r.mana, r.health = p.Resource(), p.Health()
 
-			lock.Lock()
 			mages = append(mages, r)
-			lock.Unlock()
 
 			if spell := p.CurrentSpell(); spell != nil {
 				if caster, target := spell.Caster(), spell.Target(); caster != nil && target != nil {
@@ -46,9 +42,7 @@ func render() {
 					}
 					s.x, s.y, s.z = lerp(x1, x2), lerp(y1, y2), lerp(z1, z2)
 
-					lock.Lock()
 					spells = append(spells, s)
-					lock.Unlock()
 				}
 			}
 		}
