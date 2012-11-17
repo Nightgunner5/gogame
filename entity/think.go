@@ -39,6 +39,8 @@ func thinkDispatcher(c chan<- thinkTask, global EntityList) {
 			}
 		})
 
+		toSpawn.commit()
+
 		then = now
 	}
 }

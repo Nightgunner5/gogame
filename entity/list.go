@@ -159,6 +159,85 @@ func (c *concurrentEntityList) Each(f func(Entity)) {
 	c.m.RUnlock()
 }
 
+type delayedEntityList struct {
+	p        EntityList
+	toAdd    []Entity // Unordered
+	toRemove []EntityID
+	m        sync.RWMutex
+}
+
+func (d *delayedEntityList) Add(e Entity) bool {
+	d.m.Lock()
+	defer d.m.Unlock()
+
+	if d.p.Get(e.ID()) != nil {
+		return false
+	}
+
+	for _, ent := range d.toAdd {
+		if ent == e {
+			return false
+		}
+	}
+
+	d.toAdd = append(d.toAdd, e)
+	return true
+}
+
+func (d *delayedEntityList) Remove(id EntityID) Entity {
+	panic("delayedEntityList: Remove is unimplemented by design")
+}
+
+func (d *delayedEntityList) RemoveRecursive(id EntityID) {
+	d.m.Lock()
+	defer d.m.Unlock()
+
+	d.toRemove = append(d.toRemove, id)
+}
+
+func (d *delayedEntityList) Count() int {
+	d.m.RLock()
+	defer d.m.RUnlock()
+
+	return d.p.Count() + len(d.toAdd)
+}
+
+func (d *delayedEntityList) commit() {
+	d.m.Lock()
+	defer d.m.Unlock()
+
+	for _, ent := range d.toAdd {
+		d.p.Add(ent)
+	}
+	d.toAdd = nil
+
+	for _, id := range d.toRemove {
+		d.p.RemoveRecursive(id)
+	}
+	d.toRemove = nil
+}
+
+func (d *delayedEntityList) Get(id EntityID) Entity {
+	d.m.RLock()
+	defer d.m.RUnlock()
+
+	if e := d.p.Get(id); e != nil {
+		return e
+	}
+
+	for _, ent := range d.toAdd {
+		if ent.ID() == id {
+			return ent
+		}
+	}
+
+	return nil
+}
+
+func (delayedEntityList) Each(f func(Entity)) {
+	panic("delayedEntityList: Each is unimplemented by design")
+}
+
 // Creates a new, empty EntityList. This list is not synchronized and should
 // only ever be accessed from a single goroutine. Use of the All method is
 // discouraged on this type of EntityList.
@@ -187,7 +266,10 @@ func (readOnlyEntityList) Remove(EntityID) Entity {
 	return nil
 }
 
-var globalEntityList EntityList = ConcurrentEntityList(1)
+var (
+	globalEntityList = ConcurrentEntityList(1)
+	toSpawn          = &delayedEntityList{p: globalEntityList}
+)
 
 // Returns a read-only reference to the global entity list.
 func GlobalEntityList() EntityList {
@@ -196,11 +278,12 @@ func GlobalEntityList() EntityList {
 
 // Add an entity to the global entity list. Logs a warning if the entity
 // was already spawned. This will also add any parent entities if they
-// are not already added.
+// are not already added. The entity is not inserted into the list until
+// the next think cycle.
 func Spawn(entity Entity) {
-	if globalEntityList.Add(entity) {
+	if toSpawn.Add(entity) {
 		for parent := entity.Parent(); parent != nil; parent = parent.Parent() {
-			if !globalEntityList.Add(parent) {
+			if !toSpawn.Add(parent) {
 				break
 			}
 		}
@@ -211,7 +294,7 @@ func Spawn(entity Entity) {
 
 // Remove an entity from the global entity list, along with any entity with it as its parent, recursively.
 func Despawn(entity Entity) {
-	globalEntityList.RemoveRecursive(entity.ID())
+	toSpawn.RemoveRecursive(entity.ID())
 }
 
 // Returns the entity for a given ID. nil will be returned if no entity is

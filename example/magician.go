@@ -61,6 +61,11 @@ func (m *magician) Think(delta float64) {
 		summonCastTime = 2
 	)
 
+	if m.Health() <= 0 {
+		entity.Despawn(m)
+		return
+	}
+
 	if m.CasterThink(delta) {
 		// currently casting spell
 		return

@@ -56,6 +56,11 @@ func (i *imp) Think(delta float64) {
 		spellDamage     = 5
 	)
 
+	if i.Health() <= 0 {
+		entity.Despawn(i)
+		return
+	}
+
 	if i.CasterThink(delta) {
 		// currently casting spell
 		return
