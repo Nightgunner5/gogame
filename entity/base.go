@@ -52,7 +52,7 @@ func (b *baseCounter) sub(amount, max float64, force bool) (changed bool) {
 		return
 	}
 
-	if b.c > amount || force {
+	if b.c >= amount || force {
 		b.c -= amount
 		changed = true
 	}
