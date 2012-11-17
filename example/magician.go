@@ -29,7 +29,7 @@ type (
 func NewMagician(x, y, z float64) Magician {
 	const (
 		maxHealth = 100
-		maxMana = 1000
+		maxMana   = 1000
 	)
 
 	m := &magician{
@@ -56,9 +56,9 @@ func (m *magician) Position() (x, y, z float64) {
 
 func (m *magician) Think(delta float64) {
 	const (
-		manaPerSecond = 10
-		summonCost    = 250
-		summonCastTime = 2
+		manaPerSecond  = 10
+		summonCost     = 50
+		summonCastTime = 0.5
 	)
 
 	if m.Health() <= 0 {
@@ -76,9 +76,9 @@ func (m *magician) Think(delta float64) {
 	if m.UseResource(summonCost) {
 		m.Cast(&spell.BasicSpell{
 			CastTime: summonCastTime,
-			Caster_: m.ID(),
-			Target_: m.ID(),
-			Action: summonImp,
+			Caster_:  m.ID(),
+			Target_:  m.ID(),
+			Action:   summonImp,
 		})
 	}
 }
@@ -87,9 +87,9 @@ func summonImp(target, caster entity.Entity) {
 	m := caster.(Magician)
 	x, y, z := m.Position()
 
-	x += rand.Float64() * 2 - 1
-	y += rand.Float64() * 2 - 1
-	z += rand.Float64() * 2 - 1
+	x += rand.Float64()*2 - 1
+	y += rand.Float64()*2 - 1
+	z += rand.Float64()*2 - 1
 
 	NewImp(m, x, y, z)
 }
