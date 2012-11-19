@@ -18,8 +18,8 @@ type (
 
 	magician struct {
 		entity.EntityID
-		entity.BaseHealth
-		entity.BaseResource
+		entity.Healther
+		entity.Resourcer
 		spell.SpellCaster
 
 		x, y, z float64
@@ -33,13 +33,13 @@ func NewMagician(x, y, z float64) Magician {
 	)
 
 	m := &magician{
-		BaseHealth:   entity.BaseHealth{Max: maxHealth},
-		BaseResource: entity.BaseResource{Max: maxMana},
-
 		x: x,
 		y: y,
 		z: z,
 	}
+
+	m.Healther = entity.BaseHealth(m, maxHealth)
+	m.Resourcer = entity.BaseResource(m, maxMana)
 
 	entity.Spawn(m)
 

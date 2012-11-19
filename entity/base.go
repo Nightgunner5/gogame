@@ -1,6 +1,6 @@
 package entity
 
-import "sync"
+import ("fmt";"sync")
 
 type (
 	baseCounter struct {
@@ -9,19 +9,41 @@ type (
 		set bool
 	}
 
-	BaseHealth struct {
-		Max float64
+	baseHealth struct {
+		max float64
+		ent EntityID
 		baseCounter
 	}
 
-	BaseResource struct {
-		Max float64
+	baseResource struct {
+		max float64
+		ent EntityID
 		baseCounter
 	}
 )
 
-var _ Healther = new(BaseHealth)
-var _ Resourcer = new(BaseResource)
+var _ Healther = new(baseHealth)
+var _ Resourcer = new(baseResource)
+
+func BaseHealth(e Entity, max float64) Healther {
+	if max <= 0 {
+		panic(fmt.Sprintf("max health (%v) must be positive", max))
+	}
+	return &baseHealth{
+		max: max,
+		ent: e.ID(),
+	}
+}
+
+func BaseResource(e Entity, max float64) Resourcer {
+	if max <= 0 {
+		panic(fmt.Sprintf("max resource (%v) must be positive", max))
+	}
+	return &baseResource{
+		max: max,
+		ent: e.ID(),
+	}
+}
 
 func (b *baseCounter) get(max float64) float64 {
 	b.m.RLock()
@@ -67,16 +89,16 @@ func (b *baseCounter) sub(amount, max float64, force bool) (changed bool) {
 	return
 }
 
-func (b *BaseHealth) Health() float64 {
-	return b.get(b.Max)
+func (b *baseHealth) Health() float64 {
+	return b.get(b.max)
 }
-func (b *BaseResource) Resource() float64 {
-	return b.get(b.Max)
+func (b *baseResource) Resource() float64 {
+	return b.get(b.max)
 }
 
-func (b *BaseHealth) TakeDamage(amount float64, attacker Entity) {
-	b.sub(amount, b.Max, true)
+func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
+	b.sub(amount, b.max, true)
 }
-func (b *BaseResource) UseResource(amount float64) bool {
-	return b.sub(amount, b.Max, false)
+func (b *baseResource) UseResource(amount float64) bool {
+	return b.sub(amount, b.max, false)
 }

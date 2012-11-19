@@ -16,7 +16,7 @@ type (
 
 	imp struct {
 		entity.EntityID
-		entity.BaseHealth
+		entity.Healther
 		spell.SpellCaster
 
 		x, y, z float64
@@ -29,12 +29,13 @@ func NewImp(master Magician, x, y, z float64) Imp {
 		maxHealth = 10
 	)
 	i := &imp{
-		BaseHealth: entity.BaseHealth{Max: maxHealth},
 		x:          x,
 		y:          y,
 		z:          z,
 		master:     master,
 	}
+
+	i.Healther = entity.BaseHealth(i, maxHealth)
 
 	entity.Spawn(i)
 
