@@ -21,6 +21,7 @@ func renderer() {
 <style>
 html {
 	overflow: hidden;
+	background: #333;
 }
 body>span {
 	position: absolute;
@@ -43,6 +44,45 @@ div>span, span>span {
 	height: 5px;
 	display: block;
 }
+header, footer {
+	position: fixed;
+	right: 0;
+	z-index: 1000;
+	background: rgba(255, 255, 255, 0.7);
+}
+header {
+	top: 0;
+	line-height: 0;
+	width: 100px;
+}
+footer {
+	bottom: 0;
+}
+#health, #mana {
+	height: 5px;
+	width: 50px;
+	display: inline-block;
+	background: #000;
+}
+#health div, #mana div {
+	height: 5px;
+	background: #0f0;
+}
+#mana div {
+	background: #00f;
+}
+#spellprogress {
+	height: 10px;
+	width: 100px;
+	background: #000;
+}
+#spellprogress div {
+	height: 10px;
+	background: #fff;
+}
+header p {
+	font: 10px/1.1 sans-serif;
+}
 </style>
 <script>
 // Array Remove - By John Resig (MIT Licensed)
@@ -61,6 +101,9 @@ setInterval(function() {
 		var response = JSON.parse(req.responseText);
 		response.magicians.forEach(function(m) {
 			update(have, true, 'ent' + m.id, m.x, m.y, m.z, m.health, m.mana, m.spell, m.effects);
+			if (m.id == response.self) {
+				updateSpellArea(m);
+			}
 		});
 		response.imps.forEach(function(i) {
 			update(have, false, 'ent' + i.id, i.x, i.y, i.z, i.health, 0, i.spell, '');
@@ -69,13 +112,32 @@ setInterval(function() {
 		var entities = [];
 		Array.prototype.push.apply(entities, document.body.children);
 		entities.forEach(function(ent) {
-			if (!have[ent.id]) {
+			if (ent.id.substring(0, 3) == 'ent' && !have[ent.id]) {
 				ent.parentNode.removeChild(ent);
 			}
 		});
 	});
 	req.send();
 }, 50);
+
+function updateSpellArea(m) {
+	document.querySelector('#health div').style.width = (m.health) + '%';
+	document.querySelector('#mana div').style.width = (m.mana / 1.6) + '%';
+	document.querySelector('header p').innerText = m.effects;
+	var progress = document.querySelector('#spellprogress div');
+	if (m.spell) {
+		progress.style.width = (m.spell.progress * 100) + '%';
+		progress.style.backgroundColor = spellColors[m.spell.id];
+	} else {
+		progress.style.width = '0';
+	}
+}
+
+function spell(name) {
+	var req = new XMLHttpRequest();
+	req.open('GET', 'cast/' + name, true);
+	req.send();
+}
 
 var spellColors = {
 	'impfire':      '#f00',
@@ -111,13 +173,12 @@ function update(have, big, id, x, y, z, health, mana, spell, effects) {
 }
 </script>
 </head>
-<body>
-</body>
+<body><header><div id="health"><div></div></div><div id="mana"><div></div></div><div id="spellprogress"><div></div></div><p></p></header><footer><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer></body>
 </html>`))
 	})
 
 	http.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"magicians":[`)
+		fmt.Fprintf(w, `{"self":%d,"magicians":[`, getMagician(r.Header.Get("X-Forwarded-For")).ID())
 		first := true
 		entity.ForEach(func(e entity.Entity) {
 			if m, ok := e.(Magician); ok {

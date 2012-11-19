@@ -17,6 +17,7 @@ type (
 		spell.Caster
 
 		effect.EffectAdder
+		Cast(spell spell.Spell)
 
 		magician()
 	}
@@ -64,10 +65,6 @@ func (m *magician) Position() (x, y, z float64) {
 func (m *magician) Think(delta float64) {
 	const (
 		manaPerSecond  = 10
-		summonCost     = 50
-		summonCastTime = 0.5
-		shieldCost     = 20
-		shieldCastTime = 0.2
 	)
 
 	if m.Health() <= 0 {
@@ -83,28 +80,6 @@ func (m *magician) Think(delta float64) {
 	}
 
 	m.UseResource(-delta * manaPerSecond)
-
-	if len(m.Effects()) == 0 && m.UseResource(shieldCost) {
-		m.Cast(&spell.BasicSpell{
-			CastTime: shieldCastTime,
-			Caster_:  m.ID(),
-			Target_:  m.ID(),
-			Action:   summonShield,
-
-			Tag: "summonshield",
-		})
-	}
-
-	if m.UseResource(summonCost) {
-		m.Cast(&spell.BasicSpell{
-			CastTime: summonCastTime,
-			Caster_:  m.ID(),
-			Target_:  m.ID(),
-			Action:   summonImp,
-
-			Tag: "summonimp",
-		})
-	}
 }
 
 func summonImp(target, caster entity.Entity) {
