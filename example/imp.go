@@ -29,10 +29,10 @@ func NewImp(master Magician, x, y, z float64) Imp {
 		maxHealth = 10
 	)
 	i := &imp{
-		x:          x,
-		y:          y,
-		z:          z,
-		master:     master,
+		x:      x,
+		y:      y,
+		z:      z,
+		master: master,
 	}
 
 	i.Healther = entity.BaseHealth(i, maxHealth)

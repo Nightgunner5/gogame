@@ -1,6 +1,9 @@
 package entity
 
-import ("fmt";"sync")
+import (
+	"fmt"
+	"sync"
+)
 
 type (
 	baseCounter struct {
@@ -97,6 +100,10 @@ func (b *baseResource) Resource() float64 {
 }
 
 func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
+	ent := Get(b.ent)
+	if l, ok := ent.(DamageListener); ok {
+		l.OnTakeDamage(&amount, attacker, ent)
+	}
 	b.sub(amount, b.max, true)
 }
 func (b *baseResource) UseResource(amount float64) bool {

@@ -79,6 +79,8 @@ func (m *magician) Think(delta float64) {
 			Caster_:  m.ID(),
 			Target_:  m.ID(),
 			Action:   summonImp,
+
+			Tag: "summonimp",
 		})
 	}
 }

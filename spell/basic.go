@@ -13,6 +13,8 @@ type BasicSpell struct {
 	Target_       entity.EntityID
 	Action        func(target, caster entity.Entity)
 
+	Tag string
+
 	m sync.Mutex
 }
 
