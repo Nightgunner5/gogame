@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Nightgunner5/gogame/effect"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
 	"math/rand"
@@ -14,6 +15,10 @@ type (
 		entity.Resourcer
 		entity.Thinker
 		spell.Caster
+
+		effect.EffectAdder
+
+		magician()
 	}
 
 	magician struct {
@@ -22,6 +27,8 @@ type (
 		entity.Resourcer
 		spell.SpellCaster
 
+		effect.BasicEffectAdder
+
 		x, y, z float64
 	}
 )
@@ -29,7 +36,7 @@ type (
 func NewMagician(x, y, z float64) Magician {
 	const (
 		maxHealth = 100
-		maxMana   = 1000
+		maxMana   = 160
 	)
 
 	m := &magician{
@@ -59,6 +66,8 @@ func (m *magician) Think(delta float64) {
 		manaPerSecond  = 10
 		summonCost     = 50
 		summonCastTime = 0.5
+		shieldCost     = 20
+		shieldCastTime = 0.2
 	)
 
 	if m.Health() <= 0 {
@@ -66,12 +75,25 @@ func (m *magician) Think(delta float64) {
 		return
 	}
 
+	m.EffectThink(delta)
+
 	if m.CasterThink(delta) {
 		// currently casting spell
 		return
 	}
 
 	m.UseResource(-delta * manaPerSecond)
+
+	if len(m.Effects()) == 0 && m.UseResource(shieldCost) {
+		m.Cast(&spell.BasicSpell{
+			CastTime: shieldCastTime,
+			Caster_:  m.ID(),
+			Target_:  m.ID(),
+			Action:   summonShield,
+
+			Tag: "summonshield",
+		})
+	}
 
 	if m.UseResource(summonCost) {
 		m.Cast(&spell.BasicSpell{
@@ -95,3 +117,11 @@ func summonImp(target, caster entity.Entity) {
 
 	NewImp(m, x, y, z)
 }
+
+func summonShield(target, caster entity.Entity) {
+	m := caster.(Magician)
+
+	m.AddEffect(&effect.AbsorbDamage{20}, 5)
+}
+
+func (magician) magician() {}

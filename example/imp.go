@@ -12,6 +12,8 @@ type (
 		entity.Healther
 		entity.Thinker
 		spell.Caster
+
+		imp()
 	}
 
 	imp struct {
@@ -79,3 +81,5 @@ func (i *imp) Think(delta float64) {
 		i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false))
 	})
 }
+
+func (imp) imp() {}

@@ -160,7 +160,7 @@ func (c *concurrentEntityList) Each(f func(Entity)) {
 }
 
 type delayedEntityList struct {
-	p        EntityList
+	p        *concurrentEntityList
 	toAdd    []Entity // Unordered
 	toRemove []EntityID
 	m        sync.RWMutex
@@ -205,14 +205,16 @@ func (d *delayedEntityList) Count() int {
 func (d *delayedEntityList) commit() {
 	d.m.Lock()
 	defer d.m.Unlock()
+	d.p.m.Lock()
+	defer d.p.m.Unlock()
 
 	for _, ent := range d.toAdd {
-		d.p.Add(ent)
+		d.p.l.Add(ent)
 	}
 	d.toAdd = nil
 
 	for _, id := range d.toRemove {
-		d.p.RemoveRecursive(id)
+		d.p.l.RemoveRecursive(id)
 	}
 	d.toRemove = nil
 }
@@ -268,7 +270,7 @@ func (readOnlyEntityList) Remove(EntityID) Entity {
 
 var (
 	globalEntityList = ConcurrentEntityList(1)
-	toSpawn          = &delayedEntityList{p: globalEntityList}
+	toSpawn          = &delayedEntityList{p: globalEntityList.(*concurrentEntityList)}
 )
 
 // Returns a read-only reference to the global entity list.

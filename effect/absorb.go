@@ -74,10 +74,10 @@ func (r *ReduceDamage) OnTakeDamage(amount *float64, attacker, victim entity.Ent
 func (r *ReduceDamage) String() string {
 	r.assureValidFraction()
 	if r.Fraction > 0 {
-		return fmt.Sprintf("Reduces damage by %d%%.", int(r.Fraction*100))
+		return fmt.Sprintf("Reduces damage by %d%%.", int(100-r.Fraction*100))
 	}
 	if r.Fraction < 0 {
-		return fmt.Sprintf("Reduces healing by %d%%.", int(-r.Fraction*100))
+		return fmt.Sprintf("Reduces healing by %d%%.", int(100+r.Fraction*100))
 	}
 	return ""
 }

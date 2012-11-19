@@ -5,7 +5,7 @@ import "testing"
 func nukeForTesting() {
 	nextID = 0
 	globalEntityList = ConcurrentEntityList(1)
-	toSpawn = &delayedEntityList{p: globalEntityList}
+	toSpawn = &delayedEntityList{p: globalEntityList.(*concurrentEntityList)}
 	globalEntityList.Add(World)
 }
 

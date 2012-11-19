@@ -19,6 +19,9 @@ func renderer() {
 <head>
 <title>GoGame</title>
 <style>
+html {
+	overflow: hidden;
+}
 body>span {
 	position: absolute;
 	width: 5px;
@@ -57,10 +60,10 @@ setInterval(function() {
 
 		var response = JSON.parse(req.responseText);
 		response.magicians.forEach(function(m) {
-			update(have, true, 'ent' + m.id, m.x, m.y, m.z, m.health, m.mana, m.spell);
+			update(have, true, 'ent' + m.id, m.x, m.y, m.z, m.health, m.mana, m.spell, m.effects);
 		});
 		response.imps.forEach(function(i) {
-			update(have, false, 'ent' + i.id, i.x, i.y, i.z, i.health, 0, i.spell);
+			update(have, false, 'ent' + i.id, i.x, i.y, i.z, i.health, 0, i.spell, '');
 		});
 
 		var entities = [];
@@ -74,8 +77,13 @@ setInterval(function() {
 	req.send();
 }, 50);
 
+var spellColors = {
+	'impfire':      '#f00',
+	'summonimp':    '#00f',
+	'summonshield': '#ff0'
+};
 
-function update(have, big, id, x, y, z, health, mana, spell) {
+function update(have, big, id, x, y, z, health, mana, spell, effects) {
 	var ent = document.getElementById(id);
 	if (!ent) {
 		ent = document.createElement(big ? 'div' : 'span');
@@ -85,14 +93,18 @@ function update(have, big, id, x, y, z, health, mana, spell) {
 		document.body.appendChild(ent);
 	}
 	have[id] = true;
+	ent.title = effects;
 	ent.style.left = ((x + 10) * 5) + '%';
 	ent.style.top = ((y + 10) * 5) + '%';
-	ent.firstChild.style.width = (health * (big ? 1 : 10)) + '%';
-	if (big)
-		ent.lastChild.style.width = (mana / 10) + '%';
+	if (big) {
+		ent.firstChild.style.width = (health) + '%';
+		ent.lastChild.style.width = (mana / 1.6) + '%';
+	} else {
+		ent.firstChild.style.width = (health * 10) + '%';
+	}
 
 	if (spell) {
-		ent.style.boxShadow = '0 0 ' + (100 - spell.progress * 100) + 'px #000';
+		ent.style.boxShadow = '0 0 ' + (100 - spell.progress * 100) + 'px ' + spellColors[spell.id];
 	} else {
 		ent.style.boxShadow = '';
 	}
@@ -122,7 +134,7 @@ function update(have, big, id, x, y, z, health, mana, spell) {
 				}
 
 				x, y, z := m.Position()
-				fmt.Fprintf(w, `{"id":%d,"x":%v,"y":%v,"z":%v,"health":%v,"mana":%v,"spell":%v}`, m.ID(), x, y, z, m.Health(), m.Resource(), currentSpell)
+				fmt.Fprintf(w, `{"id":%d,"x":%v,"y":%v,"z":%v,"health":%v,"mana":%v,"spell":%v,"effects":%q}`, m.ID(), x, y, z, m.Health(), m.Resource(), currentSpell, m.EffectDescription())
 			}
 		})
 
