@@ -4,6 +4,7 @@ import "github.com/Nightgunner5/gogame/entity"
 
 type multiEffect []Effect
 
+// Constructs an Effect equivelent to all of its arguments combined.
 func Multi(effects ...Effect) Effect {
 	return multiEffect(effects)
 }
