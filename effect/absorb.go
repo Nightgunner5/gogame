@@ -5,6 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/entity"
 )
 
+// Absorbs a total of [amount] damage over any number of TakeDamage calls.
 func AbsorbDamage(amount float64) Effect {
 	if amount < 0 {
 		amount = 0
@@ -12,6 +13,7 @@ func AbsorbDamage(amount float64) Effect {
 	return (*absorbDamage)(&amount)
 }
 
+// Absorbs a total of [amount] healing over any number of TakeDamage calls.
 func AbsorbHealing(amount float64) Effect {
 	if amount < 0 {
 		amount = 0

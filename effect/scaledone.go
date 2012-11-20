@@ -8,6 +8,7 @@ import (
 
 type scaleDamageDone float64
 
+// Scales all damage done by [scale]. A scale of 1 does nothing.
 func ScaleDamageDone(scale float64) Effect {
 	if scale <= 0 {
 		scale = math.Nextafter(0, 1)
@@ -15,6 +16,7 @@ func ScaleDamageDone(scale float64) Effect {
 	return scaleDamageDone(scale)
 }
 
+// Scales all healing done by [scale]. A scale of 1 does nothing.
 func ScaleHealingDone(scale float64) Effect {
 	if scale <= 0 {
 		scale = math.Nextafter(0, 1)

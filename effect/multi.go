@@ -42,4 +42,4 @@ func (m multiEffect) String() string {
 	return string(s)
 }
 
-func (m multiEffect) effect() {}
+func (multiEffect) effect() {}
