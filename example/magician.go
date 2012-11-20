@@ -64,7 +64,7 @@ func (m *magician) Position() (x, y, z float64) {
 
 func (m *magician) Think(delta float64) {
 	const (
-		manaPerSecond  = 10
+		manaPerSecond = 10
 	)
 
 	if m.Health() <= 0 {
@@ -96,7 +96,7 @@ func summonImp(target, caster entity.Entity) {
 func summonShield(target, caster entity.Entity) {
 	m := caster.(Magician)
 
-	m.AddEffect(&effect.AbsorbDamage{20}, 5)
+	m.AddEffect(effect.AbsorbDamage(20), 5)
 }
 
 func (magician) magician() {}

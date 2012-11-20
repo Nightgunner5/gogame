@@ -1,16 +1,16 @@
 package main
 
 import (
-	"net/http"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
+	"math/rand"
+	"net/http"
 	"sync"
 	"time"
-	"math/rand"
 )
 
 var (
-	magicianForIP = make(map[string]entity.EntityID)
+	magicianForIP     = make(map[string]entity.EntityID)
 	magicianForIPLock sync.Mutex
 )
 
@@ -24,8 +24,8 @@ func getMagician(ip string) Magician {
 		}
 	}
 
-	x := rand.Float64() * 20 - 10
-	y := rand.Float64() * 20 - 10
+	x := rand.Float64()*20 - 10
+	y := rand.Float64()*20 - 10
 
 	m := NewMagician(x, y, 0)
 	magicianForIP[ip] = m.ID()

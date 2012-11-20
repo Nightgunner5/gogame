@@ -101,6 +101,9 @@ func (b *baseResource) Resource() float64 {
 
 func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
 	ent := Get(b.ent)
+	if l, ok := attacker.(DoDamageListener); ok {
+		l.OnDoDamage(&amount, attacker, ent)
+	}
 	if l, ok := ent.(DamageListener); ok {
 		l.OnTakeDamage(&amount, attacker, ent)
 	}

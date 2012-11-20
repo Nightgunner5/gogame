@@ -7,8 +7,10 @@ import (
 )
 
 type Effect interface {
-	effect()
+	effect() // marker
 
+	// Returning an empty string means "this effect is no longer active
+	// and may be deleted"
 	String() string
 }
 
@@ -24,10 +26,11 @@ type basicEffect struct {
 }
 
 func (b *basicEffect) String() string {
-	if b.duration <= 0 {
-		return b.Effect.String()
+	s := b.Effect.String()
+	if s == "" || b.duration <= 0 {
+		return s
 	}
-	return fmt.Sprintf("%s (%d seconds remaining)", b.Effect, int(b.duration))
+	return fmt.Sprintf("%s (%d seconds remaining)", s, int(b.duration))
 }
 
 type BasicEffectAdder struct {
@@ -55,13 +58,13 @@ func (b *BasicEffectAdder) EffectThink(delta float64) {
 	var removed []*basicEffect
 
 	for i, e := range b.e {
-		if e.duration <= 0 {
+		if e.duration <= 0 && e.Effect.String() != "" {
 			if removed != nil {
 				removed = append(removed, e)
 			}
 			continue
 		}
-		if e.duration <= delta {
+		if e.duration <= delta || e.Effect.String() == "" {
 			if removed == nil {
 				removed = make([]*basicEffect, i, len(b.e))
 				copy(removed, b.e)

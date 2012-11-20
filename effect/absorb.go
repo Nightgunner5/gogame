@@ -3,13 +3,28 @@ package effect
 import (
 	"fmt"
 	"github.com/Nightgunner5/gogame/entity"
+	"math"
 )
 
-type AbsorbDamage struct {
+func AbsorbDamage(amount float64) Effect {
+	if amount < 0 {
+		amount = 0
+	}
+	return &absorbDamage{amount}
+}
+
+func AbsorbHealing(amount float64) Effect {
+	if amount < 0 {
+		amount = 0
+	}
+	return &absorbDamage{-amount}
+}
+
+type absorbDamage struct {
 	Amount float64
 }
 
-func (a *AbsorbDamage) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
+func (a *absorbDamage) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
 	if a.Amount > 0 {
 		if *amount <= 0 {
 			return
@@ -37,7 +52,7 @@ func (a *AbsorbDamage) OnTakeDamage(amount *float64, attacker, victim entity.Ent
 	}
 }
 
-func (a *AbsorbDamage) String() string {
+func (a *absorbDamage) String() string {
 	if a.Amount > 0 {
 		return fmt.Sprintf("Absorbs %d damage.", int(a.Amount))
 	}
@@ -47,39 +62,48 @@ func (a *AbsorbDamage) String() string {
 	return ""
 }
 
-func (a *AbsorbDamage) effect() {}
+func (a *absorbDamage) effect() {}
 
-type ReduceDamage struct {
-	Fraction float64
+func ScaleDamageTaken(scale float64) Effect {
+	if scale <= 0 {
+		scale = math.Nextafter(0, 1)
+	}
+	return &scaleDamageTaken{scale}
 }
 
-func (r *ReduceDamage) assureValidFraction() {
-	if r.Fraction > 1 {
-		r.Fraction = 1
+func ScaleHealingTaken(scale float64) Effect {
+	if scale <= 0 {
+		scale = math.Nextafter(0, 1)
 	}
-	if r.Fraction < -1 {
-		r.Fraction = -1
+	return &scaleDamageTaken{-scale}
+}
+
+type scaleDamageTaken struct {
+	Scale float64
+}
+
+func (s *scaleDamageTaken) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
+	if s.Scale > 0 && *amount > 0 {
+		*amount *= s.Scale
+	} else if s.Scale < 0 && *amount < 0 {
+		*amount *= -s.Scale
 	}
 }
 
-func (r *ReduceDamage) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
-	r.assureValidFraction()
-	if r.Fraction > 0 && *amount > 0 {
-		*amount *= r.Fraction
-	} else if r.Fraction < 0 && *amount < 0 {
-		*amount *= -r.Fraction
+func (s *scaleDamageTaken) String() string {
+	if s.Scale > 0 && s.Scale != 1 {
+		if s.Scale > 1 {
+			return fmt.Sprintf("Increases damage taken by %d%%.", int(s.Scale*100-100))
+		}
+		return fmt.Sprintf("Decreases damage taken by %d%%.", int(100-s.Scale*100))
 	}
-}
-
-func (r *ReduceDamage) String() string {
-	r.assureValidFraction()
-	if r.Fraction > 0 {
-		return fmt.Sprintf("Reduces damage by %d%%.", int(100-r.Fraction*100))
-	}
-	if r.Fraction < 0 {
-		return fmt.Sprintf("Reduces healing by %d%%.", int(100+r.Fraction*100))
+	if s.Scale < 0 && s.Scale != -1 {
+		if s.Scale < -1 {
+			return fmt.Sprintf("Increases healing taken by %d%%.", int(-s.Scale*100-100))
+		}
+		return fmt.Sprintf("Decreases healing taken by %d%%.", int(100+s.Scale*100))
 	}
 	return ""
 }
 
-func (r *ReduceDamage) effect() {}
+func (s *scaleDamageTaken) effect() {}
