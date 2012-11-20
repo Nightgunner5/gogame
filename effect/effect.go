@@ -7,11 +7,11 @@ import (
 )
 
 type Effect interface {
-	effect() // marker
-
 	// Returning an empty string means "this effect is no longer active
 	// and may be deleted"
 	String() string
+
+	effect() // marker
 }
 
 type EffectAdder interface {
@@ -29,6 +29,9 @@ func (b *basicEffect) String() string {
 	s := b.Effect.String()
 	if s == "" || b.duration <= 0 {
 		return s
+	}
+	if int(b.duration) <= 1 {
+		return fmt.Sprintf("%s (1 second remaining)", s)
 	}
 	return fmt.Sprintf("%s (%d seconds remaining)", s, int(b.duration))
 }

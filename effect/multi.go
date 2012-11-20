@@ -16,6 +16,14 @@ func (m multiEffect) OnTakeDamage(amount *float64, attacker, victim entity.Entit
 	}
 }
 
+func (m multiEffect) OnDoDamage(amount *float64, attacker, victim entity.Entity) {
+	for _, e := range m {
+		if effect, ok := e.(entity.DoDamageListener); ok {
+			effect.OnDoDamage(amount, attacker, victim)
+		}
+	}
+}
+
 func (m multiEffect) String() string {
 	var s []byte
 	addSpace := false
