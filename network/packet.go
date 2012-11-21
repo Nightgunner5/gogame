@@ -1,52 +1,37 @@
 package network
 
-import (
-	"encoding/json"
-	"io"
-	"log"
-)
-
 type Packet struct {
-	ID      uint64
-	Payload map[string]interface{}
+	id      PacketID
+	payload map[PacketID]interface{}
 }
 
-func DecodeStream(r io.ReadCloser) <-chan Packet {
-	ch := make(chan Packet)
-	decoder := json.NewDecoder(r)
-
-	go func() {
-		for {
-			var p Packet
-			if err := decoder.Decode(&p); err != nil {
-				if err != io.EOF {
-					log.Print("Error decoding packet: ", err)
-				}
-				r.Close()
-				close(ch)
-				return
-			}
-			ch <- p
-		}
-	}()
-
-	return ch
+func NewPacket(id PacketID) Packet {
+	return Packet{
+		id:      id,
+		payload: make(map[PacketID]interface{}),
+	}
 }
 
-func EncodeStream(w io.WriteCloser) chan<- Packet {
-	ch := make(chan Packet)
-	encoder := json.NewEncoder(w)
+func (p Packet) ID() PacketID {
+	return p.id
+}
 
-	go func() {
-		for p := range ch {
-			if err := encoder.Encode(p); err != nil {
-				log.Print("Error encoding packet: ", err)
-				w.Close()
-				return
-			}
-		}
-		w.Close()
-	}()
+func (p Packet) Set(key PacketID, value interface{}) Packet {
+	p.payload[key] = value
+	return p
+}
 
-	return ch
+func (p Packet) Get(key PacketID) interface{} {
+	return p.payload[key]
+}
+
+func (p Packet) Each(f func(PacketID, interface{})) Packet {
+	for k, v := range p.payload {
+		f(k, v)
+	}
+	return p
+}
+
+func (p Packet) FieldCount() int {
+	return len(p.payload)
 }
