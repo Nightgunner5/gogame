@@ -6,4 +6,7 @@ const (
 	AttackerID PacketID = iota
 	VictimID
 	Amount
+	HealthChange
+
+	debugEcho
 )

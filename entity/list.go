@@ -167,6 +167,11 @@ type delayedEntityList struct {
 }
 
 func (d *delayedEntityList) Add(e Entity) bool {
+	if d == nil {
+		// toSpawn is nil during testing
+		return globalEntityList.Add(e)
+	}
+
 	d.m.Lock()
 	defer d.m.Unlock()
 
@@ -189,6 +194,12 @@ func (d *delayedEntityList) Remove(id EntityID) Entity {
 }
 
 func (d *delayedEntityList) RemoveRecursive(id EntityID) {
+	if d == nil {
+		// toSpawn is nil during testing
+		globalEntityList.RemoveRecursive(id)
+		return
+	}
+
 	d.m.Lock()
 	defer d.m.Unlock()
 
@@ -196,6 +207,11 @@ func (d *delayedEntityList) RemoveRecursive(id EntityID) {
 }
 
 func (d *delayedEntityList) Count() int {
+	if d == nil {
+		// toSpawn is nil during testing
+		return globalEntityList.Count()
+	}
+
 	d.m.RLock()
 	defer d.m.RUnlock()
 
@@ -203,6 +219,11 @@ func (d *delayedEntityList) Count() int {
 }
 
 func (d *delayedEntityList) commit() {
+	if d == nil {
+		// toSpawn is nil during testing
+		return
+	}
+
 	d.m.Lock()
 	defer d.m.Unlock()
 	d.p.m.Lock()

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"github.com/Nightgunner5/gogame/network"
 	"sync"
 )
 
@@ -107,7 +108,13 @@ func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
 	if l, ok := ent.(DamageListener); ok {
 		l.OnTakeDamage(&amount, attacker, ent)
 	}
-	b.sub(amount, b.max, true)
+	if amount != 0 {
+		network.Broadcast(network.NewPacket(network.HealthChange).
+			Set(network.AttackerID, attacker.ID()).
+			Set(network.VictimID, b.ent).
+			Set(network.Amount, -amount), false)
+		b.sub(amount, b.max, true)
+	}
 }
 func (b *baseResource) UseResource(amount float64) bool {
 	return b.sub(amount, b.max, false)

@@ -32,9 +32,11 @@ gogame.net.iota = function() {
 /** @private */
 gogame.net.iota_ = 0;
 
-/** @const */ gogame.net.AttackerID = gogame.net.iota();
-/** @const */ gogame.net.VictimID   = gogame.net.iota();
-/** @const */ gogame.net.Amount     = gogame.net.iota();
+/** @const */ gogame.net.AttackerID   = gogame.net.iota();
+/** @const */ gogame.net.VictimID     = gogame.net.iota();
+/** @const */ gogame.net.Amount       = gogame.net.iota();
+/** @const */ gogame.net.ChangeHealth = gogame.net.iota();
+/** @const */ gogame.net.debugEcho    = gogame.net.iota();
 
 /** @constructor */
 gogame.net.Packet = function(id) {

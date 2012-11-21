@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+const MaxBufferedPackets = 32
+
 func DecodeStream(r io.ReadCloser) <-chan Packet {
 	ch := make(chan Packet)
 	decoder := json.NewDecoder(r)
@@ -29,7 +31,7 @@ func DecodeStream(r io.ReadCloser) <-chan Packet {
 }
 
 func EncodeStream(w io.WriteCloser) chan<- Packet {
-	ch := make(chan Packet)
+	ch := make(chan Packet, MaxBufferedPackets)
 	encoder := json.NewEncoder(w)
 
 	go func() {
