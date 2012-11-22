@@ -1,2 +1,1 @@
-/** @const */
-var gogame = gogame || {};
+var gogame = window['gogame'] = window['gogame'] || {};

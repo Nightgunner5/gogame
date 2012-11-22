@@ -1,8 +1,10 @@
 package entity
 
 import (
+	"github.com/Nightgunner5/gogame/network"
 	"log"
 	"math/rand"
+	"net"
 	"sync"
 )
 
@@ -231,13 +233,30 @@ func (d *delayedEntityList) commit() {
 
 	for _, ent := range d.toAdd {
 		d.p.l.Add(ent)
+		network.Broadcast(network.NewPacket(network.EntitySpawned).
+			Set(network.EntityID, ent.ID()).
+			Set(network.ParentID, ent.Parent().ID()), false)
 	}
 	d.toAdd = nil
 
 	for _, id := range d.toRemove {
 		d.p.l.RemoveRecursive(id)
+		network.Broadcast(network.NewPacket(network.EntityDespawned).
+			Set(network.EntityID, id), false)
 	}
 	d.toRemove = nil
+}
+
+func init() {
+	network.RegisterStartupListener(func(send chan<- network.Packet, addr net.Addr) {
+		ForEach(func(e Entity) {
+			if e != World {
+				send <- network.NewPacket(network.EntitySpawned).
+					Set(network.EntityID, e.ID()).
+					Set(network.ParentID, e.Parent().ID())
+			}
+		})
+	})
 }
 
 func (d *delayedEntityList) Get(id EntityID) Entity {

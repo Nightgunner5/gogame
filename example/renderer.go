@@ -84,93 +84,9 @@ header p {
 	font: 10px/1.1 sans-serif;
 }
 </style>
+<script src="engine.js"></script>
 <script>
-// Array Remove - By John Resig (MIT Licensed)
-Array.prototype.remove = function(from, to) {
-	var rest = this.slice((to || from) + 1 || this.length);
-	this.length = from < 0 ? this.length + from : from;
-	return this.push.apply(this, rest);
-};
-
-setInterval(function() {
-	var req = new XMLHttpRequest();
-	req.open('GET', 'state', true);
-	req.addEventListener('load', function() {
-		var have = {};
-
-		var response = JSON.parse(req.responseText);
-		response.magicians.forEach(function(m) {
-			update(have, true, 'ent' + m.id, m.x, m.y, m.z, m.health, m.mana, m.spell, m.effects);
-			if (m.id == response.self) {
-				updateSpellArea(m);
-			}
-		});
-		response.imps.forEach(function(i) {
-			update(have, false, 'ent' + i.id, i.x, i.y, i.z, i.health, 0, i.spell, '');
-		});
-
-		var entities = [];
-		Array.prototype.push.apply(entities, document.body.children);
-		entities.forEach(function(ent) {
-			if (ent.id.substring(0, 3) == 'ent' && !have[ent.id]) {
-				ent.parentNode.removeChild(ent);
-			}
-		});
-	});
-	req.send();
-}, 50);
-
-function updateSpellArea(m) {
-	document.querySelector('#health div').style.width = (m.health) + '%';
-	document.querySelector('#mana div').style.width = (m.mana / 1.6) + '%';
-	document.querySelector('header p').innerText = m.effects;
-	var progress = document.querySelector('#spellprogress div');
-	if (m.spell) {
-		progress.style.width = (m.spell.progress * 100) + '%';
-		progress.style.backgroundColor = spellColors[m.spell.id];
-	} else {
-		progress.style.width = '0';
-	}
-}
-
-function spell(name) {
-	var req = new XMLHttpRequest();
-	req.open('GET', 'cast/' + name, true);
-	req.send();
-}
-
-var spellColors = {
-	'impfire':      '#f00',
-	'summonimp':    '#00f',
-	'summonshield': '#ff0'
-};
-
-function update(have, big, id, x, y, z, health, mana, spell, effects) {
-	var ent = document.getElementById(id);
-	if (!ent) {
-		ent = document.createElement(big ? 'div' : 'span');
-		ent.id = id;
-		ent.appendChild(document.createElement('span'));
-		if (big) ent.appendChild(document.createElement('span'));
-		document.body.appendChild(ent);
-	}
-	have[id] = true;
-	ent.title = effects;
-	ent.style.left = ((x + 10) * 5) + '%';
-	ent.style.top = ((y + 10) * 5) + '%';
-	if (big) {
-		ent.firstChild.style.width = (health) + '%';
-		ent.lastChild.style.width = (mana / 1.6) + '%';
-	} else {
-		ent.firstChild.style.width = (health * 10) + '%';
-	}
-
-	if (spell) {
-		ent.style.boxShadow = '0 0 ' + (100 - spell.progress * 100) + 'px ' + spellColors[spell.id];
-	} else {
-		ent.style.boxShadow = '';
-	}
-}
+gogame.client.start('ws://localhost:7031/socket');
 </script>
 </head>
 <body><header><div id="health"><div></div></div><div id="mana"><div></div></div><div id="spellprogress"><div></div></div><p></p></header><footer><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer></body>

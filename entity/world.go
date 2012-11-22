@@ -1,7 +1,5 @@
 package entity
 
-import "encoding/gob"
-
 type world struct{}
 
 func (*world) ID() EntityID {
@@ -15,6 +13,5 @@ func (*world) Parent() Entity {
 var World Entity = new(world)
 
 func init() {
-	gob.Register(World)
-	Spawn(World)
+	globalEntityList.Add(World)
 }

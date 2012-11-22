@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"sync"
+
+	_ "github.com/Nightgunner5/gogame/client"
 )
 
 func init() {
@@ -65,7 +67,18 @@ func dispatchPacket(p Packet, send chan<- Packet, conn *websocket.Conn) {
 	}
 }
 
+var startupListener func(chan<- Packet, net.Addr) = func(chan<- Packet, net.Addr) {}
 var registered = make(map[PacketID]func(Packet, chan<- Packet, net.Addr))
+
+// Must be called from an init() function.
+func RegisterStartupListener(f func(chan<- Packet, net.Addr)) {
+	oldListener := startupListener
+
+	startupListener = func(send chan<- Packet, addr net.Addr) {
+		oldListener(send, addr)
+		f(send, addr)
+	}
+}
 
 // Must be called from an init() function.
 func RegisterHandler(id PacketID, f func(Packet, chan<- Packet, net.Addr)) {

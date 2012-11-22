@@ -9,4 +9,9 @@ const (
 	HealthChange
 
 	debugEcho
+
+	EntityID
+	ParentID
+	EntitySpawned
+	EntityDespawned
 )
