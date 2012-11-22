@@ -114,7 +114,16 @@ func (b *baseResource) Resource() float64 {
 	return b.get(b.max)
 }
 func (b *basePosition) Position() (x, y, z float64) {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
 	return b.xyz[0], b.xyz[1], b.xyz[2]
+}
+func (b *basePosition) positionArray() []float64 {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	return b.xyz[:]
 }
 
 func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
@@ -136,6 +145,17 @@ func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
 func (b *baseResource) UseResource(amount float64) bool {
 	return b.sub(amount, b.max, false)
 }
-func (b *basePosition) positionArray() []float64 {
-	return b.xyz[:]
+func (b *basePosition) Move(dx, dy, dz float64) {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if dx != 0 || dy != 0 || dz != 0 {
+		b.xyz[0] += dx
+		b.xyz[1] += dy
+		b.xyz[2] += dz
+
+		network.Broadcast(network.NewPacket(network.EntityPosition).
+			Set(network.EntityID, b.ent).
+			Set(network.EntityPosition, b.xyz[:]), false)
+	}
 }

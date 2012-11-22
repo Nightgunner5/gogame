@@ -16,6 +16,7 @@ type Effect interface {
 
 type EffectAdder interface {
 	AddEffect(effect Effect, duration float64)
+	EffectThink(delta float64)
 	Effects() []Effect
 	EffectDescription() string
 }
@@ -36,74 +37,79 @@ func (b *basicEffect) String() string {
 	return fmt.Sprintf("%s (%d seconds remaining)", s, int(b.duration))
 }
 
-type BasicEffectAdder struct {
-	entity.Listeners
-	e []*basicEffect
-	m sync.RWMutex
+func BaseEffectAdder(ent entity.Entity) EffectAdder {
+	return &basicEffectAdder{ent: ent.ID()}
 }
 
-func (b *BasicEffectAdder) AddEffect(effect Effect, duration float64) {
-	b.m.Lock()
-	defer b.m.Unlock()
+type basicEffectAdder struct {
+	entity.Listeners
+	effects []*basicEffect
+	mtx     sync.RWMutex
+	ent     entity.EntityID
+}
+
+func (b *basicEffectAdder) AddEffect(effect Effect, duration float64) {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
 
 	if duration <= 0 {
 		duration = 0
 	}
-	b.e = append(b.e, &basicEffect{Effect: effect, duration: duration})
+	b.effects = append(b.effects, &basicEffect{Effect: effect, duration: duration})
 
 	b.AddAll(effect)
 }
 
-func (b *BasicEffectAdder) EffectThink(delta float64) {
-	b.m.Lock()
-	defer b.m.Unlock()
+func (b *basicEffectAdder) EffectThink(delta float64) {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
 
 	var removed []*basicEffect
 
-	for i, e := range b.e {
-		if e.duration <= 0 && e.Effect.String() != "" {
+	for i, effect := range b.effects {
+		if effect.duration <= 0 && effect.Effect.String() != "" {
 			if removed != nil {
-				removed = append(removed, e)
+				removed = append(removed, effect)
 			}
 			continue
 		}
-		if e.duration <= delta || e.Effect.String() == "" {
+		if effect.duration <= delta || effect.Effect.String() == "" {
 			if removed == nil {
-				removed = make([]*basicEffect, i, len(b.e))
-				copy(removed, b.e)
+				removed = make([]*basicEffect, i, len(b.effects))
+				copy(removed, b.effects)
 			}
-			b.RemoveAll(e.Effect)
+			b.RemoveAll(effect.Effect)
 			continue
 		}
-		e.duration -= delta
+		effect.duration -= delta
 		if removed != nil {
-			removed = append(removed, e)
+			removed = append(removed, effect)
 		}
 	}
 
 	if removed != nil {
-		b.e = removed
+		b.effects = removed
 	}
 }
 
-func (b *BasicEffectAdder) Effects() []Effect {
-	b.m.RLock()
-	defer b.m.RUnlock()
+func (b *basicEffectAdder) Effects() []Effect {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
 
-	l := make([]Effect, len(b.e))
-	for i, e := range b.e {
-		l[i] = e.Effect
+	l := make([]Effect, len(b.effects))
+	for i, effect := range b.effects {
+		l[i] = effect.Effect
 	}
 	return l
 }
 
-func (b *BasicEffectAdder) EffectDescription() string {
-	b.m.RLock()
-	defer b.m.RUnlock()
+func (b *basicEffectAdder) EffectDescription() string {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
 
 	var s []byte
-	for _, e := range b.e {
-		s = append(s, e.String()...)
+	for _, effect := range b.effects {
+		s = append(s, effect.String()...)
 		s = append(s, '\n')
 	}
 

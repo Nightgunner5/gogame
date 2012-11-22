@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/Nightgunner5/gogame/entity"
-	"github.com/Nightgunner5/gogame/spell"
 	"github.com/Nightgunner5/gogame/network"
+	"github.com/Nightgunner5/gogame/spell"
 )
 
 type (
@@ -62,7 +62,7 @@ func (m *imp) Tag() string {
 
 func (i *imp) Think(delta float64) {
 	const (
-		maxCastDistance = 100
+		maxCastDistance = 10
 		spellCastTime   = 1
 		spellDamage     = 5
 	)

@@ -17,16 +17,9 @@ func renderer() {
 <head>
 <title>GoGame</title>
 <style>
-html, body, canvas { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+html, body, canvas { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #333; }
 header, footer { position: fixed; right: 0; z-index: 1000; background: rgba(255, 255, 255, 0.7); }
-header { top: 0; line-height: 0; width: 100px; }
 footer { bottom: 0; }
-#health, #mana { height: 5px; width: 50px; display: inline-block; background: #000; }
-#health div, #mana div { height: 5px; background: #0f0; }
-#mana div { background: #00f; }
-#spellprogress { height: 10px; width: 100px; background: #000; }
-#spellprogress div { height: 10px; background: #fff; }
-header p { font: 10px/1.1 sans-serif; padding: 3px; }
 </style>
 <script src="engine.js"></script>
 <script>
@@ -71,7 +64,7 @@ requestAnimationFrame(function() {
 
 		if (gogame.client.disconnected) {
 			ctx.font = '24px sans-serif';
-			ctx.fillStyle = '#000';
+			ctx.fillStyle = '#fff';
 			ctx.fillText('Disconnected', 0, 0);
 			return;
 		}
@@ -84,7 +77,7 @@ requestAnimationFrame(function() {
 				}
 			} else {
 				ctx.font = '24px sans-serif';
-				ctx.fillStyle = '#000';
+				ctx.fillStyle = '#fff';
 				ctx.fillText('You are dead!', 0, 0);
 				return;
 			}
@@ -100,29 +93,41 @@ requestAnimationFrame(function() {
 			ctx.fillRect(x, y, {
 				imp: 10,
 				magician: 100
-			}[ent.tag], 1);
+			}[ent.tag], 2);
 
 			ctx.fillStyle = '#0f0';
-			ctx.fillRect(x, y, ent.health, 1);
+			ctx.fillRect(x, y, ent.health, 2);
 
 			ctx.font = {
 				imp: '12px sans-serif',
 				magician: '18px sans-serif'
 			}[ent.tag];
-			ctx.fillStyle = '#000';
+			ctx.fillStyle = '#fff';
 			ctx.fillText(entityNames[id] || 'Unknown', x, y);
 		}
 	});
 });
 
+var lastMoveX = 0, lastMoveY = 0;
+function move(x, y) {
+	if (lastMoveX == x && lastMoveY == y) {
+		x = 0;
+		y = 0;
+	}
+	gogame.client.send(new gogame.net.Packet(gogame.net.EntityPosition).set(gogame.net.EntityPosition, [x, y, 0]));
+	lastMoveX = x;
+	lastMoveY = y;
+}
+
 function spell(name) {
 	gogame.client.send(new gogame.net.Packet(CastSpell).set(CastSpell, name));
 }
 
-gogame.client.send(new gogame.net.Packet(Handshake));
+gogame.client.send(new gogame.net.Packet(Handshake).set(EntityName, /*prompt("YO MAN WHAT'S YO NAME")*/'magician'));
 </script>
 </head>
-<body><header><div id="health"><div></div></div><div id="mana"><div></div></div><div id="spellprogress"><div></div></div><p></p></header><footer><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer><canvas width="1000" height="1000"></canvas></body>
+<body><footer><button onclick="move(0,-1)">&uarr;</button><button onclick="move(-1,0)">&larr;</button><button onclick="move(1,0)">&rarr;</button><button onclick="move(0,1)">&darr;</button>
+<br><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer><canvas></canvas></body>
 </html>`))
 	})
 

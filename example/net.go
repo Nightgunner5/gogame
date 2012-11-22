@@ -65,17 +65,19 @@ func init() {
 			return
 		}
 
-		x := rand.Float64()*20 - 10
-		y := rand.Float64()*20 - 10
+		if name, ok := packet.Get(EntityName).(string); ok {
+			x := rand.Float64()*20 - 10
+			y := rand.Float64()*20 - 10
 
-		magician := NewMagician(x, y, 0)
+			magician := NewMagician(x, y, 0, name)
 
-		magicians[addr.String()] = &netMagician{
-			id:       magician.ID(),
-			lastSeen: time.Now(),
+			magicians[addr.String()] = &netMagician{
+				id:       magician.ID(),
+				lastSeen: time.Now(),
+			}
+
+			send <- network.NewPacket(Handshake).Set(network.EntityID, magician.ID())
 		}
-
-		send <- network.NewPacket(Handshake).Set(network.EntityID, magician.ID())
 	})
 
 	network.RegisterHandler(CastSpell, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
@@ -107,6 +109,8 @@ func init() {
 						Caster_:  magician.ID(),
 						Target_:  magician.ID(),
 						Action:   summonImp,
+
+						Interruptable: true,
 					})
 				}
 			case "shield":
@@ -120,6 +124,8 @@ func init() {
 						Caster_:  magician.ID(),
 						Target_:  magician.ID(),
 						Action:   summonShield,
+
+						Interruptable: true,
 					})
 				}
 			}
@@ -135,5 +141,25 @@ func init() {
 		magicians[addr.String()].lastSeen = time.Now()
 		magicianLock.Unlock()
 		send <- network.NewPacket(KeepAlive)
+	})
+
+	network.RegisterHandler(network.EntityPosition, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
+		magicianLock.Lock()
+		if _, ok := magicians[addr.String()]; !ok {
+			magicianLock.Unlock()
+			return
+		}
+		magicians[addr.String()].lastSeen = time.Now()
+		var magician Magician
+		if m, ok := entity.Get(magicians[addr.String()].id).(Magician); ok {
+			magician = m
+		} else {
+			magicianLock.Unlock()
+			return
+		}
+		magicianLock.Unlock()
+
+		move := packet.Get(network.EntityPosition).([]interface{})
+		magician.SetMotion(move[0].(float64), move[1].(float64), move[2].(float64))
 	})
 }
