@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
+	"github.com/Nightgunner5/gogame/network"
 )
 
 type (
@@ -13,6 +14,8 @@ type (
 		entity.Thinker
 		spell.Caster
 
+		Name() string
+
 		imp()
 	}
 
@@ -22,6 +25,7 @@ type (
 		entity.Healther
 		spell.SpellCaster
 
+		name   string
 		master Magician
 	}
 )
@@ -30,14 +34,22 @@ func NewImp(master Magician, x, y, z float64) Imp {
 	const (
 		maxHealth = 10
 	)
-	i := &imp{master: master}
+	i := &imp{master: master, name: impName()}
 
 	i.Positioner = entity.BasePosition(i, x, y, z)
 	i.Healther = entity.BaseHealth(i, maxHealth)
 
 	entity.Spawn(i)
 
+	network.Broadcast(network.NewPacket(EntityName).
+		Set(network.EntityID, i.ID()).
+		Set(EntityName, i.name), false)
+
 	return i
+}
+
+func (i *imp) Name() string {
+	return i.name
 }
 
 func (i *imp) Parent() entity.Entity {

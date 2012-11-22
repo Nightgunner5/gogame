@@ -30,9 +30,12 @@ header p { font: 10px/1.1 sans-serif; padding: 3px; }
 </style>
 <script src="engine.js"></script>
 <script>
-var Handshake = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 0).toString(32);
-var CastSpell = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 1).toString(32);
-var KeepAlive = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 2).toString(32);
+var packetID = parseInt(gogame.net.FirstUnusedPacketID, 32);
+
+var Handshake  = (packetID++).toString(32);
+var EntityName = (packetID++).toString(32);
+var CastSpell  = (packetID++).toString(32);
+var KeepAlive  = (packetID++).toString(32);
 
 gogame.client.start('ws://' + location.host + '/socket');
 
@@ -48,6 +51,11 @@ setInterval(function() {
 }, 30000);
 gogame.client.listen(KeepAlive, function(packet) {
 	// do nothing
+});
+
+var entityNames = {};
+gogame.client.listen(EntityName, function(packet) {
+	entityNames[packet.get(gogame.net.EntityID)] = packet.get(EntityName);
 });
 
 requestAnimationFrame(function() {
@@ -68,21 +76,25 @@ requestAnimationFrame(function() {
 			return;
 		}
 
-		if (myMagicianID && gogame.client.Entities[myMagicianID] && gogame.client.Entities[myMagicianID].position) {
-			var pos = gogame.client.Entities[myMagicianID].position;
-			ctx.translate(-pos[0]*10, -pos[1]*10);
-		} else {
-			ctx.font = '24px sans-serif';
-			ctx.fillStyle = '#000';
-			ctx.fillText('You are dead!', 0, 0);
-			return;
+		if (myMagicianID) {
+			if (gogame.client.Entities[myMagicianID]) {
+				var pos = gogame.client.Entities[myMagicianID].position;
+				if (pos) {
+					ctx.translate(-pos[0]*20, -pos[1]*20);
+				}
+			} else {
+				ctx.font = '24px sans-serif';
+				ctx.fillStyle = '#000';
+				ctx.fillText('You are dead!', 0, 0);
+				return;
+			}
 		}
 
 		for (var id in gogame.client.Entities) {
 			var ent = gogame.client.Entities[id];
 			if (!ent.tag || !ent.position || !ent.health)
 				continue;
-			var x = ent.position[0]*10, y = ent.position[1]*10;
+			var x = ent.position[0]*20, y = ent.position[1]*20;
 
 			ctx.fillStyle = '#f00';
 			ctx.fillRect(x, y, {
@@ -98,7 +110,7 @@ requestAnimationFrame(function() {
 				magician: '18px sans-serif'
 			}[ent.tag];
 			ctx.fillStyle = '#000';
-			ctx.fillText(ent.tag, x, y);
+			ctx.fillText(entityNames[id] || 'Unknown', x, y);
 		}
 	});
 });

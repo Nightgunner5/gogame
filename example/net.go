@@ -12,6 +12,7 @@ import (
 
 const (
 	Handshake = network.FirstUnusedPacketID + iota
+	EntityName
 	CastSpell
 	KeepAlive
 )
@@ -26,10 +27,14 @@ var (
 	magicianLock sync.Mutex
 )
 
+type namer interface {
+	Name() string
+}
+
 func init() {
 	go func() {
 		for {
-			time.Sleep(time.Minute)
+			time.Sleep(10 * time.Second)
 
 			magicianLock.Lock()
 			for addr, m := range magicians {
@@ -41,6 +46,16 @@ func init() {
 			magicianLock.Unlock()
 		}
 	}()
+
+	network.RegisterStartupListener(func(send chan<- network.Packet, addr net.Addr) {
+		entity.ForEach(func(ent entity.Entity) {
+			if n, ok := ent.(namer); ok {
+				send <- network.NewPacket(EntityName).
+					Set(network.EntityID, ent.ID()).
+					Set(EntityName, n.Name())
+			}
+		})
+	})
 
 	network.RegisterHandler(Handshake, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
 		magicianLock.Lock()

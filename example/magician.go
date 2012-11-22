@@ -4,6 +4,7 @@ import (
 	"github.com/Nightgunner5/gogame/effect"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
+	"github.com/Nightgunner5/gogame/network"
 	"math/rand"
 )
 
@@ -14,10 +15,12 @@ type (
 		entity.Healther
 		entity.Resourcer
 		entity.Thinker
-		spell.Caster
 
+		spell.Caster
 		effect.EffectAdder
 		Cast(spell spell.Spell)
+
+		Name() string
 
 		magician()
 	}
@@ -30,6 +33,8 @@ type (
 		spell.SpellCaster
 
 		effect.BasicEffectAdder
+
+		name string
 	}
 )
 
@@ -39,7 +44,7 @@ func NewMagician(x, y, z float64) Magician {
 		maxMana   = 160
 	)
 
-	m := new(magician)
+	m := &magician{name: magicianName()}
 
 	m.Positioner = entity.BasePosition(m, x, y, z)
 	m.Healther = entity.BaseHealth(m, maxHealth)
@@ -47,7 +52,15 @@ func NewMagician(x, y, z float64) Magician {
 
 	entity.Spawn(m)
 
+	network.Broadcast(network.NewPacket(EntityName).
+		Set(network.EntityID, m.ID()).
+		Set(EntityName, m.name), false)
+
 	return m
+}
+
+func (m *magician) Name() string {
+	return m.name
 }
 
 func (m *magician) Parent() entity.Entity {
