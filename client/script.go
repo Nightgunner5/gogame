@@ -4,64 +4,83 @@ package client
 
 const Script = `
 'use strict';var a = window.gogame = window.gogame || {};
-var d = a.net = a.net || {};
-d.Socket = function(c) {
-  this.d = new WebSocket(c);
-  this.b = {};
-  this.d.onmessage = function(b) {
-    if(packet.i in this.b) {
-      this.b[packet.i](new a.h.f(JSON.parse(b.data)))
+var e = a.net = a.net || {};
+e.Socket = function(c) {
+  var b = this;
+  b.c = new WebSocket(c);
+  b.e = {};
+  b.c.onmessage = function(d) {
+    d = JSON.parse(d.data);
+    if(d.i in b.e) {
+      b.e[d.i](new f(d))
+    }else {
+      console.log(d)
     }
   };
-  this.send = function(b) {
-    this.d.send(JSON.stringify(b))
+  var h = "";
+  b.c.onopen = function() {
+    b.c.send(h);
+    b.send = function(d) {
+      b.c.send(JSON.stringify(d))
+    }
   };
-  this.listen = function(b, c) {
-    this.b[b] = c
+  b.send = b.send = function(b) {
+    h += JSON.stringify(b) + "\n"
+  };
+  b.b = b.listen = function(d, c) {
+    b.e[d] = c
   }
 };
-d.e = function() {
-  return(d.c - 1).toString(32)
+e.o = function() {
+  return(e.g - 1).toString(32)
 };
-d.a = function() {
-  d.c++;
-  return d.e()
+e.a = function() {
+  e.g++;
+  return e.o()
 };
-d.c = 0;
-d.AttackerID = d.a();
-d.VictimID = d.a();
-d.Amount = d.a();
-d.ChangeHealth = d.a();
-d.g = d.a();
-d.EntityID = d.a();
-d.ParentID = d.a();
-d.EntitySpawned = d.a();
-d.EntityDespawned = d.a();
-d.Packet = function(c) {
+e.g = 0;
+e.q = e.AttackerID = e.a();
+e.r = e.VictimID = e.a();
+e.h = e.Amount = e.a();
+e.j = e.ChangeHealth = e.a();
+e.s = e.a();
+e.d = e.EntityID = e.a();
+e.m = e.ParentID = e.a();
+e.n = e.Tag = e.a();
+e.l = e.EntitySpawned = e.a();
+e.k = e.EntityDespawned = e.a();
+e.f = e.EntityPosition = e.a();
+e.FirstUnusedPacketID = e.a();
+var f = e.Packet = function(c) {
   "object" == typeof c ? (this.i = c.i, this.p = c.p) : (this.i = c, this.p = {});
-  this.set = function(b, c) {
+  this.set = this.set = function(b, c) {
     this.p[b] = c;
     return this
   };
-  this.get = function(b) {
+  this.get = this.get = function(b) {
     return this.p[b]
   }
 };
-var e = a.client = {}, f = e.Entities = {};
-e.start = function(c) {
-  e = a.client = new d.Socket(c);
-  e.Entities = f;
-  e.listen(d.EntitySpawned, function(b) {
-    f[b.get(d.EntityID)] = {};
-    f[b.get(d.EntityID)].parent = b.get(d.ParentID)
+var g = a.client = {}, i = g.Entities = {};
+g.start = function(c) {
+  g = a.client = new e.Socket(c);
+  g.Entities = i;
+  g.b(e.l, function(b) {
+    i[b.get(e.d)] = {parent:b.get(e.m), tag:b.get(e.n)}
   });
-  e.listen(d.EntityDespawned, function(b) {
-    (function g(b) {
-      delete f[b];
-      for(var c in f) {
-        f[c].parent == b && g(c)
+  g.b(e.k, function(b) {
+    (function d(b) {
+      delete i[b];
+      for(var c in i) {
+        i[c].parent == b && d(c)
       }
-    })(b.get(d.EntityID))
+    })(b.get(e.d))
+  });
+  g.b(e.j, function(b) {
+    i[b.get(e.VictimID)].health = b.get(e.h)
+  });
+  g.b(e.f, function(b) {
+    i[b.get(e.d)].position = b.get(e.f)
   })
 };
 

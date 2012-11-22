@@ -1,21 +1,31 @@
 var net = gogame['net'] = gogame['net'] || {};
 
 var Socket = net['Socket'] = /** @constructor */ function(uri) {
-	/** @private */ this.socket = new WebSocket(uri);
-	/** @private */ this.listeners = {};
 	var that = this;
 
+	/** @private */ that.socket = new WebSocket(uri);
+	/** @private */ that.listeners = {};
 
-	this.socket['onmessage'] = function(message) {
-		if (packet['i'] in this.listeners) {
-			this.listeners[packet['i']](new gogame.net.Packet(JSON.parse(message['data'])));
+	that.socket['onmessage'] = function(message) {
+		var packet = JSON.parse(message['data']);
+		if (packet['i'] in that.listeners) {
+			that.listeners[packet['i']](new Packet(packet));
+		} else {
+			console.log(packet);
 		}
 	};
-	this['send'] = function(packet) {
-		this.socket.send(JSON.stringify(packet));
+	var toSend = "";
+	that.socket['onopen'] = function(event) {
+		that.socket.send(toSend);
+		that['send'] = function(packet) {
+			that.socket.send(JSON.stringify(packet));
+		};
 	};
-	this['listen'] = function(packetID, listener) {
-		this.listeners[packetID] = listener;
+	that.send = that['send'] = function(packet) {
+		toSend += JSON.stringify(packet) + '\n';
+	};
+	that.listen = that['listen'] = function(packetID, listener) {
+		that.listeners[packetID] = listener;
 	};
 };
 
@@ -35,17 +45,21 @@ net.iota = function() {
 /** @private */
 net.iota_ = 0;
 
-/** @const */ net['AttackerID']   = net.iota();
-/** @const */ net['VictimID']     = net.iota();
-/** @const */ net['Amount']       = net.iota();
-/** @const */ net['ChangeHealth'] = net.iota();
+/** @const */ net.AttackerID   = net['AttackerID']   = net.iota();
+/** @const */ net.VictimID     = net['VictimID']     = net.iota();
+/** @const */ net.Amount       = net['Amount']       = net.iota();
+/** @const */ net.ChangeHealth = net['ChangeHealth'] = net.iota();
 
 /** @const */ net.debugEcho = net.iota();
 
-/** @const */ net['EntityID']        = net.iota();
-/** @const */ net['ParentID']        = net.iota();
-/** @const */ net['EntitySpawned']   = net.iota();
-/** @const */ net['EntityDespawned'] = net.iota();
+/** @const */ net.EntityID        = net['EntityID']        = net.iota();
+/** @const */ net.ParentID        = net['ParentID']        = net.iota();
+/** @const */ net.Tag             = net['Tag']             = net.iota();
+/** @const */ net.EntitySpawned   = net['EntitySpawned']   = net.iota();
+/** @const */ net.EntityDespawned = net['EntityDespawned'] = net.iota();
+/** @const */ net.EntityPosition  = net['EntityPosition'] = net.iota();
+
+/** @const */ net['FirstUnusedPacketID'] = net.iota();
 
 var Packet = net['Packet'] = /** @constructor */ function(id) {
 	if (typeof id == 'object') {
@@ -56,12 +70,12 @@ var Packet = net['Packet'] = /** @constructor */ function(id) {
 		this['p'] = {};
 	}
 
-	this['set'] = function(key, value) {
+	this.set = this['set'] = function(key, value) {
 		this['p'][key] = value;
 		return this;
 	};
 
-	this['get'] = function(key) {
+	this.get = this['get'] = function(key) {
 		return this['p'][key];
 	};
 };

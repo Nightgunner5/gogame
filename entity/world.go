@@ -10,6 +10,10 @@ func (*world) Parent() Entity {
 	return nil
 }
 
+func (*world) Tag() string {
+	return "world"
+}
+
 var World Entity = new(world)
 
 func init() {

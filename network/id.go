@@ -12,6 +12,12 @@ const (
 
 	EntityID
 	ParentID
+	Tag
 	EntitySpawned
 	EntityDespawned
+	EntityPosition
+
+	// Insert new default packet IDs here
+
+	FirstUnusedPacketID
 )

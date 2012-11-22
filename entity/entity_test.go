@@ -13,6 +13,10 @@ type nullEntity struct {
 	EntityID
 }
 
+func (nullEntity) Tag() string {
+	return "TestEntity"
+}
+
 func (nullEntity) Parent() Entity {
 	return World
 }

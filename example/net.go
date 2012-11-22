@@ -2,91 +2,96 @@ package main
 
 import (
 	"github.com/Nightgunner5/gogame/entity"
+	"github.com/Nightgunner5/gogame/network"
 	"github.com/Nightgunner5/gogame/spell"
 	"math/rand"
-	"net/http"
+	"net"
 	"sync"
 	"time"
 )
 
-var (
-	magicianForIP     = make(map[string]entity.EntityID)
-	magicianForIPLock sync.Mutex
+const (
+	Handshake = network.FirstUnusedPacketID + iota
+	CastSpell
 )
 
-func getMagician(ip string) Magician {
-	magicianForIPLock.Lock()
-	defer magicianForIPLock.Unlock()
-
-	if id, ok := magicianForIP[ip]; ok {
-		if ent := entity.Get(id); ent != nil {
-			return ent.(Magician)
-		}
-	}
-
-	x := rand.Float64()*20 - 10
-	y := rand.Float64()*20 - 10
-
-	m := NewMagician(x, y, 0)
-	magicianForIP[ip] = m.ID()
-	return m
+type netMagician struct {
+	id       entity.EntityID
+	lastSeen time.Time
 }
 
+var (
+	magicians    = make(map[string]*netMagician)
+	magicianLock sync.Mutex
+)
+
 func init() {
-	go func() {
-		for {
-			time.Sleep(time.Minute)
+	network.RegisterHandler(Handshake, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
+		magicianLock.Lock()
+		defer magicianLock.Unlock()
 
-			magicianForIPLock.Lock()
-			for ip, id := range magicianForIP {
-				if entity.Get(id) == nil {
-					delete(magicianForIP, ip)
-				}
-			}
-			magicianForIPLock.Unlock()
-		}
-	}()
-
-	const (
-		summonCost     = 50
-		summonCastTime = 0.5
-		shieldCost     = 20
-		shieldCastTime = 0.2
-	)
-
-	http.HandleFunc("/cast/shield", func(w http.ResponseWriter, r *http.Request) {
-		m := getMagician(r.Header.Get("X-Forwarded-For"))
-		if m == nil {
+		if _, exists := magicians[addr.String()]; exists {
 			return
 		}
 
-		if len(m.Effects()) == 0 && m.UseResource(shieldCost) {
-			m.Cast(&spell.BasicSpell{
-				CastTime: shieldCastTime,
-				Caster_:  m.ID(),
-				Target_:  m.ID(),
-				Action:   summonShield,
+		x := rand.Float64()*20 - 10
+		y := rand.Float64()*20 - 10
 
-				Tag: "summonshield",
-			})
+		magician := NewMagician(x, y, 0)
+
+		magicians[addr.String()] = &netMagician{
+			id:       magician.ID(),
+			lastSeen: time.Now(),
 		}
+
+		send <- network.NewPacket(Handshake).Set(network.EntityID, magician.ID())
 	})
 
-	http.HandleFunc("/cast/imp", func(w http.ResponseWriter, r *http.Request) {
-		m := getMagician(r.Header.Get("X-Forwarded-For"))
-		if m == nil {
+	network.RegisterHandler(CastSpell, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
+		magicianLock.Lock()
+		if _, ok := magicians[addr.String()]; !ok {
+			magicianLock.Unlock()
 			return
 		}
+		magicians[addr.String()].lastSeen = time.Now()
+		var magician Magician
+		if m, ok := entity.Get(magicians[addr.String()].id).(Magician); ok {
+			magician = m
+		} else {
+			magicianLock.Unlock()
+			return
+		}
+		magicianLock.Unlock()
 
-		if m.UseResource(summonCost) {
-			m.Cast(&spell.BasicSpell{
-				CastTime: summonCastTime,
-				Caster_:  m.ID(),
-				Target_:  m.ID(),
-				Action:   summonImp,
-
-				Tag: "summonimp",
-			})
+		if name, ok := packet.Get(CastSpell).(string); ok {
+			switch name {
+			case "imp":
+				const (
+					cost = 50
+					time = 2
+				)
+				if magician.UseResource(cost) {
+					magician.Cast(&spell.BasicSpell{
+						CastTime: time,
+						Caster_:  magician.ID(),
+						Target_:  magician.ID(),
+						Action:   summonImp,
+					})
+				}
+			case "shield":
+				const (
+					cost = 20
+					time = 0.3
+				)
+				if magician.UseResource(cost) {
+					magician.Cast(&spell.BasicSpell{
+						CastTime: time,
+						Caster_:  magician.ID(),
+						Target_:  magician.ID(),
+						Action:   summonShield,
+					})
+				}
+			}
 		}
 	})
 }

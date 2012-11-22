@@ -36,6 +36,16 @@ func Broadcast(packet Packet, ensureSend bool) {
 	}
 }
 
+type remoteAddr string
+
+func (r remoteAddr) String() string {
+	return string(r)
+}
+
+func (remoteAddr) Network() string {
+	return "websocket"
+}
+
 func handleSocket(conn *websocket.Conn) {
 	in, out := DecodeStream(conn), EncodeStream(conn)
 
@@ -43,8 +53,12 @@ func handleSocket(conn *websocket.Conn) {
 	connections[conn] = out
 	connectionLock.Unlock()
 
+	addr := remoteAddr(conn.Request().RemoteAddr)
+
+	startupListener(out, addr)
+
 	for p := range in {
-		go dispatchPacket(p, out, conn)
+		go dispatchPacket(p, out, addr, conn)
 	}
 
 	connectionLock.Lock()
@@ -52,15 +66,15 @@ func handleSocket(conn *websocket.Conn) {
 	connectionLock.Unlock()
 }
 
-func dispatchPacket(p Packet, send chan<- Packet, conn *websocket.Conn) {
+func dispatchPacket(p Packet, send chan<- Packet, addr net.Addr, conn *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("Panic when handling packet %d for client %v: %v", p.ID(), conn.RemoteAddr(), err)
+			log.Printf("Panic when handling packet %d for client %v: %v", p.ID(), addr, err)
 		}
 	}()
 
 	if handler, ok := registered[p.ID()]; ok {
-		handler(p, send, conn.RemoteAddr())
+		handler(p, send, addr)
 	} else {
 		conn.Close()
 		log.Panicf("No handler found for packet ID %d", p.ID())

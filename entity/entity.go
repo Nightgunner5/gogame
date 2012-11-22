@@ -30,4 +30,8 @@ type Entity interface {
 	// The parent of this entity. Top-level entities have a parent of
 	// the World entity. Only the World entity has a nil parent.
 	Parent() Entity
+
+	// A unique (to this entity type) string used to differentiate
+	// entities on the client side more easily.
+	Tag() string
 }

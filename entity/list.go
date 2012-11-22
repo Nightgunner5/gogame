@@ -235,7 +235,19 @@ func (d *delayedEntityList) commit() {
 		d.p.l.Add(ent)
 		network.Broadcast(network.NewPacket(network.EntitySpawned).
 			Set(network.EntityID, ent.ID()).
-			Set(network.ParentID, ent.Parent().ID()), false)
+			Set(network.ParentID, ent.Parent().ID()).
+			Set(network.Tag, ent.Tag()), false)
+		if h, ok := ent.(Healther); ok {
+			network.Broadcast(network.NewPacket(network.HealthChange).
+				Set(network.AttackerID, 0).
+				Set(network.VictimID, ent.ID()).
+				Set(network.Amount, h.Health()), false)
+		}
+		if p, ok := ent.(Positioner); ok {
+			network.Broadcast(network.NewPacket(network.EntityPosition).
+				Set(network.EntityID, ent.ID()).
+				Set(network.EntityPosition, p.positionArray()), false)
+		}
 	}
 	d.toAdd = nil
 
@@ -249,11 +261,23 @@ func (d *delayedEntityList) commit() {
 
 func init() {
 	network.RegisterStartupListener(func(send chan<- network.Packet, addr net.Addr) {
-		ForEach(func(e Entity) {
-			if e != World {
+		ForEach(func(ent Entity) {
+			if ent != World {
 				send <- network.NewPacket(network.EntitySpawned).
-					Set(network.EntityID, e.ID()).
-					Set(network.ParentID, e.Parent().ID())
+					Set(network.EntityID, ent.ID()).
+					Set(network.ParentID, ent.Parent().ID()).
+					Set(network.Tag, ent.Tag())
+			}
+			if h, ok := ent.(Healther); ok {
+				send <- network.NewPacket(network.HealthChange).
+					Set(network.AttackerID, 0).
+					Set(network.VictimID, ent.ID()).
+					Set(network.Amount, h.Health())
+			}
+			if p, ok := ent.(Positioner); ok {
+				send <- network.NewPacket(network.EntityPosition).
+					Set(network.EntityID, ent.ID()).
+					Set(network.EntityPosition, p.positionArray())
 			}
 		})
 	})

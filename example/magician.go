@@ -24,13 +24,12 @@ type (
 
 	magician struct {
 		entity.EntityID
+		entity.Positioner
 		entity.Healther
 		entity.Resourcer
 		spell.SpellCaster
 
 		effect.BasicEffectAdder
-
-		x, y, z float64
 	}
 )
 
@@ -40,12 +39,9 @@ func NewMagician(x, y, z float64) Magician {
 		maxMana   = 160
 	)
 
-	m := &magician{
-		x: x,
-		y: y,
-		z: z,
-	}
+	m := new(magician)
 
+	m.Positioner = entity.BasePosition(m, x, y, z)
 	m.Healther = entity.BaseHealth(m, maxHealth)
 	m.Resourcer = entity.BaseResource(m, maxMana)
 
@@ -58,8 +54,8 @@ func (m *magician) Parent() entity.Entity {
 	return entity.World
 }
 
-func (m *magician) Position() (x, y, z float64) {
-	return m.x, m.y, m.z
+func (m *magician) Tag() string {
+	return "magician"
 }
 
 func (m *magician) Think(delta float64) {

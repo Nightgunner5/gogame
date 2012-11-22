@@ -8,8 +8,8 @@ import (
 
 type (
 	baseCounter struct {
-		m   sync.RWMutex
-		c   float64
+		mtx sync.Mutex
+		cnt float64
 		set bool
 	}
 
@@ -24,10 +24,17 @@ type (
 		ent EntityID
 		baseCounter
 	}
+
+	basePosition struct {
+		xyz [3]float64
+		ent EntityID
+		mtx sync.Mutex
+	}
 )
 
 var _ Healther = new(baseHealth)
 var _ Resourcer = new(baseResource)
+var _ Positioner = new(basePosition)
 
 func BaseHealth(e Entity, max float64) Healther {
 	if max <= 0 {
@@ -49,46 +56,53 @@ func BaseResource(e Entity, max float64) Resourcer {
 	}
 }
 
+func BasePosition(e Entity, x, y, z float64) Positioner {
+	return &basePosition{
+		xyz: [3]float64{x, y, z},
+		ent: e.ID(),
+	}
+}
+
 func (b *baseCounter) get(max float64) float64 {
-	b.m.RLock()
-	defer b.m.RUnlock()
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
 
 	if b.set {
-		if b.c > max {
+		if b.cnt > max {
 			return max
 		}
-		if b.c < 0 {
+		if b.cnt < 0 {
 			return 0
 		}
-		return b.c
+		return b.cnt
 	}
 	return max
 }
 
 func (b *baseCounter) sub(amount, max float64, force bool) (changed bool) {
-	b.m.Lock()
-	defer b.m.Unlock()
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
 
 	if !b.set {
-		b.c = max
+		b.cnt = max
 		b.set = true
 	}
 
-	if b.c <= 0 {
+	if b.cnt <= 0 {
 		return
 	}
 
-	if b.c >= amount || force {
-		b.c -= amount
+	if b.cnt >= amount || force {
+		b.cnt -= amount
 		changed = true
 	}
 
-	if b.c > max {
-		b.c = max
+	if b.cnt > max {
+		b.cnt = max
 	}
 
-	if b.c < 0 {
-		b.c = 0
+	if b.cnt < 0 {
+		b.cnt = 0
 	}
 	return
 }
@@ -98,6 +112,9 @@ func (b *baseHealth) Health() float64 {
 }
 func (b *baseResource) Resource() float64 {
 	return b.get(b.max)
+}
+func (b *basePosition) Position() (x, y, z float64) {
+	return b.xyz[0], b.xyz[1], b.xyz[2]
 }
 
 func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
@@ -109,13 +126,16 @@ func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
 		l.OnTakeDamage(&amount, attacker, ent)
 	}
 	if amount != 0 {
+		b.sub(amount, b.max, true)
 		network.Broadcast(network.NewPacket(network.HealthChange).
 			Set(network.AttackerID, attacker.ID()).
 			Set(network.VictimID, b.ent).
-			Set(network.Amount, -amount), false)
-		b.sub(amount, b.max, true)
+			Set(network.Amount, b.get(b.max)), false)
 	}
 }
 func (b *baseResource) UseResource(amount float64) bool {
 	return b.sub(amount, b.max, false)
+}
+func (b *basePosition) positionArray() []float64 {
+	return b.xyz[:]
 }

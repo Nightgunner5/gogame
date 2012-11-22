@@ -18,11 +18,11 @@ type (
 
 	imp struct {
 		entity.EntityID
+		entity.Positioner
 		entity.Healther
 		spell.SpellCaster
 
-		x, y, z float64
-		master  Magician
+		master Magician
 	}
 )
 
@@ -30,13 +30,9 @@ func NewImp(master Magician, x, y, z float64) Imp {
 	const (
 		maxHealth = 10
 	)
-	i := &imp{
-		x:      x,
-		y:      y,
-		z:      z,
-		master: master,
-	}
+	i := &imp{master: master}
 
+	i.Positioner = entity.BasePosition(i, x, y, z)
 	i.Healther = entity.BaseHealth(i, maxHealth)
 
 	entity.Spawn(i)
@@ -48,8 +44,8 @@ func (i *imp) Parent() entity.Entity {
 	return i.master
 }
 
-func (i *imp) Position() (x, y, z float64) {
-	return i.x, i.y, i.z
+func (m *imp) Tag() string {
+	return "imp"
 }
 
 func (i *imp) Think(delta float64) {

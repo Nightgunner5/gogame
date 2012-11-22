@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/spell"
 	"log"
 	"net/http"
@@ -86,58 +84,33 @@ header p {
 </style>
 <script src="engine.js"></script>
 <script>
+var Handshake = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 0).toString(32);
+var CastSpell = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 1).toString(32);
+
 gogame.client.start('ws://localhost:7031/socket');
+
+var myMagicianID;
+gogame.client.listen(Handshake, function(packet) {
+	myMagicianID = packet.get(gogame.net.EntityID);
+});
+
+requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+
+requestAnimationFrame(function render() {
+	console.log(gogame.client.Entities);
+
+	requestAnimationFrame(render);
+});
+
+function spell(name) {
+	gogame.client.send(new gogame.net.Packet(CastSpell).set(CastSpell, name));
+}
+
+gogame.client.send(new gogame.net.Packet(Handshake));
 </script>
 </head>
 <body><header><div id="health"><div></div></div><div id="mana"><div></div></div><div id="spellprogress"><div></div></div><p></p></header><footer><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer></body>
 </html>`))
-	})
-
-	http.HandleFunc("/state", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"self":%d,"magicians":[`, getMagician(r.Header.Get("X-Forwarded-For")).ID())
-		first := true
-		entity.ForEach(func(e entity.Entity) {
-			if m, ok := e.(Magician); ok {
-				if first {
-					first = false
-				} else {
-					fmt.Fprintf(w, ",")
-				}
-
-				currentSpell := `null`
-				if s := m.CurrentSpell(); s != nil {
-					tar := s.(*spell.BasicSpell).Target_
-					currentSpell = fmt.Sprintf(`{"id":%q,"progress":%v,"target":%d}`, s.(*spell.BasicSpell).Tag, spellProgress(s), tar)
-				}
-
-				x, y, z := m.Position()
-				fmt.Fprintf(w, `{"id":%d,"x":%v,"y":%v,"z":%v,"health":%v,"mana":%v,"spell":%v,"effects":%q}`, m.ID(), x, y, z, m.Health(), m.Resource(), currentSpell, m.EffectDescription())
-			}
-		})
-
-		fmt.Fprintf(w, `],"imps":[`)
-
-		first = true
-		entity.ForEach(func(e entity.Entity) {
-			if i, ok := e.(Imp); ok {
-				if first {
-					first = false
-				} else {
-					fmt.Fprintf(w, ",")
-				}
-
-				currentSpell := `null`
-				if s := i.CurrentSpell(); s != nil {
-					tar := s.(*spell.BasicSpell).Target_
-					currentSpell = fmt.Sprintf(`{"id":"impfire","progress":%v,"target":%d}`, spellProgress(s), tar)
-				}
-
-				x, y, z := i.Position()
-				fmt.Fprintf(w, `{"id":%d,"x":%v,"y":%v,"z":%v,"health":%v,"spell":%v}`, i.ID(), x, y, z, i.Health(), currentSpell)
-			}
-		})
-
-		fmt.Fprintf(w, `]}`)
 	})
 
 	log.Print("Open a browser to http://localhost:7031/")
