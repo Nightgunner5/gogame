@@ -360,7 +360,9 @@ func Spawn(entity Entity) {
 
 // Remove an entity from the global entity list, along with any entity with it as its parent, recursively.
 func Despawn(entity Entity) {
-	toSpawn.RemoveRecursive(entity.ID())
+	if entity != nil {
+		toSpawn.RemoveRecursive(entity.ID())
+	}
 }
 
 // Returns the entity for a given ID. nil will be returned if no entity is

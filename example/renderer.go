@@ -32,6 +32,7 @@ header p { font: 10px/1.1 sans-serif; padding: 3px; }
 <script>
 var Handshake = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 0).toString(32);
 var CastSpell = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 1).toString(32);
+var KeepAlive = (parseInt(gogame.net.FirstUnusedPacketID, 32) + 2).toString(32);
 
 gogame.client.start('ws://' + location.host + '/socket');
 
@@ -42,18 +43,38 @@ gogame.client.listen(Handshake, function(packet) {
 
 requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
+setInterval(function() {
+	gogame.client.send(new gogame.net.Packet(KeepAlive));
+}, 30000);
+gogame.client.listen(KeepAlive, function(packet) {
+	// do nothing
+});
+
 requestAnimationFrame(function() {
 	requestAnimationFrame(function render() {
+		requestAnimationFrame(render);
+
 		var canvas = document.querySelector('canvas'),
 			ctx = canvas.getContext('2d');
-		canvas.width = canvas.width; // Clear
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 
-		ctx.translate(500, 500);
-		ctx.scale(4, 4);
+		ctx.translate(canvas.width / 2, canvas.height / 2);
 
 		if (gogame.client.disconnected) {
+			ctx.font = '24px sans-serif';
 			ctx.fillStyle = '#000';
 			ctx.fillText('Disconnected', 0, 0);
+			return;
+		}
+
+		if (myMagicianID && gogame.client.Entities[myMagicianID] && gogame.client.Entities[myMagicianID].position) {
+			var pos = gogame.client.Entities[myMagicianID].position;
+			ctx.translate(-pos[0]*10, -pos[1]*10);
+		} else {
+			ctx.font = '24px sans-serif';
+			ctx.fillStyle = '#000';
+			ctx.fillText('You are dead!', 0, 0);
 			return;
 		}
 
@@ -72,11 +93,13 @@ requestAnimationFrame(function() {
 			ctx.fillStyle = '#0f0';
 			ctx.fillRect(x, y, ent.health, 1);
 
+			ctx.font = {
+				imp: '12px sans-serif',
+				magician: '18px sans-serif'
+			}[ent.tag];
 			ctx.fillStyle = '#000';
 			ctx.fillText(ent.tag, x, y);
 		}
-
-		requestAnimationFrame(render);
 	});
 });
 

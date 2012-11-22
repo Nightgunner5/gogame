@@ -13,6 +13,7 @@ import (
 const (
 	Handshake = network.FirstUnusedPacketID + iota
 	CastSpell
+	KeepAlive
 )
 
 type netMagician struct {
@@ -26,6 +27,21 @@ var (
 )
 
 func init() {
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+
+			magicianLock.Lock()
+			for addr, m := range magicians {
+				if time.Since(m.lastSeen) > time.Minute {
+					entity.Despawn(entity.Get(m.id))
+					delete(magicians, addr)
+				}
+			}
+			magicianLock.Unlock()
+		}
+	}()
+
 	network.RegisterHandler(Handshake, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
 		magicianLock.Lock()
 		defer magicianLock.Unlock()
@@ -93,5 +109,16 @@ func init() {
 				}
 			}
 		}
+	})
+
+	network.RegisterHandler(KeepAlive, func(packet network.Packet, send chan<- network.Packet, addr net.Addr) {
+		magicianLock.Lock()
+		if _, ok := magicians[addr.String()]; !ok {
+			magicianLock.Unlock()
+			return
+		}
+		magicians[addr.String()].lastSeen = time.Now()
+		magicianLock.Unlock()
+		send <- network.NewPacket(KeepAlive)
 	})
 }
