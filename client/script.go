@@ -4,54 +4,54 @@ package client
 
 const Script = `
 'use strict';var a = window.gogame = window.gogame || {};
-var e = a.net = a.net || {};
-e.Socket = function(c) {
+var d = a.net = a.net || {};
+d.Socket = function(c) {
   var b = this;
-  b.c = new WebSocket(c);
+  b.b = new WebSocket(c);
   b.e = {};
-  b.c.onmessage = function(d) {
-    d = JSON.parse(d.data);
-    if(d.i in b.e) {
-      b.e[d.i](new f(d))
+  b.b.onmessage = function(e) {
+    e = JSON.parse(e.data);
+    if(e.i in b.e) {
+      b.e[e.i](new f(e))
     }else {
-      console.log(d)
+      console.log(e)
     }
   };
   var h = "";
-  b.c.onopen = function() {
-    b.c.send(h);
-    b.send = function(d) {
-      b.c.send(JSON.stringify(d))
+  b.b.onopen = function() {
+    b.b.send(h);
+    b.send = function(e) {
+      b.b.send(JSON.stringify(e))
     }
   };
   b.send = b.send = function(b) {
     h += JSON.stringify(b) + "\n"
   };
-  b.b = b.listen = function(d, c) {
-    b.e[d] = c
+  b.c = b.listen = function(e, c) {
+    b.e[e] = c
   }
 };
-e.o = function() {
-  return(e.g - 1).toString(32)
+d.q = function() {
+  return(d.g - 1).toString(32)
 };
-e.a = function() {
-  e.g++;
-  return e.o()
+d.a = function() {
+  d.g++;
+  return d.q()
 };
-e.g = 0;
-e.q = e.AttackerID = e.a();
-e.r = e.VictimID = e.a();
-e.h = e.Amount = e.a();
-e.j = e.ChangeHealth = e.a();
-e.s = e.a();
-e.d = e.EntityID = e.a();
-e.m = e.ParentID = e.a();
-e.n = e.Tag = e.a();
-e.l = e.EntitySpawned = e.a();
-e.k = e.EntityDespawned = e.a();
-e.f = e.EntityPosition = e.a();
-e.FirstUnusedPacketID = e.a();
-var f = e.Packet = function(c) {
+d.g = 0;
+d.r = d.AttackerID = d.a();
+d.o = d.VictimID = d.a();
+d.h = d.Amount = d.a();
+d.j = d.ChangeHealth = d.a();
+d.s = d.a();
+d.d = d.EntityID = d.a();
+d.m = d.ParentID = d.a();
+d.n = d.Tag = d.a();
+d.l = d.EntitySpawned = d.a();
+d.k = d.EntityDespawned = d.a();
+d.f = d.EntityPosition = d.a();
+d.FirstUnusedPacketID = d.a();
+var f = d.Packet = function(c) {
   "object" == typeof c ? (this.i = c.i, this.p = c.p) : (this.i = c, this.p = {});
   this.set = this.set = function(b, c) {
     this.p[b] = c;
@@ -62,25 +62,30 @@ var f = e.Packet = function(c) {
   }
 };
 var g = a.client = {}, i = g.Entities = {};
+g.disconnected = !1;
 g.start = function(c) {
-  g = a.client = new e.Socket(c);
+  g = a.client = new d.Socket(c);
   g.Entities = i;
-  g.b(e.l, function(b) {
-    i[b.get(e.d)] = {parent:b.get(e.m), tag:b.get(e.n)}
+  g.disconnected = !1;
+  g.b.onerror = g.b.onclose = function() {
+    g.disconnected = !0
+  };
+  g.c(d.l, function(b) {
+    i[b.get(d.d)] = {parent:b.get(d.m), tag:b.get(d.n)}
   });
-  g.b(e.k, function(b) {
-    (function d(b) {
+  g.c(d.k, function(b) {
+    (function e(b) {
       delete i[b];
       for(var c in i) {
-        i[c].parent == b && d(c)
+        i[c].parent == b && e(c)
       }
-    })(b.get(e.d))
+    })(b.get(d.d))
   });
-  g.b(e.j, function(b) {
-    i[b.get(e.VictimID)].health = b.get(e.h)
+  g.c(d.j, function(b) {
+    i[b.get(d.o)].health = b.get(d.h)
   });
-  g.b(e.f, function(b) {
-    i[b.get(e.d)].position = b.get(e.f)
+  g.c(d.f, function(b) {
+    i[b.get(d.d)].position = b.get(d.f)
   })
 };
 

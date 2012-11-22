@@ -2,9 +2,16 @@ var client = gogame['client'] = {};
 
 var entities = client['Entities'] = {};
 
-client.start = function(url) {
+client['disconnected'] = false;
+
+client['start'] = function(url) {
 	client = gogame['client'] = new net['Socket'](url);
 	client['Entities'] = entities;
+	client['disconnected'] = false;
+
+	client.socket['onerror'] = client.socket['onclose'] = function(event) {
+		client['disconnected'] = true;
+	};
 
 	client.listen(net.EntitySpawned, function(packet) {
 		entities[packet.get(net.EntityID)] = {
@@ -25,7 +32,7 @@ client.start = function(url) {
 	});
 
 	client.listen(net.ChangeHealth, function(packet) {
-		entities[packet.get(net['VictimID'])]['health'] = packet.get(net.Amount);
+		entities[packet.get(net.VictimID)]['health'] = packet.get(net.Amount);
 	});
 
 	client.listen(net.EntityPosition, function(packet) {
