@@ -127,7 +127,7 @@ func summonImp(target, caster entity.Entity) {
 func summonShield(target, caster entity.Entity) {
 	m := caster.(Magician)
 
-	m.AddEffect(effect.NewEffect("Shield", 5).Add(effect.AbsorbDamage(20)))
+	m.AddEffect(effect.NewEffect("Shield", 5).Add(effect.AbsorbDamage(200)))
 }
 
 func (magician) magician() {}
