@@ -3,16 +3,15 @@ package network
 type PacketID uint64
 
 const (
-	AttackerID PacketID = iota
-	VictimID
-	Amount
-	HealthChange
-
-	debugEcho
+	debugEcho PacketID = iota
 
 	EntityID
-	ParentID
-	Tag
+	OtherEntID
+	EntityTag
+
+	Amount
+	ChangeHealth
+	ChangeResource
 
 	EntitySpawned
 	EntityDespawned

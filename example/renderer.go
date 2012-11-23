@@ -21,7 +21,7 @@ html, body, canvas { height: 100%; margin: 0; padding: 0; overflow: hidden; back
 footer { position: fixed; right: 0; z-index: 1000; bottom: 0; text-align: center; }
 button { width: 150px; }
 #movement, button { line-height: 1; padding: 2px; border-radius: 3px; border: 1px solid #aaa; display: inline-block; background: -webkit-linear-gradient(top, #eee, #ddd, #aaa); }
-#movement button { width: 20px; border: 0; background: transparent; padding: 0; margin: 0; }
+#movement button { width: 20px; height: 17px; border: 0; background: transparent; padding: 0; margin: 0; border-radius: 0; }
 button { color: #333; }
 button:hover { color: #000; }
 </style>

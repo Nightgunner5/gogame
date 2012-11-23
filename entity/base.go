@@ -130,16 +130,21 @@ func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
 	if l, ok := ent.(DamageListener); ok {
 		l.OnTakeDamage(&amount, attacker, ent)
 	}
-	if amount != 0 {
-		b.sub(amount, b.max, true)
-		network.Broadcast(network.NewPacket(network.HealthChange).
-			Set(network.AttackerID, attacker.ID()).
-			Set(network.VictimID, b.ent).
+	if b.sub(amount, b.max, true) {
+		network.Broadcast(network.NewPacket(network.ChangeHealth).
+			Set(network.EntityID, b.ent).
+			Set(network.OtherEntID, attacker.ID()).
 			Set(network.Amount, b.get(b.max)), false)
 	}
 }
 func (b *baseResource) UseResource(amount float64) bool {
-	return b.sub(amount, b.max, false)
+	if b.sub(amount, b.max, false) {
+		network.Broadcast(network.NewPacket(network.ChangeResource).
+			Set(network.EntityID, b.ent).
+			Set(network.Amount, b.get(b.max)), false)
+		return true
+	}
+	return false
 }
 func (b *basePosition) Move(dx, dy, dz float64) {
 	b.mtx.Lock()

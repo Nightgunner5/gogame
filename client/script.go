@@ -27,29 +27,28 @@ d.Socket = function(c) {
   b.send = b.send = function(b) {
     h += JSON.stringify(b) + "\n"
   };
-  b.c = b.listen = function(e, c) {
+  b.d = b.listen = function(e, c) {
     b.e[e] = c
   }
 };
 d.q = function() {
-  return(d.g - 1).toString(32)
+  return(d.h - 1).toString(32)
 };
 d.a = function() {
-  d.g++;
+  d.h++;
   return d.q()
 };
-d.g = 0;
-d.r = d.AttackerID = d.a();
-d.o = d.VictimID = d.a();
-d.h = d.Amount = d.a();
+d.h = 0;
+d.r = d.a();
+d.c = d.EntityID = d.a();
+d.o = d.OtherEntID = d.a();
+d.n = d.EntityTag = d.a();
+d.f = d.Amount = d.a();
 d.j = d.ChangeHealth = d.a();
-d.s = d.a();
-d.d = d.EntityID = d.a();
-d.m = d.ParentID = d.a();
-d.n = d.Tag = d.a();
-d.l = d.EntitySpawned = d.a();
-d.k = d.EntityDespawned = d.a();
-d.f = d.EntityPosition = d.a();
+d.k = d.ChangeResource = d.a();
+d.m = d.EntitySpawned = d.a();
+d.l = d.EntityDespawned = d.a();
+d.g = d.EntityPosition = d.a();
 d.FirstUnusedPacketID = d.a();
 var f = d.Packet = function(c) {
   "object" == typeof c ? (this.i = c.i, this.p = c.p) : (this.i = c, this.p = {});
@@ -70,22 +69,25 @@ g.start = function(c) {
   g.b.onerror = g.b.onclose = function() {
     g.disconnected = !0
   };
-  g.c(d.l, function(b) {
-    i[b.get(d.d)] = {parent:b.get(d.m), tag:b.get(d.n)}
+  g.d(d.m, function(b) {
+    i[b.get(d.c)] = {parent:b.get(d.o), tag:b.get(d.n)}
   });
-  g.c(d.k, function(b) {
+  g.d(d.l, function(b) {
     (function e(b) {
       delete i[b];
       for(var c in i) {
         i[c].parent == b && e(c)
       }
-    })(b.get(d.d))
+    })(b.get(d.c))
   });
-  g.c(d.j, function(b) {
-    i[b.get(d.o)].health = b.get(d.h)
+  g.d(d.k, function(b) {
+    i[b.get(d.c)].resource = b.get(d.f)
   });
-  g.c(d.f, function(b) {
-    i[b.get(d.d)].position = b.get(d.f)
+  g.d(d.j, function(b) {
+    i[b.get(d.c)].health = b.get(d.f)
+  });
+  g.d(d.g, function(b) {
+    i[b.get(d.c)].position = b.get(d.g)
   })
 };
 

@@ -15,8 +15,8 @@ client['start'] = function(url) {
 
 	client.listen(net.EntitySpawned, function(packet) {
 		entities[packet.get(net.EntityID)] = {
-			'parent': packet.get(net.ParentID),
-			'tag': packet.get(net.Tag)
+			'parent': packet.get(net.OtherEntID),
+			'tag':    packet.get(net.EntityTag)
 		};
 	});
 
@@ -31,8 +31,12 @@ client['start'] = function(url) {
 		})(packet.get(net.EntityID));
 	});
 
+	client.listen(net.ChangeResource, function(packet) {
+		entities[packet.get(net.EntityID)]['resource'] = packet.get(net.Amount);
+	});
+
 	client.listen(net.ChangeHealth, function(packet) {
-		entities[packet.get(net.VictimID)]['health'] = packet.get(net.Amount);
+		entities[packet.get(net.EntityID)]['health'] = packet.get(net.Amount);
 	});
 
 	client.listen(net.EntityPosition, function(packet) {

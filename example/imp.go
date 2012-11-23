@@ -4,6 +4,7 @@ import (
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/network"
 	"github.com/Nightgunner5/gogame/spell"
+	"math"
 )
 
 type (
@@ -25,8 +26,9 @@ type (
 		entity.Healther
 		spell.SpellCaster
 
-		name   string
-		master Magician
+		name       string
+		master     Magician
+		nextSearch float64
 	}
 )
 
@@ -62,9 +64,11 @@ func (m *imp) Tag() string {
 
 func (i *imp) Think(delta float64) {
 	const (
-		maxCastDistance = 10
-		spellCastTime   = 1
-		spellDamage     = 5
+		maxCastDistance     = 10
+		spellCastTime       = 1
+		spellDamage         = 5
+		moveSpeed           = 0.75
+		personalSpaceBuffer = 5
 	)
 
 	if i.Health() <= 0 {
@@ -72,22 +76,44 @@ func (i *imp) Think(delta float64) {
 		return
 	}
 
+	i.nextSearch -= delta
+
 	if i.CasterThink(delta) {
 		// currently casting spell
 		return
 	}
 
-	entity.ForOneNearby(i, maxCastDistance, func(e entity.Entity) bool {
-		if o, ok := e.(Magician); ok {
-			return o != i.master
+	foundTarget := false
+	if i.nextSearch <= 0 {
+		i.nextSearch = spellCastTime
+		entity.ForOneNearby(i, maxCastDistance, func(e entity.Entity) bool {
+			if o, ok := e.(Magician); ok {
+				return o != i.master
+			}
+			if o, ok := e.(Imp); ok {
+				return o.Parent() != i.master
+			}
+			return false
+		}, func(e entity.Entity) {
+			i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false))
+			foundTarget = true
+		})
+	}
+
+	if !foundTarget {
+		px, py, pz := i.master.Position()
+		x, y, z := i.Position()
+		x, y, z = px-x, py-y, pz-z
+		if x != 0 || y != 0 || z != 0 {
+			m := math.Sqrt(x*x + y*y + z*z)
+			if m < personalSpaceBuffer {
+				return
+			}
+			m /= moveSpeed * delta
+			x, y, z = x/m, y/m, z/m
+			i.Move(x, y, z)
 		}
-		if o, ok := e.(Imp); ok {
-			return o.Parent() != i.master
-		}
-		return false
-	}, func(e entity.Entity) {
-		i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false))
-	})
+	}
 }
 
 func (imp) imp() {}

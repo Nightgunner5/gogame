@@ -235,13 +235,17 @@ func (d *delayedEntityList) commit() {
 		d.p.l.Add(ent)
 		network.Broadcast(network.NewPacket(network.EntitySpawned).
 			Set(network.EntityID, ent.ID()).
-			Set(network.ParentID, ent.Parent().ID()).
-			Set(network.Tag, ent.Tag()), false)
+			Set(network.OtherEntID, ent.Parent().ID()).
+			Set(network.EntityTag, ent.Tag()), false)
 		if h, ok := ent.(Healther); ok {
-			network.Broadcast(network.NewPacket(network.HealthChange).
-				Set(network.AttackerID, 0).
-				Set(network.VictimID, ent.ID()).
+			network.Broadcast(network.NewPacket(network.ChangeHealth).
+				Set(network.EntityID, ent.ID()).
 				Set(network.Amount, h.Health()), false)
+		}
+		if r, ok := ent.(Resourcer); ok {
+			network.Broadcast(network.NewPacket(network.ChangeResource).
+				Set(network.EntityID, ent.ID()).
+				Set(network.Amount, r.Resource()), false)
 		}
 		if p, ok := ent.(Positioner); ok {
 			x, y, z := p.Position()
@@ -266,14 +270,18 @@ func init() {
 			if ent != World {
 				send <- network.NewPacket(network.EntitySpawned).
 					Set(network.EntityID, ent.ID()).
-					Set(network.ParentID, ent.Parent().ID()).
-					Set(network.Tag, ent.Tag())
+					Set(network.OtherEntID, ent.Parent().ID()).
+					Set(network.EntityTag, ent.Tag())
 			}
 			if h, ok := ent.(Healther); ok {
-				send <- network.NewPacket(network.HealthChange).
-					Set(network.AttackerID, 0).
-					Set(network.VictimID, ent.ID()).
+				send <- network.NewPacket(network.ChangeHealth).
+					Set(network.EntityID, ent.ID()).
 					Set(network.Amount, h.Health())
+			}
+			if r, ok := ent.(Resourcer); ok {
+				send <- network.NewPacket(network.ChangeResource).
+					Set(network.EntityID, ent.ID()).
+					Set(network.Amount, r.Resource())
 			}
 			if p, ok := ent.(Positioner); ok {
 				x, y, z := p.Position()

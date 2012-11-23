@@ -45,16 +45,15 @@ net.iota = function() {
 /** @private */
 net.iota_ = 0;
 
-/** @const */ net.AttackerID   = net['AttackerID']   = net.iota();
-/** @const */ net.VictimID     = net['VictimID']     = net.iota();
-/** @const */ net.Amount       = net['Amount']       = net.iota();
-/** @const */ net.ChangeHealth = net['ChangeHealth'] = net.iota();
-
 /** @const */ net.debugEcho = net.iota();
 
-/** @const */ net.EntityID        = net['EntityID']        = net.iota();
-/** @const */ net.ParentID        = net['ParentID']        = net.iota();
-/** @const */ net.Tag             = net['Tag']             = net.iota();
+/** @const */ net.EntityID     = net['EntityID']     = net.iota();
+/** @const */ net.OtherEntID   = net['OtherEntID']   = net.iota();
+/** @const */ net.EntityTag    = net['EntityTag']    = net.iota();
+
+/** @const */ net.Amount         = net['Amount']         = net.iota();
+/** @const */ net.ChangeHealth   = net['ChangeHealth']   = net.iota();
+/** @const */ net.ChangeResource = net['ChangeResource'] = net.iota();
 
 /** @const */ net.EntitySpawned   = net['EntitySpawned']   = net.iota();
 /** @const */ net.EntityDespawned = net['EntityDespawned'] = net.iota();

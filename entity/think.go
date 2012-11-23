@@ -9,7 +9,8 @@ import (
 var TimeScale float64 = 1
 
 const (
-	thinkDelay = time.Second / 10
+	maxThinkDelay = time.Second / 20
+	minThinkDelay = maxThinkDelay / 5
 )
 
 type thinkTask struct {
@@ -27,7 +28,7 @@ func init() {
 
 func thinkDispatcher(c chan<- thinkTask, global EntityList) {
 	then := time.Now()
-	for now := range time.Tick(thinkDelay) {
+	for now := range time.Tick(minThinkDelay) {
 		delta := float64(now.Sub(then)) / float64(time.Second) * TimeScale
 
 		global.Each(func(e Entity) {
@@ -49,7 +50,7 @@ func thinker(c <-chan thinkTask) {
 	for t := range c {
 		start := time.Now()
 		t.t.Think(t.d)
-		if diff := time.Since(start); diff > thinkDelay/2 {
+		if diff := time.Since(start); diff > maxThinkDelay {
 			log.Printf("Entity %d (%T) thinking for %v", t.t.(Entity).ID(), t.t, diff)
 		}
 	}
