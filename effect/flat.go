@@ -1,10 +1,13 @@
 package effect
 
-import "strconv"
+import (
+	"github.com/Nightgunner5/gogame/entity"
+	"strconv"
+)
 
 type flatPrimitive float64
 
-func (*flatPrimitive) effectThink(float64) {}
+func (*flatPrimitive) effectThink(float64, entity.Entity) {}
 
 func (flat *flatPrimitive) String() string {
 	if *flat <= 0 {

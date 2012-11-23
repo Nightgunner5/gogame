@@ -1,10 +1,13 @@
 package effect
 
-import "strconv"
+import (
+	"github.com/Nightgunner5/gogame/entity"
+	"strconv"
+)
 
 type scalePrimitive float64
 
-func (scalePrimitive) effectThink(float64) {}
+func (scalePrimitive) effectThink(float64, entity.Entity) {}
 
 func (a scalePrimitive) combine(b scalePrimitive) scalePrimitive {
 	return a * b

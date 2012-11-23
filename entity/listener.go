@@ -8,6 +8,11 @@ type DoDamageListener interface {
 	OnDoDamage(amount *float64, attacker, victim Entity)
 }
 
+type AllListeners interface {
+	DamageListener
+	DoDamageListener
+}
+
 type ListenerAdder interface {
 	AddAll(interface{})
 	AddDamageListener(DamageListener)
