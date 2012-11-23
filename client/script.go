@@ -7,50 +7,52 @@ const Script = `
 var d = a.net = a.net || {};
 d.Socket = function(c) {
   var b = this;
-  b.b = new WebSocket(c);
+  b.d = new WebSocket(c);
   b.e = {};
-  b.b.onmessage = function(e) {
-    e = JSON.parse(e.data);
-    if(e.i in b.e) {
-      b.e[e.i](new f(e))
-    }else {
-      console.log(e)
-    }
+  b.d.onmessage = function(c) {
+    var f = JSON.parse(c.data);
+    f.i in b.e ? b.e[f.i].forEach(function(b) {
+      b(new e(f))
+    }) : console.log(f)
   };
   var h = "";
-  b.b.onopen = function() {
-    b.b.send(h);
-    b.send = function(e) {
-      b.b.send(JSON.stringify(e))
+  b.d.onopen = function() {
+    b.d.send(h);
+    b.send = function(c) {
+      b.d.send(JSON.stringify(c))
     }
   };
   b.send = b.send = function(b) {
     h += JSON.stringify(b) + "\n"
   };
-  b.d = b.listen = function(e, c) {
-    b.e[e] = c
+  b.c = b.listen = function(c, f) {
+    b.e[c] = b.e[c] || [];
+    b.e[c].push(f)
   }
 };
-d.q = function() {
-  return(d.h - 1).toString(32)
+d.t = function() {
+  return(d.k - 1).toString(32)
 };
 d.a = function() {
-  d.h++;
-  return d.q()
+  d.k++;
+  return d.t()
 };
-d.h = 0;
-d.r = d.a();
-d.c = d.EntityID = d.a();
-d.o = d.OtherEntID = d.a();
-d.n = d.EntityTag = d.a();
+d.k = 0;
+d.u = d.a();
+d.b = d.EntityID = d.a();
+d.h = d.OtherEntID = d.a();
+d.j = d.Tag = d.a();
 d.f = d.Amount = d.a();
-d.j = d.ChangeHealth = d.a();
-d.k = d.ChangeResource = d.a();
-d.m = d.EntitySpawned = d.a();
-d.l = d.EntityDespawned = d.a();
+d.m = d.ChangeHealth = d.a();
+d.n = d.ChangeResource = d.a();
+d.q = d.EntitySpawned = d.a();
+d.o = d.EntityDespawned = d.a();
 d.g = d.EntityPosition = d.a();
+d.l = d.CastSpell = d.a();
+d.r = d.TimeLeft = d.a();
+d.s = d.TotalTime = d.a();
 d.FirstUnusedPacketID = d.a();
-var f = d.Packet = function(c) {
+var e = d.Packet = function(c) {
   "object" == typeof c ? (this.i = c.i, this.p = c.p) : (this.i = c, this.p = {});
   this.set = this.set = function(b, c) {
     this.p[b] = c;
@@ -60,35 +62,43 @@ var f = d.Packet = function(c) {
     return this.p[b]
   }
 };
-var g = a.client = {}, i = g.Entities = {};
+var g = a.client = {}, j = g.Entities = {};
 g.disconnected = !1;
 g.start = function(c) {
   g = a.client = new d.Socket(c);
-  g.Entities = i;
+  g.Entities = j;
   g.disconnected = !1;
-  g.b.onerror = g.b.onclose = function() {
+  g.d.onerror = g.d.onclose = function() {
     g.disconnected = !0
   };
-  g.d(d.m, function(b) {
-    i[b.get(d.c)] = {parent:b.get(d.o), tag:b.get(d.n)}
+  g.c(d.q, function(b) {
+    j[b.get(d.b)] = {parent:b.get(d.h), tag:b.get(d.j)}
   });
-  g.d(d.l, function(b) {
-    (function e(b) {
-      delete i[b];
-      for(var c in i) {
-        i[c].parent == b && e(c)
+  g.c(d.o, function(b) {
+    (function i(b) {
+      delete j[b];
+      for(var c in j) {
+        j[c].parent == b && i(c)
       }
-    })(b.get(d.c))
+    })(b.get(d.b))
   });
-  g.d(d.k, function(b) {
-    i[b.get(d.c)].resource = b.get(d.f)
+  g.c(d.n, function(b) {
+    j[b.get(d.b)].resource = b.get(d.f)
   });
-  g.d(d.j, function(b) {
-    i[b.get(d.c)].health = b.get(d.f)
+  g.c(d.m, function(b) {
+    j[b.get(d.b)].health = b.get(d.f)
   });
-  g.d(d.g, function(b) {
-    i[b.get(d.c)].position = b.get(d.g)
+  g.c(d.l, function(b) {
+    j[b.get(d.b)].spell = {target:b.get(d.h), timeLeft:b.get(d.r), totalTime:b.get(d.s), tag:b.get(d.j)}
+  });
+  g.c(d.g, function(b) {
+    j[b.get(d.b)].position = b.get(d.g)
   })
 };
+setInterval(function() {
+  for(var c in j) {
+    "spell" in j[c] && 0 >= (j[c].spell.timeLeft -= 0.1) && delete j[c].spell
+  }
+}, 100);
 
 `

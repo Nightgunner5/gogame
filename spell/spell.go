@@ -2,12 +2,13 @@ package spell
 
 import (
 	"github.com/Nightgunner5/gogame/entity"
+	"github.com/Nightgunner5/gogame/network"
 	"sync"
 )
 
 type Spell interface {
 	// Returns true if the spell has ended, false if it has not.
-	Tick(Δtime float64) bool
+	Tick(float64) bool
 
 	Caster() entity.Entity
 	Target() entity.Entity
@@ -18,54 +19,69 @@ type Spell interface {
 	// Interrupts the spell and returns true. If the spell is not
 	// interruptable, returns false and does nothing.
 	Interrupt() bool
+
+	Tag() string
 }
 
-type Caster interface {
+type SpellCaster interface {
 	Interrupt() bool
 	CurrentSpell() Spell
+	Cast(Spell)
+	CasterThink(float64) bool
 }
 
-type SpellCaster struct {
-	current Spell
-	m       sync.Mutex
+type baseSpellCaster struct {
+	ent   entity.EntityID
+	spell Spell
+	sync.Mutex
 }
 
-func (c *SpellCaster) CasterThink(Δtime float64) bool {
-	c.m.Lock()
-	defer c.m.Unlock()
+func BaseSpellCaster(ent entity.Entity) SpellCaster {
+	return &baseSpellCaster{
+		ent: ent.ID(),
+	}
+}
 
-	spell := c.current
-	if spell == nil {
+func (b *baseSpellCaster) CasterThink(delta float64) bool {
+	b.Lock()
+	defer b.Unlock()
+
+	if b.spell == nil {
 		return false
 	}
-	if spell.Tick(Δtime) {
-		c.current = nil
+	if b.spell.Tick(delta) {
+		b.spell = nil
 		return false
 	}
 	return true
 }
 
-func (c *SpellCaster) CurrentSpell() Spell {
-	c.m.Lock()
-	defer c.m.Unlock()
+func (b *baseSpellCaster) CurrentSpell() Spell {
+	b.Lock()
+	defer b.Unlock()
 
-	return c.current
+	return b.spell
 }
 
-func (c *SpellCaster) Cast(spell Spell) {
-	c.m.Lock()
-	defer c.m.Unlock()
+func (b *baseSpellCaster) Cast(spell Spell) {
+	b.Lock()
+	defer b.Unlock()
 
-	c.current = spell
+	b.spell = spell
+	network.Broadcast(network.NewPacket(network.CastSpell).
+		Set(network.EntityID, b.ent).
+		Set(network.OtherEntID, spell.Target().ID()).
+		Set(network.Tag, spell.Tag()).
+		Set(network.TimeLeft, spell.TimeLeft()).
+		Set(network.TotalTime, spell.TotalTime()), false)
 }
 
-func (c *SpellCaster) Interrupt() bool {
-	c.m.Lock()
-	defer c.m.Unlock()
+func (b *baseSpellCaster) Interrupt() bool {
+	b.Lock()
+	defer b.Unlock()
 
-	spell := c.current
-	if spell != nil && spell.Interrupt() {
-		c.current = nil
+	if b.spell != nil && b.spell.Interrupt() {
+		b.spell = nil
 		return true
 	}
 	return false

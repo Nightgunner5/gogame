@@ -236,7 +236,7 @@ func (d *delayedEntityList) commit() {
 		network.Broadcast(network.NewPacket(network.EntitySpawned).
 			Set(network.EntityID, ent.ID()).
 			Set(network.OtherEntID, ent.Parent().ID()).
-			Set(network.EntityTag, ent.Tag()), false)
+			Set(network.Tag, ent.Tag()), false)
 		if h, ok := ent.(Healther); ok {
 			network.Broadcast(network.NewPacket(network.ChangeHealth).
 				Set(network.EntityID, ent.ID()).
@@ -271,7 +271,7 @@ func init() {
 				send <- network.NewPacket(network.EntitySpawned).
 					Set(network.EntityID, ent.ID()).
 					Set(network.OtherEntID, ent.Parent().ID()).
-					Set(network.EntityTag, ent.Tag())
+					Set(network.Tag, ent.Tag())
 			}
 			if h, ok := ent.(Healther); ok {
 				send <- network.NewPacket(network.ChangeHealth).

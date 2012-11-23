@@ -34,7 +34,7 @@ var EntityName = (packetID++).toString(32);
 var CastSpell  = (packetID++).toString(32);
 var KeepAlive  = (packetID++).toString(32);
 
-var VIEW_SCALE = 20;
+var VIEW_SCALE = 1;
 
 gogame.client.start('ws://' + location.host + '/socket');
 
@@ -89,29 +89,42 @@ requestAnimationFrame(function() {
 				ctx.fillText('You are dead!', 0, 0);
 			}
 		}
-		ctx.translate(-viewPos.x * VIEW_SCALE, -viewPos.y * VIEW_SCALE);
+		ctx.translate(-viewPos.x * VIEW_SCALE * 20, -viewPos.y * VIEW_SCALE * 20);
 
 		for (var id in gogame.client.Entities) {
 			var ent = gogame.client.Entities[id];
 			if (!ent.tag || !ent.position || !ent.health)
 				continue;
-			var x = ent.position[0]*VIEW_SCALE, y = ent.position[1]*VIEW_SCALE;
+			var x = ent.position[0] * VIEW_SCALE * 20, y = ent.position[1] * VIEW_SCALE * 20;
 
 			if (ent.tag == 'imp') {
 				ctx.beginPath();
 				ctx.fillStyle = ent.parent == myMagicianID ? 'rgba(0, 255, 0, 0.05)' : 'rgba(255, 0, 0, 0.05)';
-				ctx.arc(x, y, VIEW_SCALE * 10, 0, Math.PI * 2);
+				ctx.arc(x, y, VIEW_SCALE * 200, 0, Math.PI * 2);
 				ctx.fill();
 			}
 
 			ctx.fillStyle = '#f00';
 			ctx.fillRect(x, y, {
-				imp: VIEW_SCALE / 2,
-				magician: VIEW_SCALE * 5
-			}[ent.tag], VIEW_SCALE / 10);
+				imp:      VIEW_SCALE * 10,
+				magician: VIEW_SCALE * 100
+			}[ent.tag], VIEW_SCALE * 2);
 
 			ctx.fillStyle = '#0f0';
-			ctx.fillRect(x, y, ent.health * VIEW_SCALE / 20, VIEW_SCALE / 10);
+			ctx.fillRect(x, y, ent.health * VIEW_SCALE, VIEW_SCALE * 2);
+
+			if (ent.tag == 'magician') {
+				ctx.fillStyle = '#000';
+				ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * 100, VIEW_SCALE * 2);
+
+				ctx.fillStyle = '#00f';
+				ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * ent.resource / 1.6, VIEW_SCALE * 2);
+
+				if ('spell' in ent) {
+					ctx.fillStyle = '#07f';
+					ctx.fillRect(x, y + VIEW_SCALE * 6, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 100, VIEW_SCALE * 2);
+				}
+			}
 
 			ctx.font = {
 				imp: '12px sans-serif',

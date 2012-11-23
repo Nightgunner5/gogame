@@ -17,10 +17,8 @@ type (
 		entity.Healther
 		entity.Resourcer
 		entity.Thinker
-
-		spell.Caster
+		spell.SpellCaster
 		effect.Effected
-		Cast(spell spell.Spell)
 
 		Name() string
 		SetMotion(x, y, z float64)
@@ -33,7 +31,6 @@ type (
 		entity.Positioner
 		entity.Healther
 		entity.Resourcer
-
 		spell.SpellCaster
 		effect.Effected
 
@@ -55,6 +52,7 @@ func NewMagician(x, y, z float64, name string) Magician {
 	m.Positioner = entity.BasePosition(m, x, y, z)
 	m.Healther = entity.BaseHealth(m, maxHealth)
 	m.Resourcer = entity.BaseResource(m, maxMana)
+	m.SpellCaster = spell.BaseSpellCaster(m)
 	m.Effected = effect.BaseEffected(m)
 
 	entity.Spawn(m)

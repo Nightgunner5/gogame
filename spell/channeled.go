@@ -12,6 +12,7 @@ type ChanneledSpell struct {
 	Caster_       entity.EntityID
 	Target_       entity.EntityID
 	Action        func(target, caster entity.Entity, Δtime float64)
+	Tag_          string
 
 	m sync.Mutex
 }
@@ -22,6 +23,10 @@ func (s *ChanneledSpell) Caster() entity.Entity {
 
 func (s *ChanneledSpell) Target() entity.Entity {
 	return entity.Get(s.Target_)
+}
+
+func (s *ChanneledSpell) Tag() string {
+	return s.Tag_
 }
 
 func (s *ChanneledSpell) Interrupt() bool {

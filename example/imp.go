@@ -13,7 +13,7 @@ type (
 		entity.Positioner
 		entity.Healther
 		entity.Thinker
-		spell.Caster
+		spell.SpellCaster
 
 		Name() string
 
@@ -40,6 +40,7 @@ func NewImp(master Magician, x, y, z float64) Imp {
 
 	i.Positioner = entity.BasePosition(i, x, y, z)
 	i.Healther = entity.BaseHealth(i, maxHealth)
+	i.SpellCaster = spell.BaseSpellCaster(i)
 
 	entity.Spawn(i)
 
@@ -95,7 +96,7 @@ func (i *imp) Think(delta float64) {
 			}
 			return false
 		}, func(e entity.Entity) {
-			i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false))
+			i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false, "impfire"))
 			foundTarget = true
 		})
 	}

@@ -16,7 +16,7 @@ client['start'] = function(url) {
 	client.listen(net.EntitySpawned, function(packet) {
 		entities[packet.get(net.EntityID)] = {
 			'parent': packet.get(net.OtherEntID),
-			'tag':    packet.get(net.EntityTag)
+			'tag':    packet.get(net.Tag)
 		};
 	});
 
@@ -39,7 +39,26 @@ client['start'] = function(url) {
 		entities[packet.get(net.EntityID)]['health'] = packet.get(net.Amount);
 	});
 
+	client.listen(net.CastSpell, function(packet) {
+		entities[packet.get(net.EntityID)]['spell'] = {
+			'target':    packet.get(net.OtherEntID),
+			'timeLeft':  packet.get(net.TimeLeft),
+			'totalTime': packet.get(net.TotalTime),
+			'tag':       packet.get(net.Tag)
+		};
+	});
+
 	client.listen(net.EntityPosition, function(packet) {
 		entities[packet.get(net.EntityID)]['position'] = packet.get(net.EntityPosition);
 	});
 };
+
+setInterval(function() {
+	for (var id in entities) {
+		if ('spell' in entities[id]) {
+			if ((entities[id]['spell']['timeLeft'] -= 0.1) <= 0) {
+				delete entities[id]['spell'];
+			}
+		}
+	}
+}, 100);

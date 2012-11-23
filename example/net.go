@@ -109,6 +109,7 @@ func init() {
 						Caster_:  magician.ID(),
 						Target_:  magician.ID(),
 						Action:   summonImp,
+						Tag_:     "summonimp",
 
 						Interruptable: true,
 					})
@@ -124,6 +125,7 @@ func init() {
 						Caster_:  magician.ID(),
 						Target_:  magician.ID(),
 						Action:   summonShield,
+						Tag_:     "summonshield",
 
 						Interruptable: true,
 					})

@@ -9,7 +9,9 @@ var Socket = net['Socket'] = /** @constructor */ function(uri) {
 	that.socket['onmessage'] = function(message) {
 		var packet = JSON.parse(message['data']);
 		if (packet['i'] in that.listeners) {
-			that.listeners[packet['i']](new Packet(packet));
+			that.listeners[packet['i']].forEach(function(listener) {
+				listener(new Packet(packet));
+			});
 		} else {
 			console.log(packet);
 		}
@@ -25,11 +27,10 @@ var Socket = net['Socket'] = /** @constructor */ function(uri) {
 		toSend += JSON.stringify(packet) + '\n';
 	};
 	that.listen = that['listen'] = function(packetID, listener) {
-		that.listeners[packetID] = listener;
+		that.listeners[packetID] = that.listeners[packetID] || [];
+		that.listeners[packetID].push(listener);
 	};
 };
-
-/** @private */
 
 /** @private */
 net.base32 = function(n) {
@@ -47,9 +48,9 @@ net.iota_ = 0;
 
 /** @const */ net.debugEcho = net.iota();
 
-/** @const */ net.EntityID     = net['EntityID']     = net.iota();
-/** @const */ net.OtherEntID   = net['OtherEntID']   = net.iota();
-/** @const */ net.EntityTag    = net['EntityTag']    = net.iota();
+/** @const */ net.EntityID   = net['EntityID']   = net.iota();
+/** @const */ net.OtherEntID = net['OtherEntID'] = net.iota();
+/** @const */ net.Tag        = net['Tag']        = net.iota();
 
 /** @const */ net.Amount         = net['Amount']         = net.iota();
 /** @const */ net.ChangeHealth   = net['ChangeHealth']   = net.iota();
@@ -58,6 +59,10 @@ net.iota_ = 0;
 /** @const */ net.EntitySpawned   = net['EntitySpawned']   = net.iota();
 /** @const */ net.EntityDespawned = net['EntityDespawned'] = net.iota();
 /** @const */ net.EntityPosition  = net['EntityPosition']  = net.iota();
+
+/** @const */ net.CastSpell = net['CastSpell'] = net.iota();
+/** @const */ net.TimeLeft  = net['TimeLeft']  = net.iota();
+/** @const */ net.TotalTime = net['TotalTime'] = net.iota();
 
 /** @const */ net['FirstUnusedPacketID'] = net.iota();
 

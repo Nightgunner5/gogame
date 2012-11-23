@@ -12,8 +12,7 @@ type BasicSpell struct {
 	Caster_       entity.EntityID
 	Target_       entity.EntityID
 	Action        func(target, caster entity.Entity)
-
-	Tag string
+	Tag_          string
 
 	m sync.Mutex
 }
@@ -24,6 +23,10 @@ func (s *BasicSpell) Caster() entity.Entity {
 
 func (s *BasicSpell) Target() entity.Entity {
 	return entity.Get(s.Target_)
+}
+
+func (s *BasicSpell) Tag() string {
+	return s.Tag_
 }
 
 func (s *BasicSpell) Interrupt() bool {

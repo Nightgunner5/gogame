@@ -7,7 +7,7 @@ const (
 
 	EntityID
 	OtherEntID
-	EntityTag
+	Tag
 
 	Amount
 	ChangeHealth
@@ -16,6 +16,10 @@ const (
 	EntitySpawned
 	EntityDespawned
 	EntityPosition
+
+	CastSpell
+	TimeLeft
+	TotalTime
 
 	// Insert new default packet IDs here
 
