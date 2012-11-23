@@ -26,9 +26,9 @@ type (
 	}
 
 	basePosition struct {
-		xyz [3]float64
-		ent EntityID
-		mtx sync.Mutex
+		x, y, z float64
+		ent     EntityID
+		mtx     sync.Mutex
 	}
 )
 
@@ -58,7 +58,9 @@ func BaseResource(e Entity, max float64) Resourcer {
 
 func BasePosition(e Entity, x, y, z float64) Positioner {
 	return &basePosition{
-		xyz: [3]float64{x, y, z},
+		x:   x,
+		y:   y,
+		z:   z,
 		ent: e.ID(),
 	}
 }
@@ -117,13 +119,7 @@ func (b *basePosition) Position() (x, y, z float64) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 
-	return b.xyz[0], b.xyz[1], b.xyz[2]
-}
-func (b *basePosition) positionArray() []float64 {
-	b.mtx.Lock()
-	defer b.mtx.Unlock()
-
-	return b.xyz[:]
+	return b.x, b.y, b.z
 }
 
 func (b *baseHealth) TakeDamage(amount float64, attacker Entity) {
@@ -150,12 +146,12 @@ func (b *basePosition) Move(dx, dy, dz float64) {
 	defer b.mtx.Unlock()
 
 	if dx != 0 || dy != 0 || dz != 0 {
-		b.xyz[0] += dx
-		b.xyz[1] += dy
-		b.xyz[2] += dz
+		b.x += dx
+		b.y += dy
+		b.z += dz
 
 		network.Broadcast(network.NewPacket(network.EntityPosition).
 			Set(network.EntityID, b.ent).
-			Set(network.EntityPosition, b.xyz[:]), false)
+			Set(network.EntityPosition, []float64{b.x, b.y, b.z}), false)
 	}
 }

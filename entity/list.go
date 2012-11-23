@@ -244,9 +244,10 @@ func (d *delayedEntityList) commit() {
 				Set(network.Amount, h.Health()), false)
 		}
 		if p, ok := ent.(Positioner); ok {
+			x, y, z := p.Position()
 			network.Broadcast(network.NewPacket(network.EntityPosition).
 				Set(network.EntityID, ent.ID()).
-				Set(network.EntityPosition, p.positionArray()), false)
+				Set(network.EntityPosition, []float64{x, y, z}), false)
 		}
 	}
 	d.toAdd = nil
@@ -275,9 +276,10 @@ func init() {
 					Set(network.Amount, h.Health())
 			}
 			if p, ok := ent.(Positioner); ok {
+				x, y, z := p.Position()
 				send <- network.NewPacket(network.EntityPosition).
 					Set(network.EntityID, ent.ID()).
-					Set(network.EntityPosition, p.positionArray())
+					Set(network.EntityPosition, []float64{x, y, z})
 			}
 		})
 	})

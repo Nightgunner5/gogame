@@ -18,8 +18,12 @@ func renderer() {
 <title>GoGame</title>
 <style>
 html, body, canvas { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #333; }
-header, footer { position: fixed; right: 0; z-index: 1000; background: rgba(255, 255, 255, 0.7); }
-footer { bottom: 0; }
+footer { position: fixed; right: 0; z-index: 1000; bottom: 0; text-align: center; }
+button { width: 150px; }
+#movement, button { line-height: 1; padding: 2px; border-radius: 3px; border: 1px solid #aaa; display: inline-block; background: -webkit-linear-gradient(top, #eee, #ddd, #aaa); }
+#movement button { width: 20px; border: 0; background: transparent; padding: 0; margin: 0; }
+button { color: #333; }
+button:hover { color: #000; }
 </style>
 <script src="engine.js"></script>
 <script>
@@ -29,6 +33,8 @@ var Handshake  = (packetID++).toString(32);
 var EntityName = (packetID++).toString(32);
 var CastSpell  = (packetID++).toString(32);
 var KeepAlive  = (packetID++).toString(32);
+
+var VIEW_SCALE = 20;
 
 gogame.client.start('ws://' + location.host + '/socket');
 
@@ -50,6 +56,8 @@ var entityNames = {};
 gogame.client.listen(EntityName, function(packet) {
 	entityNames[packet.get(gogame.net.EntityID)] = packet.get(EntityName);
 });
+
+var viewPos = {x: 0, y: 0};
 
 requestAnimationFrame(function() {
 	requestAnimationFrame(function render() {
@@ -73,30 +81,37 @@ requestAnimationFrame(function() {
 			if (gogame.client.Entities[myMagicianID]) {
 				var pos = gogame.client.Entities[myMagicianID].position;
 				if (pos) {
-					ctx.translate(-pos[0]*20, -pos[1]*20);
+					viewPos.x = pos[0], viewPos.y = pos[1];
 				}
 			} else {
 				ctx.font = '24px sans-serif';
 				ctx.fillStyle = '#fff';
 				ctx.fillText('You are dead!', 0, 0);
-				return;
 			}
 		}
+		ctx.translate(-viewPos.x * VIEW_SCALE, -viewPos.y * VIEW_SCALE);
 
 		for (var id in gogame.client.Entities) {
 			var ent = gogame.client.Entities[id];
 			if (!ent.tag || !ent.position || !ent.health)
 				continue;
-			var x = ent.position[0]*20, y = ent.position[1]*20;
+			var x = ent.position[0]*VIEW_SCALE, y = ent.position[1]*VIEW_SCALE;
+
+			if (ent.tag == 'imp') {
+				ctx.beginPath();
+				ctx.fillStyle = ent.parent == myMagicianID ? 'rgba(0, 255, 0, 0.05)' : 'rgba(255, 0, 0, 0.05)';
+				ctx.arc(x, y, VIEW_SCALE * 10, 0, Math.PI * 2);
+				ctx.fill();
+			}
 
 			ctx.fillStyle = '#f00';
 			ctx.fillRect(x, y, {
-				imp: 10,
-				magician: 100
-			}[ent.tag], 2);
+				imp: VIEW_SCALE / 2,
+				magician: VIEW_SCALE * 5
+			}[ent.tag], VIEW_SCALE / 10);
 
 			ctx.fillStyle = '#0f0';
-			ctx.fillRect(x, y, ent.health, 2);
+			ctx.fillRect(x, y, ent.health * VIEW_SCALE / 20, VIEW_SCALE / 10);
 
 			ctx.font = {
 				imp: '12px sans-serif',
@@ -108,15 +123,8 @@ requestAnimationFrame(function() {
 	});
 });
 
-var lastMoveX = 0, lastMoveY = 0;
 function move(x, y) {
-	if (lastMoveX == x && lastMoveY == y) {
-		x = 0;
-		y = 0;
-	}
 	gogame.client.send(new gogame.net.Packet(gogame.net.EntityPosition).set(gogame.net.EntityPosition, [x, y, 0]));
-	lastMoveX = x;
-	lastMoveY = y;
 }
 
 function spell(name) {
@@ -126,8 +134,13 @@ function spell(name) {
 gogame.client.send(new gogame.net.Packet(Handshake).set(EntityName, /*prompt("YO MAN WHAT'S YO NAME")*/'magician'));
 </script>
 </head>
-<body><footer><button onclick="move(0,-1)">&uarr;</button><button onclick="move(-1,0)">&larr;</button><button onclick="move(1,0)">&rarr;</button><button onclick="move(0,1)">&darr;</button>
-<br><button onclick="spell('imp')">SUMMON IMP</button> <button onclick="spell('shield')">SHIELD SELF</button></footer><canvas></canvas></body>
+<body><footer>
+<div id="movement"><button onclick="move(-1,-1)">&nbsp;</button><button onclick="move(0,-1)">&uarr;</button><button onclick="move(1,-1)">&nbsp;</button><br/>
+<button onclick="move(-1,0)">&larr;</button><button onclick="move(0, 0)">&nbsp;</button><button onclick="move(1,0)">&rarr;</button><br/>
+<button onclick="move(-1,1)">&nbsp;</button><button onclick="move(0,1)">&darr;</button><button onclick="move(1,1)">&nbsp;</button></div><br/>
+<button onclick="spell('imp')">SUMMON IMP</button><br/>
+<button onclick="spell('shield')">SHIELD SELF</button>
+</footer><canvas></canvas></body>
 </html>`))
 	})
 

@@ -7,6 +7,7 @@ import (
 	"github.com/Nightgunner5/gogame/spell"
 	"math"
 	"math/rand"
+	"sync"
 )
 
 type (
@@ -38,6 +39,8 @@ type (
 
 		name   string
 		motion [3]float64
+
+		mtx sync.Mutex
 	}
 )
 
@@ -80,7 +83,9 @@ func (m *magician) SetMotion(x, y, z float64) {
 		magnitude := math.Sqrt(x*x + y*y + z*z)
 		x, y, z = x/magnitude, y/magnitude, z/magnitude
 	}
+	m.mtx.Lock()
 	m.motion[0], m.motion[1], m.motion[2] = x, y, z
+	m.mtx.Unlock()
 }
 
 func (m *magician) Think(delta float64) {
@@ -93,10 +98,12 @@ func (m *magician) Think(delta float64) {
 		return
 	}
 
+	m.mtx.Lock()
 	m.Move(m.motion[0]*delta, m.motion[1]*delta, 0)
 	if m.motion[0] != 0 || m.motion[1] != 0 {
 		m.Interrupt()
 	}
+	m.mtx.Unlock()
 
 	m.EffectThink(delta)
 
