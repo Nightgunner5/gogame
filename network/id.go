@@ -13,6 +13,7 @@ const (
 	EntityID
 	ParentID
 	Tag
+
 	EntitySpawned
 	EntityDespawned
 	EntityPosition

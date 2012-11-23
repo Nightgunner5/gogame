@@ -55,9 +55,10 @@ net.iota_ = 0;
 /** @const */ net.EntityID        = net['EntityID']        = net.iota();
 /** @const */ net.ParentID        = net['ParentID']        = net.iota();
 /** @const */ net.Tag             = net['Tag']             = net.iota();
+
 /** @const */ net.EntitySpawned   = net['EntitySpawned']   = net.iota();
 /** @const */ net.EntityDespawned = net['EntityDespawned'] = net.iota();
-/** @const */ net.EntityPosition  = net['EntityPosition'] = net.iota();
+/** @const */ net.EntityPosition  = net['EntityPosition']  = net.iota();
 
 /** @const */ net['FirstUnusedPacketID'] = net.iota();
 
