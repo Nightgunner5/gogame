@@ -8,11 +8,18 @@ import (
 type Effected interface {
 	Effects() []*Effect
 	AddEffect(*Effect)
-	EffectThink(float64, entity.Entity)
+	EffectThink(float64)
 	entity.AllListeners
 }
 
+func BaseEffected(ent entity.Entity) Effected {
+	return &baseEffected{
+		ent: ent.ID(),
+	}
+}
+
 type baseEffected struct {
+	ent     entity.EntityID
 	effects []*Effect
 	sync.Mutex
 }
@@ -38,9 +45,11 @@ func (b *baseEffected) AddEffect(effect *Effect) {
 	}
 }
 
-func (b *baseEffected) EffectThink(delta float64, ent entity.Entity) {
+func (b *baseEffected) EffectThink(delta float64) {
 	b.Lock()
 	defer b.Unlock()
+
+	ent := entity.Get(b.ent)
 
 	for i, e := range b.effects {
 		e.effectThink(delta, ent)

@@ -368,7 +368,7 @@ func Despawn(entity Entity) {
 // Returns the entity for a given ID. nil will be returned if no entity is
 // spawned with the given ID.
 func Get(id EntityID) Entity {
-	return globalEntityList.Get(id)
+	return toSpawn.Get(id)
 }
 
 // Calls the given function for each currently spawned entity in order.

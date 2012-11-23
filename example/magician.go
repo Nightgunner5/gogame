@@ -18,7 +18,7 @@ type (
 		entity.Thinker
 
 		spell.Caster
-		effect.EffectAdder
+		effect.Effected
 		Cast(spell spell.Spell)
 
 		Name() string
@@ -34,7 +34,7 @@ type (
 		entity.Resourcer
 
 		spell.SpellCaster
-		effect.EffectAdder
+		effect.Effected
 
 		name   string
 		motion [3]float64
@@ -52,7 +52,7 @@ func NewMagician(x, y, z float64, name string) Magician {
 	m.Positioner = entity.BasePosition(m, x, y, z)
 	m.Healther = entity.BaseHealth(m, maxHealth)
 	m.Resourcer = entity.BaseResource(m, maxMana)
-	m.EffectAdder = effect.BaseEffectAdder(m)
+	m.Effected = effect.BaseEffected(m)
 
 	entity.Spawn(m)
 
@@ -122,7 +122,7 @@ func summonImp(target, caster entity.Entity) {
 func summonShield(target, caster entity.Entity) {
 	m := caster.(Magician)
 
-	m.AddEffect(effect.AbsorbDamage(20), 5)
+	m.AddEffect(effect.NewEffect("Shield", 5).Add(effect.AbsorbDamage(20)))
 }
 
 func (magician) magician() {}
