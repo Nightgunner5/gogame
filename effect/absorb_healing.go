@@ -10,7 +10,6 @@ type absorbHealingFlat struct {
 	flatPrimitive
 }
 
-var _ Primitive = new(absorbHealingFlat)
 var _ entity.DamageListener = new(absorbHealingFlat)
 
 func (*absorbHealingFlat) isSameType(other Primitive) bool {
@@ -30,6 +29,9 @@ func (absorb *absorbHealingFlat) String() string {
 	return "Absorbs " + s + " healing."
 }
 
-func (absorb *absorbHealingFlat) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
-	*amount += absorb.consume(-*amount)
+func (absorb *absorbHealingFlat) OnTakeDamage(amount *float64, attacker, victim entity.Entity) bool {
+	c := absorb.consume(-*amount)
+	*amount += c
+
+	return c != 0
 }

@@ -30,27 +30,28 @@ d.Socket = function(c) {
     b.e[c].push(f)
   }
 };
-d.t = function() {
-  return(d.k - 1).toString(32)
+d.u = function() {
+  return(d.l - 1).toString(32)
 };
 d.a = function() {
-  d.k++;
-  return d.t()
+  d.l++;
+  return d.u()
 };
-d.k = 0;
-d.u = d.a();
+d.l = 0;
+d.v = d.a();
 d.b = d.EntityID = d.a();
-d.h = d.OtherEntID = d.a();
-d.j = d.Tag = d.a();
+d.j = d.OtherEntID = d.a();
+d.k = d.Tag = d.a();
 d.f = d.Amount = d.a();
-d.m = d.ChangeHealth = d.a();
-d.n = d.ChangeResource = d.a();
-d.q = d.EntitySpawned = d.a();
-d.o = d.EntityDespawned = d.a();
-d.g = d.EntityPosition = d.a();
-d.l = d.CastSpell = d.a();
-d.r = d.TimeLeft = d.a();
-d.s = d.TotalTime = d.a();
+d.n = d.ChangeHealth = d.a();
+d.o = d.ChangeResource = d.a();
+d.r = d.EntitySpawned = d.a();
+d.q = d.EntityDespawned = d.a();
+d.h = d.EntityPosition = d.a();
+d.m = d.CastSpell = d.a();
+d.s = d.TimeLeft = d.a();
+d.t = d.TotalTime = d.a();
+d.g = d.EntityEffects = d.a();
 d.FirstUnusedPacketID = d.a();
 var e = d.Packet = function(c) {
   "object" == typeof c ? (this.i = c.i, this.p = c.p) : (this.i = c, this.p = {});
@@ -71,10 +72,10 @@ g.start = function(c) {
   g.d.onerror = g.d.onclose = function() {
     g.disconnected = !0
   };
-  g.c(d.q, function(b) {
-    j[b.get(d.b)] = {parent:b.get(d.h), tag:b.get(d.j)}
+  g.c(d.r, function(b) {
+    j[b.get(d.b)] = {parent:b.get(d.j), tag:b.get(d.k), position:[0, 0, 0], effects:[]}
   });
-  g.c(d.o, function(b) {
+  g.c(d.q, function(b) {
     (function i(b) {
       delete j[b];
       for(var c in j) {
@@ -82,17 +83,20 @@ g.start = function(c) {
       }
     })(b.get(d.b))
   });
-  g.c(d.n, function(b) {
+  g.c(d.o, function(b) {
     j[b.get(d.b)].resource = b.get(d.f)
   });
-  g.c(d.m, function(b) {
+  g.c(d.n, function(b) {
     j[b.get(d.b)].health = b.get(d.f)
   });
-  g.c(d.l, function(b) {
-    j[b.get(d.b)].spell = {target:b.get(d.h), timeLeft:b.get(d.r), totalTime:b.get(d.s), tag:b.get(d.j)}
+  g.c(d.m, function(b) {
+    j[b.get(d.b)].spell = {target:b.get(d.j), timeLeft:b.get(d.s), totalTime:b.get(d.t), tag:b.get(d.k)}
+  });
+  g.c(d.h, function(b) {
+    j[b.get(d.b)].position = b.get(d.h)
   });
   g.c(d.g, function(b) {
-    j[b.get(d.b)].position = b.get(d.g)
+    j[b.get(d.b)].effects = b.get(d.g)
   })
 };
 setInterval(function() {

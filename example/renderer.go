@@ -58,6 +58,7 @@ gogame.client.listen(EntityName, function(packet) {
 });
 
 var viewPos = {x: 0, y: 0};
+var icons = {};
 
 requestAnimationFrame(function() {
 	requestAnimationFrame(function render() {
@@ -113,27 +114,51 @@ requestAnimationFrame(function() {
 			ctx.fillStyle = '#0f0';
 			ctx.fillRect(x, y, ent.health * VIEW_SCALE, VIEW_SCALE * 2);
 
+			var _y = y + VIEW_SCALE * 3;
+
 			if (ent.tag == 'magician') {
 				ctx.fillStyle = '#000';
-				ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * 100, VIEW_SCALE * 2);
+				ctx.fillRect(x, _y, VIEW_SCALE * 100, VIEW_SCALE * 2);
 
 				ctx.fillStyle = '#00f';
-				ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * ent.resource / 1.6, VIEW_SCALE * 2);
+				ctx.fillRect(x, _y, VIEW_SCALE * ent.resource / 1.6, VIEW_SCALE * 2);
+
+				_y += VIEW_SCALE * 3;
 
 				if ('spell' in ent) {
 					ctx.fillStyle = '#07f';
-					ctx.fillRect(x, y + VIEW_SCALE * 6, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 100, VIEW_SCALE * 2);
+					ctx.fillRect(x, _y, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 100, VIEW_SCALE * 2);
+					_y += VIEW_SCALE * 3;
 				}
 			} else {
 				if ('spell' in ent) {
 					ctx.fillStyle = '#07f';
-					ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 10, VIEW_SCALE * 2);
+					ctx.fillRect(x, _y, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 10, VIEW_SCALE * 2);
+					_y += VIEW_SCALE * 3;
 				}
 			}
 
+			if ('effects' in ent && ent.effects.length) {
+				ent.effects.forEach(function(effect) {
+					var name = effect.desc.substr(0, effect.desc.indexOf('\n'));
+
+					if (name in icons) {
+						ctx.drawImage(icons[name], x, _y, VIEW_SCALE * 8, VIEW_SCALE * 8);
+						ctx.font = (8 * VIEW_SCALE) + 'px sans-serif';
+						ctx.fillStyle = '#fff';
+						effect.desc.split(/\n/g).forEach(function(line, i) {
+							ctx.fillText(line, x + (i ? 0 : 9 * VIEW_SCALE), _y += VIEW_SCALE * 9);
+						});
+					} else {
+						icons[name] = new Image();
+						icons[name].src = 'res/' + name + '.png';
+					}
+				});
+			}
+
 			ctx.font = {
-				imp: '12px sans-serif',
-				magician: '18px sans-serif'
+				imp:      (12 * VIEW_SCALE) + 'px sans-serif',
+				magician: (18 * VIEW_SCALE) + 'px sans-serif'
 			}[ent.tag];
 			ctx.fillStyle = '#fff';
 			ctx.fillText(entityNames[id] || 'Unknown', x, y);

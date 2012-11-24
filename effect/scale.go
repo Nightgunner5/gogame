@@ -7,7 +7,7 @@ import (
 
 type scalePrimitive float64
 
-func (scalePrimitive) effectThink(float64, entity.Entity) {}
+func (scalePrimitive) effectThink(float64, entity.Entity) bool { return false }
 
 func (a scalePrimitive) combine(b scalePrimitive) scalePrimitive {
 	return a * b

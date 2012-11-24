@@ -64,6 +64,8 @@ net.iota_ = 0;
 /** @const */ net.TimeLeft  = net['TimeLeft']  = net.iota();
 /** @const */ net.TotalTime = net['TotalTime'] = net.iota();
 
+/** @const */ net.EntityEffects = net['EntityEffects'] = net.iota();
+
 /** @const */ net['FirstUnusedPacketID'] = net.iota();
 
 var Packet = net['Packet'] = /** @constructor */ function(id) {

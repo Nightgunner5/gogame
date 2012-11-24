@@ -60,26 +60,30 @@ func (e *Effect) String() string {
 	return s
 }
 
-func (e *Effect) effectThink(delta float64, ent entity.Entity) {
+func (e *Effect) effectThink(delta float64, ent entity.Entity) (changed bool) {
+	changed = int(e.currentTime) != int(e.currentTime + delta)
 	e.currentTime += delta
 
 	for _, p := range e.primitives {
-		p.effectThink(delta, ent)
+		changed = p.effectThink(delta, ent) || changed
 	}
+	return
 }
 
-func (e *Effect) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
+func (e *Effect) OnTakeDamage(amount *float64, attacker, victim entity.Entity) (changed bool) {
 	for _, p := range e.primitives {
 		if l, ok := p.(entity.DamageListener); ok {
-			l.OnTakeDamage(amount, attacker, victim)
+			changed = l.OnTakeDamage(amount, attacker, victim) || changed
 		}
 	}
+	return
 }
 
-func (e *Effect) OnDoDamage(amount *float64, attacker, victim entity.Entity) {
+func (e *Effect) OnDoDamage(amount *float64, attacker, victim entity.Entity) (changed bool) {
 	for _, p := range e.primitives {
 		if l, ok := p.(entity.DoDamageListener); ok {
-			l.OnDoDamage(amount, attacker, victim)
+			changed = l.OnDoDamage(amount, attacker, victim) || changed
 		}
 	}
+	return
 }

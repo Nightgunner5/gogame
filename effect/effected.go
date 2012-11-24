@@ -43,6 +43,8 @@ func (b *baseEffected) AddEffect(effect *Effect) {
 	if effect.TimeLeft() != 0 {
 		b.effects = append(b.effects, effect)
 	}
+
+	broadcastPacket(b.ent, b.effects)
 }
 
 func (b *baseEffected) EffectThink(delta float64) {
@@ -51,35 +53,49 @@ func (b *baseEffected) EffectThink(delta float64) {
 
 	ent := entity.Get(b.ent)
 
+	changed := false
 	for i, e := range b.effects {
-		e.effectThink(delta, ent)
+		changed = e.effectThink(delta, ent) || changed
 		if e.TimeLeft() == 0 {
 			b.effects[i] = nil
+			changed = true
 		}
 	}
 
-	for i := 0; i < len(b.effects); i++ {
-		if b.effects[i] == nil {
-			b.effects = append(b.effects[:i], b.effects[i+1:]...)
-			i--
+	if changed {
+		for i := 0; i < len(b.effects); i++ {
+			if b.effects[i] == nil {
+				b.effects = append(b.effects[:i], b.effects[i+1:]...)
+				i--
+			}
 		}
+
+		broadcastPacket(b.ent, b.effects)
 	}
 }
 
-func (b *baseEffected) OnDoDamage(amount *float64, attacker, victim entity.Entity) {
+func (b *baseEffected) OnDoDamage(amount *float64, attacker, victim entity.Entity) (changed bool) {
 	b.Lock()
 	defer b.Unlock()
 
 	for _, e := range b.effects {
-		e.OnDoDamage(amount, attacker, victim)
+		changed = e.OnDoDamage(amount, attacker, victim) || changed
 	}
+	if changed {
+		broadcastPacket(b.ent, b.effects)
+	}
+	return
 }
 
-func (b *baseEffected) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
+func (b *baseEffected) OnTakeDamage(amount *float64, attacker, victim entity.Entity) (changed bool) {
 	b.Lock()
 	defer b.Unlock()
 
 	for _, e := range b.effects {
-		e.OnTakeDamage(amount, attacker, victim)
+		changed = e.OnTakeDamage(amount, attacker, victim) || changed
 	}
+	if changed {
+		broadcastPacket(b.ent, b.effects)
+	}
+	return
 }

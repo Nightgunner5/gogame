@@ -9,8 +9,6 @@ func AbsorbDamage(amount float64) Primitive {
 type absorbDamageFlat struct {
 	flatPrimitive
 }
-
-var _ Primitive = new(absorbDamageFlat)
 var _ entity.DamageListener = new(absorbDamageFlat)
 
 func (*absorbDamageFlat) isSameType(other Primitive) bool {
@@ -30,6 +28,8 @@ func (absorb *absorbDamageFlat) String() string {
 	return "Absorbs " + s + " damage."
 }
 
-func (absorb *absorbDamageFlat) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
-	*amount -= absorb.consume(*amount)
+func (absorb *absorbDamageFlat) OnTakeDamage(amount *float64, attacker, victim entity.Entity) bool {
+	c := absorb.consume(*amount)
+	*amount -= c
+	return c != 0
 }

@@ -42,12 +42,12 @@ func (*after) combine(Primitive) Primitive {
 	panic("combine on effect.after is unimplemented by design")
 }
 
-func (a *after) effectThink(delta float64, ent entity.Entity) {
+func (a *after) effectThink(delta float64, ent entity.Entity) bool {
 	a.Lock()
 	defer a.Unlock()
 
 	if a.timeLeft <= 0 {
-		return
+		return false
 	}
 
 	a.timeLeft -= delta
@@ -57,4 +57,5 @@ func (a *after) effectThink(delta float64, ent entity.Entity) {
 			go e.AddEffect(a.add)
 		}
 	}
+	return true
 }

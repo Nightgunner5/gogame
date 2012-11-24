@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const MaxBufferedPackets = 32
+const MaxBufferedPackets = 8
 
 func DecodeStream(r net.Conn) <-chan Packet {
 	ch := make(chan Packet)

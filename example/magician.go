@@ -122,7 +122,7 @@ func summonImp(target, caster entity.Entity) {
 	z += rand.Float64()*2 - 1
 
 	imp := NewImp(m, x, y, z)
-	imp.AddEffect(effect.NewEffect("Impending Sickness", 10.1).
+	imp.AddEffect(effect.NewEffect("Summoning Sickness", 10.1).
 		Add(effect.After(effect.NewEffect("Summoning Sickness", 0).
 		Add(effect.DamageOverTime(2)), 10)))
 }

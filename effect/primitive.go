@@ -7,6 +7,6 @@ type Primitive interface {
 	// Only to be called if isSameType returns true for the same argument.
 	combine(Primitive) Primitive
 
-	effectThink(delta float64, ent entity.Entity)
+	effectThink(delta float64, ent entity.Entity) bool
 	String() string
 }

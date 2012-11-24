@@ -12,11 +12,12 @@ func DamageOverTime(perSecond float64) Primitive {
 	return damageOverTime{addPrimitive(perSecond)}
 }
 
-func (dot damageOverTime) effectThink(delta float64, ent entity.Entity) {
+func (dot damageOverTime) effectThink(delta float64, ent entity.Entity) bool {
 	if h, ok := ent.(entity.Healther); ok {
 		// This has to be done in a goroutine since the effect list gets locked when damage is dealt or taken.
 		go h.TakeDamage(dot.get()*delta, entity.World)
 	}
+	return false
 }
 
 func (damageOverTime) isSameType(other Primitive) bool {

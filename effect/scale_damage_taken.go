@@ -10,7 +10,6 @@ type scaleDamageTaken struct {
 	scalePrimitive
 }
 
-var _ Primitive = new(scaleDamageTaken)
 var _ entity.DamageListener = new(scaleDamageTaken)
 
 func (scaleDamageTaken) isSameType(other Primitive) bool {
@@ -33,6 +32,7 @@ func (scale scaleDamageTaken) String() string {
 	return "Reduces damage taken by " + s[1:] + "."
 }
 
-func (scale scaleDamageTaken) OnTakeDamage(amount *float64, attacker, victim entity.Entity) {
+func (scale scaleDamageTaken) OnTakeDamage(amount *float64, attacker, victim entity.Entity) bool {
 	*amount = scale.scale(*amount)
+	return false
 }

@@ -21,6 +21,8 @@ const (
 	TimeLeft
 	TotalTime
 
+	EntityEffects
+
 	// Insert new default packet IDs here
 
 	FirstUnusedPacketID

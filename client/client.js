@@ -15,8 +15,10 @@ client['start'] = function(url) {
 
 	client.listen(net.EntitySpawned, function(packet) {
 		entities[packet.get(net.EntityID)] = {
-			'parent': packet.get(net.OtherEntID),
-			'tag':    packet.get(net.Tag)
+			'parent':   packet.get(net.OtherEntID),
+			'tag':      packet.get(net.Tag),
+			'position': [0, 0, 0],
+			'effects':  []
 		};
 	});
 
@@ -50,6 +52,10 @@ client['start'] = function(url) {
 
 	client.listen(net.EntityPosition, function(packet) {
 		entities[packet.get(net.EntityID)]['position'] = packet.get(net.EntityPosition);
+	});
+
+	client.listen(net.EntityEffects, function(packet) {
+		entities[packet.get(net.EntityID)]['effects'] = packet.get(net.EntityEffects);
 	});
 };
 

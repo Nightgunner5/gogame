@@ -6,6 +6,7 @@ import (
 	"github.com/Nightgunner5/gogame/spell"
 	"math/rand"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -32,6 +33,8 @@ type namer interface {
 }
 
 func init() {
+	http.Handle("/res/", http.FileServer(http.Dir(".")))
+
 	go func() {
 		for {
 			time.Sleep(10 * time.Second)

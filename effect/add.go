@@ -7,7 +7,7 @@ import (
 
 type addPrimitive float64
 
-func (addPrimitive) effectThink(float64, entity.Entity) {}
+func (addPrimitive) effectThink(float64, entity.Entity) bool { return false }
 
 func (add addPrimitive) String() string {
 	if add <= 0 {

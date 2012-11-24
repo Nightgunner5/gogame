@@ -1,11 +1,13 @@
 package entity
 
 type DamageListener interface {
-	OnTakeDamage(amount *float64, attacker, victim Entity)
+	// Optionally modifies *amount. Returns true if the state of the DamageListener has changed.
+	OnTakeDamage(amount *float64, attacker, victim Entity) (changed bool)
 }
 
 type DoDamageListener interface {
-	OnDoDamage(amount *float64, attacker, victim Entity)
+	// Optionally modifies *amount. Returns true if the state of the DoDamageListener has changed.
+	OnDoDamage(amount *float64, attacker, victim Entity) (changed bool)
 }
 
 type AllListeners interface {
@@ -27,6 +29,7 @@ type Listeners struct {
 	damage   []DamageListener
 	doDamage []DoDamageListener
 }
+var _ AllListeners = new(Listeners)
 
 func (l *Listeners) AddAll(listener interface{}) {
 	if dmg, ok := listener.(DamageListener); ok {
@@ -72,14 +75,16 @@ func (l *Listeners) RemoveDoDamageListener(listener DoDamageListener) {
 	}
 }
 
-func (l *Listeners) OnTakeDamage(amount *float64, attacker, victim Entity) {
+func (l *Listeners) OnTakeDamage(amount *float64, attacker, victim Entity) (changed bool) {
 	for _, listener := range l.damage {
-		listener.OnTakeDamage(amount, attacker, victim)
+		changed = listener.OnTakeDamage(amount, attacker, victim) || changed
 	}
+	return
 }
 
-func (l *Listeners) OnDoDamage(amount *float64, attacker, victim Entity) {
+func (l *Listeners) OnDoDamage(amount *float64, attacker, victim Entity) (changed bool) {
 	for _, listener := range l.doDamage {
-		listener.OnDoDamage(amount, attacker, victim)
+		changed = listener.OnDoDamage(amount, attacker, victim) || changed
 	}
+	return
 }

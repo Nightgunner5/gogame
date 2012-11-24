@@ -7,7 +7,7 @@ import (
 
 type flatPrimitive float64
 
-func (*flatPrimitive) effectThink(float64, entity.Entity) {}
+func (*flatPrimitive) effectThink(float64, entity.Entity) bool { return false }
 
 func (flat *flatPrimitive) String() string {
 	if *flat <= 0 {
