@@ -99,7 +99,7 @@ func (i *imp) Think(delta float64) {
 	foundTarget := false
 	if i.nextSearch <= 0 {
 		i.nextSearch = spellCastTime
-		entity.ForOneNearby(i, maxCastDistance, func(e entity.Entity) bool {
+		foundTarget = entity.ForOneNearby(i, maxCastDistance, func(e entity.Entity) bool {
 			if o, ok := e.(Magician); ok {
 				return o != i.master
 			}
@@ -109,7 +109,6 @@ func (i *imp) Think(delta float64) {
 			return false
 		}, func(e entity.Entity) {
 			i.Cast(spell.DamageSpell(spellCastTime, spellDamage, i, e, false, "impfire"))
-			foundTarget = true
 		})
 	}
 

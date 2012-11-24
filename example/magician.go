@@ -124,7 +124,7 @@ func summonImp(target, caster entity.Entity) {
 	imp := NewImp(m, x, y, z)
 	imp.AddEffect(effect.NewEffect("Impending Sickness", 10.1).
 		Add(effect.After(effect.NewEffect("Summoning Sickness", 0).
-		Add(effect.DamageOverTime(5)), 10)))
+		Add(effect.DamageOverTime(2)), 10)))
 }
 
 func summonShield(target, caster entity.Entity) {
