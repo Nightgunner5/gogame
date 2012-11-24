@@ -6,6 +6,7 @@ import (
 	"github.com/Nightgunner5/gogame/network"
 	"github.com/Nightgunner5/gogame/spell"
 	"math"
+	"sync"
 )
 
 type (
@@ -32,6 +33,8 @@ type (
 		name       string
 		master     Magician
 		nextSearch float64
+
+		sync.Mutex
 	}
 )
 
@@ -75,6 +78,9 @@ func (i *imp) Think(delta float64) {
 		moveSpeed           = 0.75
 		personalSpaceBuffer = 5
 	)
+
+	i.Lock()
+	defer i.Unlock()
 
 	if i.Health() <= 0 {
 		entity.Despawn(i)

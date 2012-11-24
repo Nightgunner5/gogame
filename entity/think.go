@@ -10,7 +10,7 @@ var TimeScale float64 = 1
 
 const (
 	maxThinkDelay = time.Second / 20
-	minThinkDelay = maxThinkDelay / 5
+	minThinkDelay = maxThinkDelay
 )
 
 type thinkTask struct {
@@ -26,9 +26,23 @@ func init() {
 	}
 }
 
+// This is used instead of time.Tick because it does not prevent "throw: all goroutines are asleep!"
+func timeTick(interval time.Duration) <-chan time.Time {
+	ch := make(chan time.Time)
+
+	go func() {
+		for {
+			ch <- time.Now()
+			time.Sleep(interval)
+		}
+	}()
+
+	return ch
+}
+
 func thinkDispatcher(c chan<- thinkTask, global EntityList) {
 	then := time.Now()
-	for now := range time.Tick(minThinkDelay) {
+	for now := range timeTick(minThinkDelay) {
 		delta := float64(now.Sub(then)) / float64(time.Second) * TimeScale
 
 		global.Each(func(e Entity) {

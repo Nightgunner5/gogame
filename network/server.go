@@ -58,7 +58,7 @@ func handleSocket(conn *websocket.Conn) {
 	startupListener(out, addr)
 
 	for p := range in {
-		go dispatchPacket(p, out, addr, conn)
+		dispatchPacket(p, out, addr, conn)
 	}
 
 	connectionLock.Lock()

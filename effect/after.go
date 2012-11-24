@@ -53,6 +53,8 @@ func (a *after) effectThink(delta float64, ent entity.Entity) {
 	a.timeLeft -= delta
 	if a.timeLeft <= 0 {
 		// This has to be done in a goroutine since the effect list is locked during effectThink
-		go ent.(Effected).AddEffect(a.add)
+		if e, ok := ent.(Effected); ok {
+			go e.AddEffect(a.add)
+		}
 	}
 }
