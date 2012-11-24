@@ -406,31 +406,35 @@ func ForEachNearby(target Positioner, distance float64, f func(Entity)) {
 	})
 }
 
-func ForOneNearby(target Positioner, distance float64, allowed func(Entity) bool, f func(Entity)) {
+func ForOneNearby(target Positioner, distance float64, allowed func(Entity) bool, f func(Entity)) bool {
 	sX, sY, sZ := target.Position()
 	d2 := distance * distance
 
-	var (
-		ent   Entity
-		count int
-	)
+	global := globalEntityList.(*concurrentEntityList)
+	global.m.RLock()
+	defer global.m.RUnlock()
 
-	globalEntityList.Each(func(e Entity) {
-		if p, ok := e.(Positioner); ok && target != p && allowed(e) {
+	count := len(global.l)
+	current := rand.Intn(count)
+	step := rand.Intn(count - 2) + 1
+
+	for i := 0; i < count; i++ {
+		ent := global.l[current]
+
+		if p, ok := ent.(Positioner); ok && target != p && allowed(ent) {
 			x, y, z := p.Position()
 			x, y, z = sX-x, sY-y, sZ-z
 			x, y, z = x*x, y*y, z*z
 
 			if x+y+z <= d2 {
-				count++
-				if ent == nil || rand.Intn(count) == 0 {
-					ent = e
-				}
+				f(ent)
+				return true
 			}
 		}
-	})
 
-	if ent != nil {
-		f(ent)
+		current += step
+		current %= count
 	}
+
+	return false
 }
