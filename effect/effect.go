@@ -61,6 +61,8 @@ func (e *Effect) String() string {
 }
 
 func (e *Effect) effectThink(delta float64, ent entity.Entity) {
+	e.currentTime += delta
+
 	for _, p := range e.primitives {
 		p.effectThink(delta, ent)
 	}

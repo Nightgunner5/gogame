@@ -416,7 +416,7 @@ func ForOneNearby(target Positioner, distance float64, allowed func(Entity) bool
 
 	count := len(global.l)
 	current := rand.Intn(count)
-	step := rand.Intn(count - 2) + 1
+	step := rand.Intn(count-2) + 1
 
 	for i := 0; i < count; i++ {
 		ent := global.l[current]
