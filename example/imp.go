@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Nightgunner5/gogame/effect"
 	"github.com/Nightgunner5/gogame/entity"
 	"github.com/Nightgunner5/gogame/network"
 	"github.com/Nightgunner5/gogame/spell"
@@ -14,6 +15,7 @@ type (
 		entity.Healther
 		entity.Thinker
 		spell.SpellCaster
+		effect.Effected
 
 		Name() string
 
@@ -25,6 +27,7 @@ type (
 		entity.Positioner
 		entity.Healther
 		spell.SpellCaster
+		effect.Effected
 
 		name       string
 		master     Magician
@@ -41,6 +44,7 @@ func NewImp(master Magician, x, y, z float64) Imp {
 	i.Positioner = entity.BasePosition(i, x, y, z)
 	i.Healther = entity.BaseHealth(i, maxHealth)
 	i.SpellCaster = spell.BaseSpellCaster(i)
+	i.Effected = effect.BaseEffected(i)
 
 	entity.Spawn(i)
 
@@ -76,6 +80,8 @@ func (i *imp) Think(delta float64) {
 		entity.Despawn(i)
 		return
 	}
+
+	i.EffectThink(delta)
 
 	i.nextSearch -= delta
 

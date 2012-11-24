@@ -124,6 +124,11 @@ requestAnimationFrame(function() {
 					ctx.fillStyle = '#07f';
 					ctx.fillRect(x, y + VIEW_SCALE * 6, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 100, VIEW_SCALE * 2);
 				}
+			} else {
+				if ('spell' in ent) {
+					ctx.fillStyle = '#07f';
+					ctx.fillRect(x, y + VIEW_SCALE * 3, VIEW_SCALE * (ent.spell.totalTime - ent.spell.timeLeft) / ent.spell.totalTime * 10, VIEW_SCALE * 2);
+				}
 			}
 
 			ctx.font = {

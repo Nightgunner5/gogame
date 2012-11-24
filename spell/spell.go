@@ -82,6 +82,12 @@ func (b *baseSpellCaster) Interrupt() bool {
 
 	if b.spell != nil && b.spell.Interrupt() {
 		b.spell = nil
+		network.Broadcast(network.NewPacket(network.CastSpell).
+			Set(network.EntityID, b.ent).
+			Set(network.OtherEntID, 0).
+			Set(network.Tag, "interrupted").
+			Set(network.TimeLeft, 0).
+			Set(network.TotalTime, 0), false)
 		return true
 	}
 	return false

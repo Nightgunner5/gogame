@@ -121,13 +121,17 @@ func summonImp(target, caster entity.Entity) {
 	y += rand.Float64()*2 - 1
 	z += rand.Float64()*2 - 1
 
-	NewImp(m, x, y, z)
+	imp := NewImp(m, x, y, z)
+	imp.AddEffect(effect.NewEffect("Impending Sickness", 10.1).
+		Add(effect.After(effect.NewEffect("Summoning Sickness", 0).
+		Add(effect.DamageOverTime(5)), 10)))
 }
 
 func summonShield(target, caster entity.Entity) {
 	m := caster.(Magician)
 
-	m.AddEffect(effect.NewEffect("Shield", 5).Add(effect.AbsorbDamage(200)))
+	m.AddEffect(effect.NewEffect("Shield", 5).
+		Add(effect.AbsorbDamage(200)))
 }
 
 func (magician) magician() {}

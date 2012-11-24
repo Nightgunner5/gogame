@@ -3,7 +3,7 @@ package effect
 import "github.com/Nightgunner5/gogame/entity"
 
 func ScaleHealingDone(amount float64) Primitive {
-	return &scaleHealingDone{scalePrimitive(amount)}
+	return scaleHealingDone{scalePrimitive(amount)}
 }
 
 type scaleHealingDone struct {
