@@ -21,8 +21,16 @@ func (s *ChanneledSpell) Caster() entity.Entity {
 	return entity.Get(s.Caster_)
 }
 
+func (s *ChanneledSpell) CasterID() entity.EntityID {
+	return s.Caster_
+}
+
 func (s *ChanneledSpell) Target() entity.Entity {
 	return entity.Get(s.Target_)
+}
+
+func (s *ChanneledSpell) TargetID() entity.EntityID {
+	return s.Target_
 }
 
 func (s *ChanneledSpell) Tag() string {

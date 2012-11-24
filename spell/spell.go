@@ -11,7 +11,9 @@ type Spell interface {
 	Tick(float64) bool
 
 	Caster() entity.Entity
+	CasterID() entity.EntityID
 	Target() entity.Entity
+	TargetID() entity.EntityID
 
 	TotalTime() float64
 	TimeLeft() float64
@@ -70,7 +72,7 @@ func (b *baseSpellCaster) Cast(spell Spell) {
 	b.spell = spell
 	network.Broadcast(network.NewPacket(network.CastSpell).
 		Set(network.EntityID, b.ent).
-		Set(network.OtherEntID, spell.Target().ID()).
+		Set(network.OtherEntID, spell.TargetID()).
 		Set(network.Tag, spell.Tag()).
 		Set(network.TimeLeft, spell.TimeLeft()).
 		Set(network.TotalTime, spell.TotalTime()), false)
