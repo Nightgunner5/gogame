@@ -9,6 +9,9 @@ type Subscriber struct {
 	queue message.Sender
 }
 
+// Constructs a Subscriber and returns it and the reciever end of its channel.
+// maxWaiting is the size of the buffer for the channel. If a send to the
+// channel would block, the Message is simply dropped.
 func Subscribe(kind message.Kind, maxWaiting int) (Subscriber, message.Reciever) {
 	queue := make(chan message.Message, maxWaiting)
 
