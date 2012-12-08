@@ -1,7 +1,4 @@
 language: go
 
-install:
-  - cd client && make
-  - go install -v ./...
 script:
   - go test -v -bench . ./...
