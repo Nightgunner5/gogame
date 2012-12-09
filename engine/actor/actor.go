@@ -8,7 +8,7 @@ type Actor struct {
 	Send message.Sender
 }
 
-func (a *Actor) Initialize() (messages message.Reciever, broadcast message.Sender) {
+func (a *Actor) Initialize() (messages message.Receiver, broadcast message.Sender) {
 	send_ := make(chan message.Message)
 	a.Send = send_
 
@@ -44,7 +44,7 @@ func (a *Actor) Initialize() (messages message.Reciever, broadcast message.Sende
 	return
 }
 
-func TopLevel(messages message.Reciever, _ message.Sender) {
+func TopLevel(messages message.Receiver, _ message.Sender) {
 	go func() {
 		// unhandled message
 		panic(<-messages)

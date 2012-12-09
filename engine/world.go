@@ -6,13 +6,17 @@ import (
 )
 
 var (
+	// Spawn Message - see Spawn.
 	MsgSpawn = message.NewKind("Spawn")
 )
 
+// A Message which, when given to World, is forwarded to all Subscribers to
+// the MsgSpawn Message.
 type Spawn struct {
 	Actor *actor.Actor
 }
 
+// Returns MsgSpawn.
 func (Spawn) Kind() message.Kind {
 	return MsgSpawn
 }
@@ -21,7 +25,7 @@ type world struct {
 	actor.Actor
 }
 
-func (w world) Initialize() (message.Reciever, message.Sender) {
+func (w world) Initialize() (message.Receiver, message.Sender) {
 	messages, broadcast := w.Actor.Initialize()
 	messages_ := make(chan message.Message)
 
