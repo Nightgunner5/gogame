@@ -11,13 +11,13 @@ const (
 )
 
 var (
-	broadcast chan<- packet.Packet
+	sendToAll chan<- packet.Packet
 	connected chan<- chan<- packet.Packet
 )
 
 func init() {
-	broadcast_ := make(chan packet.Packet)
-	broadcast = broadcast_
+	sendToAll_ := make(chan packet.Packet)
+	sendToAll = sendToAll_
 
 	connected_ := make(chan chan<- packet.Packet)
 	connected = connected_
@@ -26,7 +26,7 @@ func init() {
 		connections := make(map[chan<- packet.Packet]bool)
 		for {
 			select {
-			case p := <-broadcast_:
+			case p := <-sendToAll_:
 				for c := range connections {
 					select {
 					case c <- p:

@@ -55,11 +55,13 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 						}
 						p.x += dx
 						p.y += dy
-						world.Send <- SetLocation{
-							ID:    p.ID,
-							Actor: &p.Actor,
-							Coord: layout.Coord{p.x, p.y},
-						}
+						go func() {
+							world.Send <- SetLocation{
+								ID:    p.ID,
+								Actor: &p.Actor,
+								Coord: layout.Coord{p.x, p.y},
+							}
+						}()
 					}
 				}
 			case msg := <-msgIn:

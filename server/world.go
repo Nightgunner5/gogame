@@ -38,6 +38,15 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 					w.actorToID[m.Actor] = m.ID
 					w.idToActor[m.ID] = m.Actor
 					w.location[m.Actor] = m.Coord
+
+					sendToAll <- packet.Packet{
+						PlayerLocation: &packet.PlayerLocation{
+							ID:    m.ID,
+							Coord: m.Coord,
+						},
+					}
+				default:
+					messages <- m
 				}
 
 			case c := <-onConnect:
@@ -53,7 +62,8 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 var world = NewWorld()
 
-func NewWorld() (world World) {
+func NewWorld() (world *World) {
+	world = new(World)
 	actor.TopLevel(world.Initialize())
 	return
 }

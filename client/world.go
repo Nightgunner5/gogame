@@ -47,6 +47,44 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 			select {
 			case msg := <-msgIn:
 				switch m := msg.(type) {
+				case MoveRequest:
+					if m.X == 0 && m.Y == 0 {
+						continue
+					}
+					if m.X*m.X > m.Y*m.Y {
+						if m.X > 0 {
+							w.out <- packet.Packet{
+								MoveRequest: &packet.MoveRequest{
+									Dx: 1,
+									Dy: 0,
+								},
+							}
+						} else {
+							w.out <- packet.Packet{
+								MoveRequest: &packet.MoveRequest{
+									Dx: -1,
+									Dy: 0,
+								},
+							}
+						}
+					} else {
+						if m.Y > 0 {
+							w.out <- packet.Packet{
+								MoveRequest: &packet.MoveRequest{
+									Dx: 0,
+									Dy: 1,
+								},
+							}
+						} else {
+							w.out <- packet.Packet{
+								MoveRequest: &packet.MoveRequest{
+									Dx: 0,
+									Dy: -1,
+								},
+							}
+						}
+					}
+
 				default:
 					messages <- m
 				}
@@ -110,3 +148,16 @@ type PaintContext struct {
 func (p PaintContext) Paint(viewport draw.Image, xOffset, yOffset int) {
 	Tile(viewport, Actors, p.spriteID, p.x+xOffset, p.y+yOffset)
 }
+
+var (
+	MsgMoveRequest = message.NewKind("MoveRequest")
+)
+
+type MoveRequest struct {
+	X, Y int
+}
+
+func (MoveRequest) Kind() message.Kind {
+	return MsgMoveRequest
+}
+

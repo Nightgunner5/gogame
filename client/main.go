@@ -119,6 +119,10 @@ func UI() {
 		case wde.MouseMovedEvent:
 		case wde.MouseDownEvent:
 		case wde.MouseUpEvent:
+			x, y := e.Where.X, e.Where.Y
+			x, y = x>>TileSize, y>>TileSize
+			world.Send <- MoveRequest{x - ViewportWidth/2, y - ViewportHeight/2}
+
 		case wde.MouseDraggedEvent:
 		case wde.MouseEnteredEvent:
 		case wde.MouseExitedEvent:

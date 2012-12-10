@@ -76,3 +76,4 @@ type SetLocation struct {
 func (SetLocation) Kind() message.Kind {
 	return MsgSetLocation
 }
+
