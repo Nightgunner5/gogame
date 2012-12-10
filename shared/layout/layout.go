@@ -3,10 +3,31 @@ package layout
 type Coord struct{ X, Y int }
 
 var baseLayout = map[Coord]Tile{
-	Coord{0, 0}: WhiteTile,
-	Coord{-1, 0}: Wall1,
-	Coord{-1, -1}: Wall1,
-	Coord{0, -1}: Wall1,
+	Coord{-2, -2}: Wall1,
+	Coord{-2, -1}: Wall1,
+	Coord{-2, 0}:  Wall1,
+	Coord{-2, 1}:  Wall1,
+	Coord{-2, 2}:  Wall1,
+	Coord{-1, -2}: Wall1,
+	Coord{-1, -1}: WhiteTile,
+	Coord{-1, 0}:  WhiteTile,
+	Coord{-1, 1}:  WhiteTile,
+	Coord{-1, 2}:  Wall1,
+	Coord{0, -2}:  Wall1,
+	Coord{0, -1}:  WhiteTile,
+	Coord{0, 0}:   WhiteTile,
+	Coord{0, 1}:   WhiteTile,
+	Coord{0, 2}:   Wall1,
+	Coord{1, -2}:  Wall1,
+	Coord{1, -1}:  WhiteTile,
+	Coord{1, 0}:   WhiteTile,
+	Coord{1, 1}:   WhiteTile,
+	Coord{1, 2}:   Wall1,
+	Coord{2, -2}:  Wall1,
+	Coord{2, -1}:  Wall1,
+	Coord{2, 0}:   Wall1,
+	Coord{2, 1}:   Wall1,
+	Coord{2, 2}:   Wall1,
 }
 
 var currentLayout map[Coord]Tile
