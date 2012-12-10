@@ -4,12 +4,14 @@ import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 	"image"
+	"sync/atomic"
 	"time"
 )
 
 type Player struct {
 	actor.Actor
-	x, y int
+	x, y          int
+	isLocalPlayer bool
 }
 
 func (p *Player) Initialize() (message.Receiver, message.Sender) {
@@ -32,7 +34,12 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 				if p.y == ViewportHeight {
 					p.y = 0
 				}
-				Invalidate(p.screenRect())
+				if p.isLocalPlayer {
+					atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
+					atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
+				} else {
+					Invalidate(p.screenRect())
+				}
 			case msg := <-msgIn:
 				switch m := msg.(type) {
 				case PaintRequest:
@@ -48,13 +55,18 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 }
 
 func (p *Player) screenRect() image.Rectangle {
-	return image.Rect(p.x<<TileSize, p.y<<TileSize,
-		(p.x+1)<<TileSize, (p.y+1)<<TileSize)
+	if p.isLocalPlayer {
+		return image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize)
+	}
+	x, y := GetTopLeft()
+	return image.Rect((p.x+x)<<TileSize, (p.y+y)<<TileSize,
+		(p.x+1+x)<<TileSize, (p.y+1+y)<<TileSize)
 }
 
-var thePlayer = NewPlayer()
+var thePlayer = NewPlayer(true)
 
-func NewPlayer() (player Player) {
+func NewPlayer(isLocalPlayer bool) (player Player) {
+	player.isLocalPlayer = isLocalPlayer
 	actor.TopLevel(player.Initialize())
 	world.Send <- actor.AddHeld{&player.Actor}
 	return

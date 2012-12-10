@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/client/res"
+	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
@@ -59,24 +59,28 @@ func getTile(x, y int) layout.Tile {
 	if t, ok := layout.CurrentLayout[layout.Coord{x, y}]; ok {
 		return t
 	}
-	return layout.Space[(x^y)%len(layout.Space)]
+	return layout.Space[uint(x^y)%uint(len(layout.Space))]
 }
 
 func Paint(w wde.Window, rect image.Rectangle) {
 	viewport := w.Screen()
 
-	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
-		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
-			Tile(viewport, Terrain, uint16(getTile(x, y)), x, y)
-		}
-	}
+	xOffset, yOffset := GetTopLeft()
+
 	actors := world.GetHeld()
 	count, paint := len(actors), make(chan PaintContext, len(actors))
 	for _, actor := range actors {
 		actor.Send <- PaintRequest(paint)
 	}
+
+	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
+		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
+			Tile(viewport, Terrain, uint16(getTile(x-xOffset, y-yOffset)), x, y)
+		}
+	}
+
 	for i := 0; i < count; i++ {
-		(<-paint).Paint(viewport)
+		(<-paint).Paint(viewport, xOffset, yOffset)
 	}
 	w.FlushImage(rect)
 }

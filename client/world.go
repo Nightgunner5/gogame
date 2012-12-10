@@ -4,7 +4,18 @@ import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 	"image/draw"
+	"sync/atomic"
 )
+
+var (
+	topLeftX, topLeftY int64 = ViewportWidth/2, ViewportHeight/2
+)
+
+func GetTopLeft() (x, y int) {
+	x = int(atomic.LoadInt64(&topLeftX))
+	y = int(atomic.LoadInt64(&topLeftY))
+	return
+}
 
 type World struct {
 	actor.Holder
@@ -36,6 +47,6 @@ type PaintContext struct {
 	x, y     int
 }
 
-func (p PaintContext) Paint(viewport draw.Image) {
-	Tile(viewport, Actors, p.spriteID, p.x, p.y)
+func (p PaintContext) Paint(viewport draw.Image, xOffset, yOffset int) {
+	Tile(viewport, Actors, p.spriteID, p.x+xOffset, p.y+yOffset)
 }
