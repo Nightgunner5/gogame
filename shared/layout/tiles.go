@@ -23,6 +23,15 @@ const (
 
 	Wall1 Tile = 16
 
-	Space1 Tile = 1023
-	Space2 Tile = 1022
+	Space1 Tile = 1022
+	Space2 Tile = 1023
 )
+
+func (t Tile) Space() bool {
+	return t >= Space1
+}
+
+func (t Tile) Passable() bool {
+	return (t >= WhiteTile && t <= PinkTile) ||
+		(t >= Space1)
+}

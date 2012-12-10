@@ -55,13 +55,6 @@ func Tile(viewport draw.Image, base image.Image, index uint16, x, y int) {
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
-func getTile(x, y int) layout.Tile {
-	if t, ok := layout.CurrentLayout[layout.Coord{x, y}]; ok {
-		return t
-	}
-	return layout.Space[uint(x^y)%uint(len(layout.Space))]
-}
-
 func Paint(w wde.Window, rect image.Rectangle) {
 	viewport := w.Screen()
 
@@ -75,7 +68,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
 		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
-			Tile(viewport, Terrain, uint16(getTile(x-xOffset, y-yOffset)), x, y)
+			Tile(viewport, Terrain, uint16(layout.Get(x-xOffset, y-yOffset)), x, y)
 		}
 	}
 
