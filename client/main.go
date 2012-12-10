@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/client/res"
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
@@ -44,21 +45,21 @@ const (
 	ViewportHeight = 15
 )
 
-func tileCoord(index int) (p image.Point) {
-	return image.Pt((index&TileMask)<<TileSize,
-		(index>>TileShift&TileMask)<<TileSize)
+func tileCoord(index uint16) (p image.Point) {
+	return image.Pt(int((index&TileMask)<<TileSize),
+		int((index>>TileShift&TileMask)<<TileSize))
 }
 
-func Tile(viewport draw.Image, base image.Image, index, x, y int) {
+func Tile(viewport draw.Image, base image.Image, index uint16, x, y int) {
 	x, y = x<<TileSize, y<<TileSize
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
-func getTile(x, y int) int {
-	if x == 0 || y == 0 || x == ViewportWidth-1 || y == ViewportHeight-1 {
-		return 16
+func getTile(x, y int) layout.Tile {
+	if t, ok := layout.CurrentLayout[layout.Coord{x, y}]; ok {
+		return t
 	}
-	return (x ^ y) & 1
+	return layout.Space[(x^y)%len(layout.Space)]
 }
 
 func Paint(w wde.Window, rect image.Rectangle) {
@@ -66,7 +67,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
 		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
-			Tile(viewport, Terrain, getTile(x, y), x, y)
+			Tile(viewport, Terrain, uint16(getTile(x, y)), x, y)
 		}
 	}
 	actors := world.GetHeld()

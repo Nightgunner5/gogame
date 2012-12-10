@@ -23,7 +23,7 @@ var (
 
 type PaintRequest chan<- PaintContext
 
-func (p PaintRequest) Reply(spriteID, x, y int) {
+func (p PaintRequest) Reply(spriteID uint16, x, y int) {
 	p <- PaintContext{spriteID, x, y}
 }
 
@@ -32,7 +32,8 @@ func (p PaintRequest) Kind() message.Kind {
 }
 
 type PaintContext struct {
-	spriteID, x, y int
+	spriteID uint16
+	x, y     int
 }
 
 func (p PaintContext) Paint(viewport draw.Image) {
