@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
+	"github.com/Nightgunner5/gogame/shared/layout"
 	"image"
 	"sync/atomic"
-	"time"
 )
 
 type Player struct {
@@ -19,31 +19,24 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	tick := actor.Tick(time.Second)
-
 	go func() {
 		for {
 			select {
-			case <-tick:
-				Invalidate(p.screenRect())
-				p.x++
-				if p.x == ViewportWidth {
-					p.x = 0
-					p.y++
-				}
-				if p.y == ViewportHeight {
-					p.y = 0
-				}
-				if p.isLocalPlayer {
-					atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
-					atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
-				} else {
-					Invalidate(p.screenRect())
-				}
 			case msg := <-msgIn:
 				switch m := msg.(type) {
 				case PaintRequest:
 					m.Reply(0, p.x, p.y)
+
+				case SetLocation:
+					Invalidate(p.screenRect())
+					p.x, p.y = m.X, m.Y
+					if p.isLocalPlayer {
+						atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
+						atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
+					} else {
+						Invalidate(p.screenRect())
+					}
+
 				default:
 					messages <- m
 				}
@@ -65,9 +58,21 @@ func (p *Player) screenRect() image.Rectangle {
 
 var thePlayer = NewPlayer(true)
 
-func NewPlayer(isLocalPlayer bool) (player Player) {
+func NewPlayer(isLocalPlayer bool) (player *Player) {
+	player = new(Player)
 	player.isLocalPlayer = isLocalPlayer
 	actor.TopLevel(player.Initialize())
-	world.Send <- actor.AddHeld{&player.Actor}
 	return
+}
+
+var (
+	MsgSetLocation = message.NewKind("SetLocation")
+)
+
+type SetLocation struct {
+	layout.Coord
+}
+
+func (SetLocation) Kind() message.Kind {
+	return MsgSetLocation
 }
