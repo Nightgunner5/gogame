@@ -63,7 +63,11 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	actors := world.GetHeld()
 	count, paint := len(actors), make(chan PaintContext, len(actors))
 	for _, actor := range actors {
-		actor.Send <- PaintRequest(paint)
+		select {
+		case actor.Send <- PaintRequest(paint):
+		default:
+			count--
+		}
 	}
 
 	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
@@ -133,7 +137,6 @@ func UI() {
 			w.SetSize(ViewportWidth<<TileSize, ViewportHeight<<TileSize)
 			Invalidate(w.Screen().Bounds())
 		case wde.CloseEvent:
-			_ = e
 			return
 		}
 	}

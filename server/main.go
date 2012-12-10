@@ -11,8 +11,9 @@ const (
 )
 
 var (
-	sendToAll chan<- packet.Packet
-	connected chan<- chan<- packet.Packet
+	sendToAll    chan<- packet.Packet
+	connected    chan<- chan<- packet.Packet
+	disconnected chan<- chan<- packet.Packet
 )
 
 func init() {
@@ -21,6 +22,9 @@ func init() {
 
 	connected_ := make(chan chan<- packet.Packet)
 	connected = connected_
+
+	disconnected_ := make(chan chan<- packet.Packet)
+	disconnected = disconnected_
 
 	go func() {
 		connections := make(map[chan<- packet.Packet]bool)
@@ -33,6 +37,8 @@ func init() {
 					default:
 					}
 				}
+			case c := <-disconnected_:
+				delete(connections, c)
 			case c := <-connected_:
 				connections[c] = true
 			}
@@ -52,7 +58,6 @@ func main() {
 
 		NewPlayer(addr, recv, send)
 
-		// TODO: disconnect logic
 		world.onConnect <- send
 		connected <- send
 	}, packet.Type, MaxQueue)

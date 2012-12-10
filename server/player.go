@@ -44,24 +44,36 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 	go func() {
 		for {
 			select {
-			case pkt := <-p.in:
+			case pkt, ok := <-p.in:
+				if !ok {
+					go func() {
+						world.Send <- actor.RemoveHeld{&p.Actor}
+						world.Send <- Despawn{
+							ID: p.ID,
+							Actor: &p.Actor,
+						}
+					}()
+					disconnected <- p.out
+					close(p.out)
+					return
+				}
 				switch {
 				case pkt.MoveRequest != nil:
 					dx, dy := pkt.MoveRequest.Dx, pkt.MoveRequest.Dy
 					if dx*dx+dy*dy == 1 {
 						// TODO: space logic
 						if !layout.Get(p.x+dx, p.y+dy).Passable() {
-							return
+							continue
 						}
 						p.x += dx
 						p.y += dy
-						go func() {
-							world.Send <- SetLocation{
-								ID:    p.ID,
-								Actor: &p.Actor,
-								Coord: layout.Coord{p.x, p.y},
-							}
-						}()
+						go func(m SetLocation) {
+							world.Send <- m
+						}(SetLocation{
+							ID:    p.ID,
+							Actor: &p.Actor,
+							Coord: layout.Coord{p.x, p.y},
+						})
 					}
 				}
 			case msg := <-msgIn:
@@ -87,10 +99,5 @@ func NewPlayer(addr net.Addr, in <-chan packet.Packet, out chan<- packet.Packet)
 	player.addr = addr
 	player.in, player.out = in, out
 	actor.TopLevel(player.Initialize())
-	world.Send <- actor.AddHeld{&player.Actor}
-	world.Send <- SetLocation{
-		Actor: &player.Actor,
-		Coord: layout.Coord{},
-	}
 	return
 }

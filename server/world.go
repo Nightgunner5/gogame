@@ -45,13 +45,20 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 							Coord: m.Coord,
 						},
 					}
+
+				case Despawn:
+					delete(w.actorToID, m.Actor)
+					delete(w.idToActor, m.ID)
+					delete(w.location, m.Actor)
+					// TODO: despawn on client side
+
 				default:
 					messages <- m
 				}
 
 			case c := <-onConnect:
-				for actor := range w.actorToID {
-					actor.Send <- SendLocation(c)
+				for a := range w.actorToID {
+					a.Send <- SendLocation(c)
 				}
 			}
 		}

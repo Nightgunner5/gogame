@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"github.com/Nightgunner5/netchan"
 	"image/draw"
 	"net"
+	"os"
 	"sync/atomic"
 )
 
@@ -88,7 +90,14 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 				default:
 					messages <- m
 				}
-			case pkt := <-w.in:
+			case pkt, ok := <-w.in:
+				if !ok {
+					close(w.out)
+					fmt.Println("disconnected")
+					os.Exit(0)
+					return
+				}
+
 				switch {
 				case pkt.HandshakeServer != nil:
 					id := pkt.HandshakeServer.ID
@@ -160,4 +169,3 @@ type MoveRequest struct {
 func (MoveRequest) Kind() message.Kind {
 	return MsgMoveRequest
 }
-
