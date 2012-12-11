@@ -30,6 +30,8 @@ func client(username string, server io.ReadWriteCloser) {
 
 	in := bufio.NewReader(os.Stdin)
 
+	clientpkg.Network = me.Send
+
 	go func() {
 		defer close(me.Send)
 		for {

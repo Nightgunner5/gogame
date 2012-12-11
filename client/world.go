@@ -23,21 +23,18 @@ func GetTopLeft() (x, y int) {
 	return
 }
 
+var Network chan<- packet.Packet
+
 type World struct {
 	actor.Holder
 
-	in  <-chan packet.Packet
-	out chan<- packet.Packet
-
 	idToActor map[uint64]*actor.Actor
-	actorToID map[*actor.Actor]uint64
 }
 
 func (w *World) Initialize() (message.Receiver, message.Sender) {
 	msgIn, broadcast := w.Holder.Initialize()
 
 	w.idToActor = make(map[uint64]*actor.Actor)
-	w.actorToID = make(map[*actor.Actor]uint64)
 
 	messages := make(chan message.Message)
 
@@ -66,34 +63,24 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 					if m.X == 0 && m.Y == 0 {
 						continue
 					}
+					var dx, dy int
 					if m.X*m.X > m.Y*m.Y {
 						if m.X > 0 {
-							w.out <- packet.Packet{
-								Location: &packet.Location{
-									Coord: layout.Coord{1, 0},
-								},
-							}
+							dx = 1
 						} else {
-							w.out <- packet.Packet{
-								Location: &packet.Location{
-									Coord: layout.Coord{-1, 0},
-								},
-							}
+							dx = -1
 						}
 					} else {
 						if m.Y > 0 {
-							w.out <- packet.Packet{
-								Location: &packet.Location{
-									Coord: layout.Coord{0, 1},
-								},
-							}
+							dy = 1
 						} else {
-							w.out <- packet.Packet{
-								Location: &packet.Location{
-									Coord: layout.Coord{0, -1},
-								},
-							}
+							dy = -1
 						}
+					}
+					Network <- packet.Packet{
+						Location: &packet.Location{
+							Coord: layout.Coord{dx, dy},
+						},
 					}
 
 				default:
