@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/Nightgunner5/gogame/engine/actor"
@@ -7,13 +7,16 @@ import (
 	"github.com/Nightgunner5/gogame/shared/packet"
 )
 
+var (
+	SendToAll = make(chan packet.Packet)
+)
+
 type World struct {
 	actor.Holder
 
 	onConnect chan<- chan<- packet.Packet
 
 	idToActor map[uint64]*actor.Actor
-	actorToID map[*actor.Actor]uint64
 	location  map[*actor.Actor]layout.Coord
 }
 
@@ -24,7 +27,6 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 	w.onConnect = onConnect
 
 	w.idToActor = make(map[uint64]*actor.Actor)
-	w.actorToID = make(map[*actor.Actor]uint64)
 	w.location = make(map[*actor.Actor]layout.Coord)
 
 	messages := make(chan message.Message)
@@ -35,31 +37,34 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 			case msg := <-msgIn:
 				switch m := msg.(type) {
 				case SetLocation:
-					w.actorToID[m.Actor] = m.ID
 					w.idToActor[m.ID] = m.Actor
 					w.location[m.Actor] = m.Coord
 
-					sendToAll <- packet.Packet{
-						PlayerLocation: &packet.PlayerLocation{
+					SendToAll <- packet.Packet{
+						Location: &packet.Location{
 							ID:    m.ID,
 							Coord: m.Coord,
 						},
 					}
 
-				case Despawn:
-					delete(w.actorToID, m.Actor)
+				case packet.Despawn:
+					a := w.idToActor[m.ID]
 					delete(w.idToActor, m.ID)
-					delete(w.location, m.Actor)
-					// TODO: despawn on client side
+					delete(w.location, a)
+					SendToAll <- packet.Packet{
+						Despawn: &m,
+					}
 
 				default:
 					messages <- m
 				}
 
 			case c := <-onConnect:
-				for a := range w.actorToID {
-					a.Send <- SendLocation(c)
-				}
+				go func(c SendLocation) {
+					for _, a := range w.GetHeld() {
+						a.Send <- c
+					}
+				}(SendLocation(c))
 			}
 		}
 	}()

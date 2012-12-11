@@ -4,4 +4,5 @@ type Packet struct {
 	*Chat
 	*Handshake
 	*Location
+	*Despawn
 }

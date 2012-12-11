@@ -3,12 +3,12 @@
 package main
 
 import (
+	serverpkg "github.com/Nightgunner5/gogame/server"
+	"github.com/Nightgunner5/gogame/shared/packet"
+	"github.com/kylelemons/fatchan"
 	"io"
 	"log"
 	"sync"
-
-	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/kylelemons/fatchan"
 )
 
 const canServe = true
@@ -19,7 +19,7 @@ var users = struct {
 	taken map[string]bool
 }{
 	chans: make(map[chan packet.Packet]string),
-	taken: map[string]bool{"SERVER": true},
+	taken: map[string]bool{"SERVER": true, "": true},
 }
 
 func addUser(username string, channel chan packet.Packet) bool {
@@ -52,6 +52,14 @@ func sendAll(msg packet.Packet) {
 	}
 }
 
+func init() {
+	go func() {
+		for p := range serverpkg.SendToAll {
+			go sendAll(p)
+		}
+	}()
+}
+
 func serve(id string, client io.ReadWriteCloser) {
 	log.Printf("Client %q connected", id)
 	defer log.Printf("Client %q disconnected", id)
@@ -75,15 +83,11 @@ func serve(id string, client io.ReadWriteCloser) {
 	defer delUser(user.Recv)
 	defer close(user.Recv)
 
+	player := serverpkg.NewPlayer(id, user.User, user.Recv)
+	defer player.Disconnected()
+
 	for msg := range user.Send {
-		switch {
-		case msg.Chat != nil:
-			msg.Chat.User = user.User
-			go sendAll(packet.Packet{
-				Chat: msg.Chat,
-			})
-		default:
-			log.Printf("Client %q sent unknown packet %#v", id, msg)
+		if !serverpkg.Dispatch(player, msg) {
 			return
 		}
 	}

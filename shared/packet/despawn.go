@@ -1,7 +1,6 @@
-package main
+package packet
 
 import (
-	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 )
 
@@ -10,8 +9,7 @@ var (
 )
 
 type Despawn struct {
-	ID    uint64
-	Actor *actor.Actor
+	ID uint64
 }
 
 func (Despawn) Kind() message.Kind {
