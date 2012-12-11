@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"sync"
+	"time"
 )
 
 const canServe = true
@@ -48,7 +49,10 @@ func sendAll(msg packet.Packet) {
 	users.RLock()
 	defer users.RUnlock()
 	for ch := range users.chans {
-		ch <- msg
+		select {
+		case ch <- msg:
+		case <-time.After(10 * time.Millisecond):
+		}
 	}
 }
 

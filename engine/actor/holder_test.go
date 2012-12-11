@@ -8,10 +8,10 @@ func TestHolder(t *testing.T) {
 	t.Parallel()
 
 	var a Actor
-	TopLevel(a.Initialize())
+	Init("TestHolder:actor", &h, &h)
 
 	var h Holder
-	TopLevel(h.Initialize())
+	Init("TestHolder:holder", &h.Actor, &h)
 
 	if l := len(h.GetHeld()); l != 0 {
 		t.Errorf("Expected no held actors, but there are %d", l)
@@ -46,4 +46,6 @@ func TestHolder(t *testing.T) {
 	if l := len(held); l != 0 {
 		t.Errorf("Expected no held actors, but there are %d", l)
 	}
+
+	close(h.Send)
 }

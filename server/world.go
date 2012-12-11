@@ -76,6 +76,6 @@ var world = NewWorld()
 
 func NewWorld() (world *World) {
 	world = new(World)
-	actor.TopLevel(world.Initialize())
+	actor.Init("world", &world.Actor, world)
 	return
 }

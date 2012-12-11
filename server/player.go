@@ -36,23 +36,20 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 	messages := make(chan message.Message)
 
 	go func() {
-		for {
-			select {
-			case msg := <-msgIn:
-				switch m := msg.(type) {
-				case SendLocation:
-					m <- packet.Packet{
-						Location: &packet.Location{
-							ID:    p.ID,
-							Coord: layout.Coord{p.x, p.y},
-						},
-					}
-				case packet.Location:
-					dx, dy := m.Coord.X, m.Coord.Y
-					// TODO: space logic
-					if !layout.Get(p.x+dx, p.y+dy).Passable() {
-						continue
-					}
+		for msg := range msgIn {
+			switch m := msg.(type) {
+			case SendLocation:
+				m <- packet.Packet{
+					Location: &packet.Location{
+						ID:    p.ID,
+						Coord: layout.Coord{p.x, p.y},
+					},
+				}
+
+			case packet.Location:
+				dx, dy := m.Coord.X, m.Coord.Y
+				// TODO: space logic
+				if layout.Get(p.x+dx, p.y+dy).Passable() {
 					p.x += dx
 					p.y += dy
 
@@ -63,22 +60,22 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 						Actor: &p.Actor,
 						Coord: layout.Coord{p.x, p.y},
 					})
-
-				default:
-					messages <- m
 				}
+
+			default:
+				messages <- m
 			}
 		}
+		close(messages)
 	}()
 
 	return messages, broadcast
 }
 
 func (p *Player) Disconnected() {
+	world.Send <- packet.Despawn{ID: p.ID}
 	world.Send <- actor.RemoveHeld{&p.Actor}
-	world.Send <- packet.Despawn{
-		ID: p.ID,
-	}
+	close(p.Send)
 }
 
 func NewPlayer(id string, name string, out chan<- packet.Packet) (player *Player) {
@@ -86,16 +83,15 @@ func NewPlayer(id string, name string, out chan<- packet.Packet) (player *Player
 	player.id = id
 	player.Name = name
 	player.out = out
-	actor.TopLevel(player.Initialize())
+	actor.Init("player:" + id, &player.Actor, player)
+
 	out <- packet.Packet{
 		Handshake: &packet.Handshake{
 			ID: player.ID,
 		},
 	}
 
-	go func() {
-		world.Send <- actor.AddHeld{&player.Actor}
-		world.onConnect <- out
-	}()
+	world.Send <- actor.AddHeld{&player.Actor}
+	world.onConnect <- out
 	return
 }

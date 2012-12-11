@@ -45,7 +45,11 @@ func (h *Holder) Initialize() (messages message.Receiver, broadcast message.Send
 		getHeld := make(chan []*Actor)
 		for {
 			select {
-			case msg := <-msgIn:
+			case msg, ok := <-msgIn:
+				if !ok {
+					close(messages_)
+					return
+				}
 				switch m := msg.(type) {
 				case AddHeld:
 					if !held[m.Actor] {
