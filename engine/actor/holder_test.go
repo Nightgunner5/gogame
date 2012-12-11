@@ -8,7 +8,7 @@ func TestHolder(t *testing.T) {
 	t.Parallel()
 
 	var a Actor
-	Init("TestHolder:actor", &h, &h)
+	Init("TestHolder:actor", &a, &a)
 
 	var h Holder
 	Init("TestHolder:holder", &h.Actor, &h)
