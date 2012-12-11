@@ -12,6 +12,11 @@ import (
 	"os"
 )
 
+const (
+	DefaultAddr   = "nightgunner5.is-a-geek.net:7031"
+	DefaultServer = false
+)
+
 func client(username string, server io.ReadWriteCloser) {
 	log.Printf("Connected to server")
 	defer log.Printf("Server disconnected")

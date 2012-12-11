@@ -8,10 +8,9 @@ import (
 	"os"
 )
 
-// Flags
 var (
-	server = flag.Bool("server", false, "Start in server mode")
-	addr   = flag.String("addr", "", "Address to listen on or connect to")
+	server = flag.Bool("server", DefaultServer, "Start in server mode")
+	addr   = flag.String("addr", DefaultAddr, "Address to listen on or connect to")
 	user   = flag.String("user", os.Getenv("USER"), "Username (ignored in server mode)")
 )
 

@@ -125,19 +125,27 @@ func UI() {
 		case wde.MouseMovedEvent:
 		case wde.MouseDownEvent:
 		case wde.MouseUpEvent:
-			x, y := e.Where.X, e.Where.Y
-			x, y = x>>TileSize, y>>TileSize
-			world.Send <- MoveRequest{x - ViewportWidth/2, y - ViewportHeight/2}
-
 		case wde.MouseDraggedEvent:
 		case wde.MouseEnteredEvent:
 		case wde.MouseExitedEvent:
 		case wde.KeyDownEvent:
 		case wde.KeyUpEvent:
 		case wde.KeyTypedEvent:
+			switch e.Key {
+			case wde.KeyUpArrow:
+				thePlayer.Send <- packet.Location{Coord: layout.Coord{0, -1}}
+			case wde.KeyDownArrow:
+				thePlayer.Send <- packet.Location{Coord: layout.Coord{0, 1}}
+			case wde.KeyLeftArrow:
+				thePlayer.Send <- packet.Location{Coord: layout.Coord{-1, 0}}
+			case wde.KeyRightArrow:
+				thePlayer.Send <- packet.Location{Coord: layout.Coord{1, 0}}
+			}
+
 		case wde.ResizeEvent:
 			w.SetSize(ViewportWidth<<TileSize, ViewportHeight<<TileSize)
 			Invalidate(w.Screen().Bounds())
+
 		case wde.CloseEvent:
 			return
 		}
