@@ -1,13 +1,13 @@
 package layout
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 const (
-	top = -3
-	left = -3
+	top   = -3
+	left  = -3
 	check = `       
  WWWWW 
  W___W 
@@ -52,14 +52,16 @@ func TestCheck(t *testing.T) {
 
 func TestLayout(t *testing.T) {
 	assert := func(name string, tile Tile, x, y int, ok bool) {
-		if ok { return }
+		if ok {
+			return
+		}
 
 		t.Errorf("Tile at (%d, %d) (%v) failed check %q", x, y, tile, name)
 	}
 
 	for y_, row := range getCheck() {
 		for x_, r := range row {
-			x, y := x_ + left, y_ + top
+			x, y := x_+left, y_+top
 			tile := Get(x, y)
 			switch r {
 			case ' ':

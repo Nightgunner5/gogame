@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"github.com/Nightgunner5/gogame/engine/actor"
@@ -76,4 +76,3 @@ type SetLocation struct {
 func (SetLocation) Kind() message.Kind {
 	return MsgSetLocation
 }
-

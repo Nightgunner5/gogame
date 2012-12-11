@@ -1,14 +1,16 @@
-package main
+package client
 
 import (
 	"bytes"
 	"github.com/Nightgunner5/gogame/client/res"
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/packet"
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
 	"image/draw"
 	"image/png"
+	"log"
 )
 
 var (
@@ -30,7 +32,7 @@ func init() {
 	}
 }
 
-func main() {
+func Main() {
 	go UI()
 
 	wde.Run()
@@ -139,5 +141,22 @@ func UI() {
 		case wde.CloseEvent:
 			return
 		}
+	}
+}
+
+func Disconnected() {
+	log.Fatal("Disconnected")
+}
+
+func Handle(msg packet.Packet) {
+	switch {
+	case msg.Chat != nil:
+		log.Printf("<%s> %s", msg.Chat.User, msg.Chat.Message)
+	case msg.Handshake != nil:
+		world.Send <- *msg.Handshake
+	case msg.Location != nil:
+		world.Send <- *msg.Location
+	default:
+		log.Fatalf("unknown packet: %#v", msg)
 	}
 }

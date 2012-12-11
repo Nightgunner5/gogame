@@ -49,7 +49,7 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 					go func() {
 						world.Send <- actor.RemoveHeld{&p.Actor}
 						world.Send <- Despawn{
-							ID: p.ID,
+							ID:    p.ID,
 							Actor: &p.Actor,
 						}
 					}()

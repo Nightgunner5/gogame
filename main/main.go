@@ -1,0 +1,68 @@
+package main
+
+import (
+	"flag"
+	"github.com/Nightgunner5/gogame/shared/packet"
+	"log"
+	"net"
+	"os"
+)
+
+// Flags
+var (
+	server = flag.Bool("server", false, "Start in server mode")
+	addr   = flag.String("addr", "", "Address to listen on or connect to")
+	user   = flag.String("user", os.Getenv("USER"), "Username (ignored in server mode)")
+)
+
+type Handshake struct {
+	User string
+	Send chan packet.Packet `fatchan:"request"`
+	Recv chan packet.Packet `fatchan:"reply"`
+}
+
+func main() {
+	flag.Parse()
+	if *addr == "" {
+		log.Fatalf("error: must specify -addr. see -help for arguments.")
+	}
+
+	if *server {
+		listenAndServe(*addr)
+	} else {
+		connectTo(*user, *addr)
+	}
+}
+
+func listenAndServe(addr string) {
+	if !canServe {
+		serve("", nil)
+		return
+	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Fatalf("listen(%q): %s", addr, err)
+	}
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			if err.(net.Error).Temporary() {
+				log.Printf("accept(): %s", err)
+			} else {
+				log.Fatalf("accept(): %s", err)
+			}
+		}
+
+		go serve(conn.RemoteAddr().String(), conn)
+	}
+}
+
+func connectTo(username, addr string) {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Fatalf("dial(%q): %s", addr, err)
+	}
+
+	client(username, conn)
+}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/Nightgunner5/netchan"
+	"github.com/kylelemons/fatchan"
 	"net"
 )
 

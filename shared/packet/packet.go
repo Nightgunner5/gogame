@@ -1,11 +1,7 @@
 package packet
 
-import "reflect"
-
 type Packet struct {
-	*HandshakeServer
-	*PlayerLocation
-	*MoveRequest
+	*Chat
+	*Handshake
+	*Location
 }
-
-var Type = reflect.TypeOf(Packet{})

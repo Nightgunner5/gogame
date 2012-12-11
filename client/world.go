@@ -1,14 +1,11 @@
-package main
+package client
 
 import (
-	"fmt"
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
+	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/Nightgunner5/netchan"
 	"image/draw"
-	"net"
-	"os"
 	"sync/atomic"
 )
 
@@ -49,6 +46,22 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 			select {
 			case msg := <-msgIn:
 				switch m := msg.(type) {
+				case packet.Handshake:
+					a := &thePlayer.Actor
+					w.idToActor[m.ID] = a
+					go func(a *actor.Actor) {
+						w.Send <- actor.AddHeld{a}
+					}(a)
+				case packet.Location:
+					id, coord := m.ID, m.Coord
+					if _, ok := w.idToActor[id]; !ok {
+						a := &NewPlayer(false).Actor
+						w.idToActor[id] = a
+						go func(a *actor.Actor) {
+							w.Send <- actor.AddHeld{a}
+						}(a)
+					}
+					w.idToActor[id].Send <- SetLocation{coord}
 				case MoveRequest:
 					if m.X == 0 && m.Y == 0 {
 						continue
@@ -56,32 +69,28 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 					if m.X*m.X > m.Y*m.Y {
 						if m.X > 0 {
 							w.out <- packet.Packet{
-								MoveRequest: &packet.MoveRequest{
-									Dx: 1,
-									Dy: 0,
+								Location: &packet.Location{
+									Coord: layout.Coord{1, 0},
 								},
 							}
 						} else {
 							w.out <- packet.Packet{
-								MoveRequest: &packet.MoveRequest{
-									Dx: -1,
-									Dy: 0,
+								Location: &packet.Location{
+									Coord: layout.Coord{-1, 0},
 								},
 							}
 						}
 					} else {
 						if m.Y > 0 {
 							w.out <- packet.Packet{
-								MoveRequest: &packet.MoveRequest{
-									Dx: 0,
-									Dy: 1,
+								Location: &packet.Location{
+									Coord: layout.Coord{0, 1},
 								},
 							}
 						} else {
 							w.out <- packet.Packet{
-								MoveRequest: &packet.MoveRequest{
-									Dx: 0,
-									Dy: -1,
+								Location: &packet.Location{
+									Coord: layout.Coord{0, -1},
 								},
 							}
 						}
@@ -89,31 +98,6 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 				default:
 					messages <- m
-				}
-			case pkt, ok := <-w.in:
-				if !ok {
-					close(w.out)
-					fmt.Println("disconnected")
-					os.Exit(0)
-					return
-				}
-
-				switch {
-				case pkt.HandshakeServer != nil:
-					id := pkt.HandshakeServer.ID
-					w.idToActor[id] = &thePlayer.Actor
-					w.actorToID[&thePlayer.Actor] = id
-					w.Send <- actor.AddHeld{&thePlayer.Actor}
-
-				case pkt.PlayerLocation != nil:
-					id, coord := pkt.PlayerLocation.ID, pkt.PlayerLocation.Coord
-					if _, ok := w.idToActor[id]; !ok {
-						a := &NewPlayer(false).Actor
-						w.idToActor[id] = a
-						w.actorToID[a] = id
-						w.Send <- actor.AddHeld{a}
-					}
-					w.idToActor[id].Send <- SetLocation{coord}
 				}
 			}
 		}
@@ -124,13 +108,8 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 var world = NewWorld()
 
-func NewWorld() (world World) {
-	conn, err := net.Dial("tcp", "nightgunner5.is-a-geek.net:7031")
-	if err != nil {
-		panic(err)
-	}
-	c := netchan.New(conn, packet.Type, MaxQueue)
-	world.in, world.out = c.ChanRecv().(<-chan packet.Packet), c.ChanSend().(chan<- packet.Packet)
+func NewWorld() (world *World) {
+	world = new(World)
 	actor.TopLevel(world.Initialize())
 	return
 }
