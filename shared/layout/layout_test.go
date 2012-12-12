@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	top   = -3
-	left  = -3
-	check = `       
- WWWWW 
- W___W 
- W___W 
- W___W 
- WWWWW 
-       `
+	top   = -5
+	left  = -7
+	check = `                
+      WWWWWWWW  
+ WWWWWWWW___WWW 
+ WW__________WW 
+ W____________W 
+ W____________W 
+ W____________W 
+ WW__________WW 
+ WWWWWWWW___WWW 
+      WWWWWWWW  
+                `
 )
 
 func getCheck() [][]rune {
