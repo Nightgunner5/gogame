@@ -31,7 +31,7 @@ func init() {
 				os.Exit(0)
 			case <-tick:
 				for _, profile := range pprof.Profiles() {
-					f, err := os.Open(profile.Name() + ".prof")
+					f, err := os.Create(profile.Name() + ".prof")
 					if err != nil {
 						panic(err)
 					}
