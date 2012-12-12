@@ -9,10 +9,6 @@ import (
 	"sync/atomic"
 )
 
-const (
-	MaxQueue = 8
-)
-
 var (
 	topLeftX, topLeftY int64 = ViewportWidth / 2, ViewportHeight / 2
 )

@@ -133,13 +133,13 @@ func UI() {
 		case wde.KeyTypedEvent:
 			switch e.Key {
 			case wde.KeyUpArrow:
-				thePlayer.Send <- packet.Location{Coord: layout.Coord{0, -1}}
+				world.Send <- MoveRequest{0, -1}
 			case wde.KeyDownArrow:
-				thePlayer.Send <- packet.Location{Coord: layout.Coord{0, 1}}
+				world.Send <- MoveRequest{0, 1}
 			case wde.KeyLeftArrow:
-				thePlayer.Send <- packet.Location{Coord: layout.Coord{-1, 0}}
+				world.Send <- MoveRequest{-1, 0}
 			case wde.KeyRightArrow:
-				thePlayer.Send <- packet.Location{Coord: layout.Coord{1, 0}}
+				world.Send <- MoveRequest{1, 0}
 			}
 
 		case wde.ResizeEvent:
