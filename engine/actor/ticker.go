@@ -4,12 +4,26 @@ import (
 	"time"
 )
 
+const (
+	MaxDroppedTicks = 10
+)
+
 type Ticker <-chan struct{}
 
 func (Ticker) tick(delay time.Duration, t chan struct{}) {
+	skipped := 0
 	for {
 		time.Sleep(delay)
-		t <- struct{}{}
+		select {
+		case t <- struct{}{}:
+			skipped = 0
+		default:
+			skipped++
+		}
+		if skipped > MaxDroppedTicks {
+			close(t)
+			return
+		}
 	}
 }
 

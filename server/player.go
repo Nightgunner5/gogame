@@ -71,7 +71,15 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				messages <- m
 			}
 
-		case <-move:
+		case _, ok := <-move:
+			if !ok {
+				// We missed at least 10 ticks, which means the
+				// server is lagging quite heavily. Restart the
+				// ticker as we aren't dead just yet.
+				move = actor.Tick(time.Second / 2)
+				continue
+			}
+
 			dx, dy := moveRequest.X, moveRequest.Y
 
 			if dx == 0 && dy == 0 {
