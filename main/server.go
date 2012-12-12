@@ -5,7 +5,7 @@ package main
 import (
 	serverpkg "github.com/Nightgunner5/gogame/server"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/kylelemons/fatchan"
+	"github.com/Nightgunner5/fatchan"
 	"io"
 	"log"
 	"sync"

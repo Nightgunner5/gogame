@@ -5,7 +5,7 @@ package main
 import (
 	clientpkg "github.com/Nightgunner5/gogame/client"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/kylelemons/fatchan"
+	"github.com/Nightgunner5/fatchan"
 	"io"
 	"log"
 )
