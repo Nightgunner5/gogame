@@ -16,7 +16,7 @@ func (Ticker) tick(delay time.Duration, t chan struct{}) {
 func Tick(delay time.Duration) Ticker {
 	c := make(chan struct{})
 
-	go c.tick(delay, c)
+	go Ticker(c).tick(delay, c)
 
 	return c
 }

@@ -79,7 +79,7 @@ type alivePing struct{}
 func (alivePing) Kind() message.Kind { return msgAlivePing }
 
 func (a *Actor) checkAlive(isAlive chan struct{}) {
-	isAlive <- true
+	isAlive <- struct{}{}
 	for {
 		select {
 		case _, ok := <-isAlive:

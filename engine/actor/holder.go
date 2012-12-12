@@ -41,12 +41,12 @@ func (h *Holder) Initialize() (messages message.Receiver, broadcast message.Send
 	held := make(map[*Actor]bool)
 	h.getHeld = make(chan chan []*Actor)
 
-	go h.dispatch(msgIn, messages_, held)
+	go h.dispatch(msgIn, messages_, broadcast, held)
 
 	return
 }
 
-func (h *Holder) dispatch(msgIn message.Receiver, messages message.Sender, held map[*Actor]bool) {
+func (h *Holder) dispatch(msgIn message.Receiver, messages, broadcast message.Sender, held map[*Actor]bool) {
 	getHeld := make(chan []*Actor)
 	for {
 		select {
