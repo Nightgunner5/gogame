@@ -37,7 +37,7 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 	return messages, broadcast
 }
 
-func (w *World) dispatch(msgIn messages.Receiver, messages message.Sender, onConnect <-chan chan<- packet.Packet) {
+func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, onConnect <-chan chan<- packet.Packet) {
 	for {
 		select {
 		case msg, ok := <-msgIn:
