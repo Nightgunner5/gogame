@@ -40,53 +40,51 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 }
 
 func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
-		for msg := range msgIn {
-			switch m := msg.(type) {
-			case packet.Handshake:
-				a := &thePlayer.Actor
-				w.idToActor[m.ID] = a
+	for msg := range msgIn {
+		switch m := msg.(type) {
+		case packet.Handshake:
+			a := &thePlayer.Actor
+			w.idToActor[m.ID] = a
+			go w.addHeld(a)
+
+		case packet.Location:
+			id, coord := m.ID, m.Coord
+			if _, ok := w.idToActor[id]; !ok {
+				a := &NewPlayer(false).Actor
+				w.idToActor[id] = a
 				go w.addHeld(a)
-
-			case packet.Location:
-				id, coord := m.ID, m.Coord
-				if _, ok := w.idToActor[id]; !ok {
-					a := &NewPlayer(false).Actor
-					w.idToActor[id] = a
-					go w.addHeld(a)
-				}
-				w.idToActor[id].Send <- SetLocation{coord}
-
-			case MoveRequest:
-				if m.X == 0 && m.Y == 0 {
-					continue
-				}
-				var dx, dy int
-				if m.X*m.X > m.Y*m.Y {
-					if m.X > 0 {
-						dx = 1
-					} else {
-						dx = -1
-					}
-				} else {
-					if m.Y > 0 {
-						dy = 1
-					} else {
-						dy = -1
-					}
-				}
-				Network <- packet.Packet{
-					Location: &packet.Location{
-						Coord: layout.Coord{dx, dy},
-					},
-				}
-
-			default:
-				messages <- m
 			}
-		}
-		close(messages)
-	}()
+			w.idToActor[id].Send <- SetLocation{coord}
 
+		case MoveRequest:
+			if m.X == 0 && m.Y == 0 {
+				continue
+			}
+			var dx, dy int
+			if m.X*m.X > m.Y*m.Y {
+				if m.X > 0 {
+					dx = 1
+				} else {
+					dx = -1
+				}
+			} else {
+				if m.Y > 0 {
+					dy = 1
+				} else {
+					dy = -1
+				}
+			}
+			Network <- packet.Packet{
+				Location: &packet.Location{
+					Coord: layout.Coord{dx, dy},
+				},
+			}
+
+		default:
+			messages <- m
+		}
+	}
+	close(messages)
 }
 
 func (w *World) addHeld(a *actor.Actor) {
