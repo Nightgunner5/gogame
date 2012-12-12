@@ -21,12 +21,12 @@ var (
 func init() {
 	var err error
 
-	Terrain, err = png.Decode(bytes.NewReader(res.Terrain))
+	Terrain, err = png.Decode(bytes.NewReader(res.TerrainPng[:]))
 	if err != nil {
 		panic(err)
 	}
 
-	Actors, err = png.Decode(bytes.NewReader(res.Actors))
+	Actors, err = png.Decode(bytes.NewReader(res.ActorsPng[:]))
 	if err != nil {
 		panic(err)
 	}
