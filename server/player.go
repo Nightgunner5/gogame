@@ -5,6 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
+	"time"
 )
 
 var nextPlayerID = make(chan uint64)
@@ -43,20 +44,48 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 }
 
 func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
-	for msg := range msgIn {
-		switch m := msg.(type) {
-		case SendLocation:
-			m <- packet.Packet{
-				Location: &packet.Location{
-					ID:    p.ID,
-					Coord: layout.Coord{p.x, p.y},
-				},
+	defer close(messages)
+
+	var moveRequest layout.Coord
+	move := actor.Tick(time.Second / 2)
+
+	for {
+		select {
+		case msg, ok := <-msgIn:
+			if !ok {
+				return
+			}
+			switch m := msg.(type) {
+			case SendLocation:
+				m <- packet.Packet{
+					Location: &packet.Location{
+						ID:    p.ID,
+						Coord: layout.Coord{p.x, p.y},
+					},
+				}
+
+			case packet.Location:
+				moveRequest = m.Coord
+
+			default:
+				messages <- m
 			}
 
-		case packet.Location:
-			dx, dy := m.Coord.X, m.Coord.Y
+		case <-move:
+			dx, dy := moveRequest.X, moveRequest.Y
+
+			if dx == 0 && dy == 0 {
+				continue
+			}
+
+			canMove := layout.Get(p.x+dx, p.y+dy).Passable()
+			if canMove && dx != 0 && dy != 0 {
+				canMove = canMove && (layout.Get(p.x+dx, p.y).Passable() ||
+					layout.Get(p.x, p.y+dy).Passable())
+			}
+
 			// TODO: space logic
-			if layout.Get(p.x+dx, p.y+dy).Passable() {
+			if canMove {
 				p.x += dx
 				p.y += dy
 
@@ -68,12 +97,8 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 					Coord: layout.Coord{p.x, p.y},
 				})
 			}
-
-		default:
-			messages <- m
 		}
 	}
-	close(messages)
 }
 
 func (p *Player) Disconnected() {

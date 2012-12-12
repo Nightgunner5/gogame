@@ -125,6 +125,8 @@ func UI() {
 
 	Invalidate(w.Screen().Bounds())
 
+	keys := make(map[string]bool)
+
 	for event := range w.EventChan() {
 		switch e := event.(type) {
 		case wde.MouseMovedEvent:
@@ -134,19 +136,22 @@ func UI() {
 		case wde.MouseEnteredEvent:
 		case wde.MouseExitedEvent:
 		case wde.KeyDownEvent:
-		case wde.KeyUpEvent:
-		case wde.KeyTypedEvent:
-			switch e.Key {
-			case wde.KeyUpArrow:
-				world.Send <- MoveRequest{0, -1}
-			case wde.KeyDownArrow:
-				world.Send <- MoveRequest{0, 1}
-			case wde.KeyLeftArrow:
-				world.Send <- MoveRequest{-1, 0}
-			case wde.KeyRightArrow:
-				world.Send <- MoveRequest{1, 0}
+			if !keys[e.Key] {
+				keys[e.Key] = true
+				if f := keyDown[e.Key]; f != nil {
+					f(keys)
+				}
 			}
 
+		case wde.KeyUpEvent:
+			if keys[e.Key] {
+				delete(keys, e.Key)
+				if f := keyUp[e.Key]; f != nil {
+					f(keys)
+				}
+			}
+
+		case wde.KeyTypedEvent:
 		case wde.ResizeEvent:
 			w.SetSize(ViewportWidth<<TileSize, ViewportHeight<<TileSize)
 			Invalidate(w.Screen().Bounds())

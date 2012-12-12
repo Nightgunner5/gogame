@@ -3,9 +3,9 @@
 package main
 
 import (
+	"github.com/Nightgunner5/fatchan"
 	clientpkg "github.com/Nightgunner5/gogame/client"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"github.com/Nightgunner5/fatchan"
 	"io"
 	"log"
 )
