@@ -5,6 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
+	"time"
 )
 
 var (
@@ -31,45 +32,55 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	go func() {
-		for {
-			select {
-			case msg := <-msgIn:
-				switch m := msg.(type) {
-				case SetLocation:
-					w.idToActor[m.ID] = m.Actor
-					w.location[m.Actor] = m.Coord
-
-					SendToAll <- packet.Packet{
-						Location: &packet.Location{
-							ID:    m.ID,
-							Coord: m.Coord,
-						},
-					}
-
-				case packet.Despawn:
-					a := w.idToActor[m.ID]
-					delete(w.idToActor, m.ID)
-					delete(w.location, a)
-					SendToAll <- packet.Packet{
-						Despawn: &m,
-					}
-
-				default:
-					messages <- m
-				}
-
-			case c := <-onConnect:
-				go func(c SendLocation) {
-					for _, a := range w.GetHeld() {
-						a.Send <- c
-					}
-				}(SendLocation(c))
-			}
-		}
-	}()
+	go w.dispatch(msgIn, messages, onConnect)
 
 	return messages, broadcast
+}
+
+func (w *World) dispatch(msgIn messages.Receiver, messages message.Sender, onConnect <-chan chan<- packet.Packet) {
+	for {
+		select {
+		case msg, ok := <-msgIn:
+			if !ok {
+				close(messages)
+				return
+			}
+
+			switch m := msg.(type) {
+			case SetLocation:
+				w.idToActor[m.ID] = m.Actor
+				w.location[m.Actor] = m.Coord
+
+				SendToAll <- packet.Packet{
+					Location: &packet.Location{
+						ID:    m.ID,
+						Coord: m.Coord,
+					},
+				}
+
+			case packet.Despawn:
+				a := w.idToActor[m.ID]
+				delete(w.idToActor, m.ID)
+				delete(w.location, a)
+				SendToAll <- packet.Packet{
+					Despawn: &m,
+				}
+
+			default:
+				messages <- m
+			}
+
+		case c := <-onConnect:
+			go func(c SendLocation) {
+				for _, a := range w.GetHeld() {
+					select {
+					case a.Send <- c:
+					case <-time.After(10 * time.Millisecond):
+					}
+				}
+			}(SendLocation(c))
+		}
+	}
 }
 
 var world = NewWorld()

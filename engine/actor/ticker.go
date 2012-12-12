@@ -6,15 +6,17 @@ import (
 
 type Ticker <-chan struct{}
 
+func (Ticker) tick(delay time.Duration, t chan struct{}) {
+	for {
+		time.Sleep(delay)
+		t <- struct{}{}
+	}
+}
+
 func Tick(delay time.Duration) Ticker {
 	c := make(chan struct{})
 
-	go func() {
-		for {
-			time.Sleep(delay)
-			c <- struct{}{}
-		}
-	}()
+	go c.tick(delay, c)
 
 	return c
 }

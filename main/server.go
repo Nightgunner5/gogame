@@ -56,12 +56,14 @@ func sendAll(msg packet.Packet) {
 	}
 }
 
+func broadcastServer() {
+	for p := range serverpkg.SendToAll {
+		go sendAll(p)
+	}
+}
+
 func init() {
-	go func() {
-		for p := range serverpkg.SendToAll {
-			go sendAll(p)
-		}
-	}()
+	go broadcastServer()
 }
 
 func serve(id string, client io.ReadWriteCloser) {

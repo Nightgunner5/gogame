@@ -9,14 +9,16 @@ import (
 
 var nextPlayerID = make(chan uint64)
 
+func generatePlayerIDs() {
+	var id uint64
+	for {
+		id++
+		nextPlayerID <- id
+	}
+}
+
 func init() {
-	go func() {
-		var id uint64
-		for {
-			id++
-			nextPlayerID <- id
-		}
-	}()
+	go generatePlayerIDs()
 }
 
 type Player struct {
@@ -35,41 +37,43 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	go func() {
-		for msg := range msgIn {
-			switch m := msg.(type) {
-			case SendLocation:
-				m <- packet.Packet{
-					Location: &packet.Location{
-						ID:    p.ID,
-						Coord: layout.Coord{p.x, p.y},
-					},
-				}
-
-			case packet.Location:
-				dx, dy := m.Coord.X, m.Coord.Y
-				// TODO: space logic
-				if layout.Get(p.x+dx, p.y+dy).Passable() {
-					p.x += dx
-					p.y += dy
-
-					go func(m SetLocation) {
-						world.Send <- m
-					}(SetLocation{
-						ID:    p.ID,
-						Actor: &p.Actor,
-						Coord: layout.Coord{p.x, p.y},
-					})
-				}
-
-			default:
-				messages <- m
-			}
-		}
-		close(messages)
-	}()
+	go p.dispatch(msgIn, messages)
 
 	return messages, broadcast
+}
+
+func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
+	for msg := range msgIn {
+		switch m := msg.(type) {
+		case SendLocation:
+			m <- packet.Packet{
+				Location: &packet.Location{
+					ID:    p.ID,
+					Coord: layout.Coord{p.x, p.y},
+				},
+			}
+
+		case packet.Location:
+			dx, dy := m.Coord.X, m.Coord.Y
+			// TODO: space logic
+			if layout.Get(p.x+dx, p.y+dy).Passable() {
+				p.x += dx
+				p.y += dy
+
+				go func(m SetLocation) {
+					world.Send <- m
+				}(SetLocation{
+					ID:    p.ID,
+					Actor: &p.Actor,
+					Coord: layout.Coord{p.x, p.y},
+				})
+			}
+
+		default:
+			messages <- m
+		}
+	}
+	close(messages)
 }
 
 func (p *Player) Disconnected() {
@@ -83,7 +87,7 @@ func NewPlayer(id string, name string, out chan<- packet.Packet) (player *Player
 	player.id = id
 	player.Name = name
 	player.out = out
-	actor.Init("player:" + id, &player.Actor, player)
+	actor.Init("player:"+id, &player.Actor, player)
 
 	out <- packet.Packet{
 		Handshake: &packet.Handshake{

@@ -33,36 +33,20 @@ func client(username string, server io.ReadWriteCloser) {
 	}
 	login <- me
 
+	defer close(me.Send)
+
 	in := bufio.NewReader(os.Stdin)
 
 	clientpkg.Network = me.Send
 
-	go func() {
-		defer close(me.Send)
-		for {
-			line, err := in.ReadString('\n')
-			if err == io.EOF {
-				return
-			}
-
-			if err != nil {
-				log.Fatalf("readline(): %s", err)
-			}
-
-			me.Send <- packet.Packet{
-				Chat: &packet.Chat{
-					Message: line,
-				},
-			}
-		}
-	}()
-
-	go func() {
-		for msg := range me.Recv {
-			clientpkg.Handle(msg)
-		}
-		clientpkg.Disconnected()
-	}()
+	go dispatch(me.Recv)
 
 	clientpkg.Main()
+}
+
+func dispatch(recv <-chan packet.Packet) {
+	for msg := range recv {
+		clientpkg.Handle(msg)
+	}
+	clientpkg.Disconnected()
 }

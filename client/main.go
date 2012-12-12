@@ -102,6 +102,12 @@ func Invalidate(rect image.Rectangle) {
 	}
 }
 
+func paintHandler(w wde.Window) {
+	for rect := range shouldPaint {
+		Paint(w, rect)
+	}
+}
+
 func UI() {
 	defer wde.Stop()
 
@@ -115,11 +121,7 @@ func UI() {
 
 	w.Show()
 
-	go func() {
-		for rect := range shouldPaint {
-			Paint(w, rect)
-		}
-	}()
+	go paintHandler(w)
 
 	Invalidate(w.Screen().Bounds())
 

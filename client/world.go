@@ -34,24 +34,25 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	go func() {
+	go w.dispatch(msgIn, messages)
+
+	return messages, broadcast
+}
+
+func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 		for msg := range msgIn {
 			switch m := msg.(type) {
 			case packet.Handshake:
 				a := &thePlayer.Actor
 				w.idToActor[m.ID] = a
-				go func(a *actor.Actor) {
-					w.Send <- actor.AddHeld{a}
-				}(a)
+				go w.addHeld(a)
 
 			case packet.Location:
 				id, coord := m.ID, m.Coord
 				if _, ok := w.idToActor[id]; !ok {
 					a := &NewPlayer(false).Actor
 					w.idToActor[id] = a
-					go func(a *actor.Actor) {
-						w.Send <- actor.AddHeld{a}
-					}(a)
+					go w.addHeld(a)
 				}
 				w.idToActor[id].Send <- SetLocation{coord}
 
@@ -86,7 +87,10 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 		close(messages)
 	}()
 
-	return messages, broadcast
+}
+
+func (w *World) addHeld(a *actor.Actor) {
+	w.Send <- actor.AddHeld{a}
 }
 
 var world = NewWorld()

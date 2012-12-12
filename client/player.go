@@ -19,31 +19,33 @@ func (p *Player) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	go func() {
-		for msg := range msgIn {
-			switch m := msg.(type) {
-			case PaintRequest:
-				m.Reply(0, p.x, p.y)
-
-			case SetLocation:
-				Invalidate(p.screenRect())
-				p.x, p.y = m.X, m.Y
-				if p.isLocalPlayer {
-					atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
-					atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
-				} else {
-					Invalidate(p.screenRect())
-				}
-
-			default:
-				messages <- m
-			}
-		}
-
-		close(messages)
-	}()
+	go p.dispatch(msgIn, messages)
 
 	return messages, broadcast
+}
+
+func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
+	for msg := range msgIn {
+		switch m := msg.(type) {
+		case PaintRequest:
+			m.Reply(0, p.x, p.y)
+
+		case SetLocation:
+			Invalidate(p.screenRect())
+			p.x, p.y = m.X, m.Y
+
+			if p.isLocalPlayer {
+				atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
+				atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
+			} else {
+				Invalidate(p.screenRect())
+			}
+
+		default:
+			messages <- m
+		}
+	}
+	close(messages)
 }
 
 func (p *Player) screenRect() image.Rectangle {
