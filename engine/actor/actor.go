@@ -7,9 +7,9 @@ import (
 )
 
 type Actor struct {
-	Send message.Sender
+	Send   message.Sender
 	closed chan struct{}
-	tag  string
+	tag    string
 }
 
 func (a *Actor) Initialize() (messages message.Receiver, broadcast message.Sender) {
@@ -69,7 +69,10 @@ func Init(tag string, bottom *Actor, top interface {
 	Initialize() (message.Receiver, message.Sender)
 },) {
 	bottom.tag = tag
-	go bottom.topLevel(top.Initialize())
+
+	// TODO: remove temporary hack
+	a, b := top.Initialize()
+	go bottom.topLevel(a, b)
 }
 
 var msgAlivePing = message.NewKind("alivePing")
