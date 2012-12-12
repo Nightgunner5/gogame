@@ -3,13 +3,11 @@
 package main
 
 import (
-	"bufio"
 	clientpkg "github.com/Nightgunner5/gogame/client"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"github.com/kylelemons/fatchan"
 	"io"
 	"log"
-	"os"
 )
 
 const (
@@ -34,8 +32,6 @@ func client(username string, server io.ReadWriteCloser) {
 	login <- me
 
 	defer close(me.Send)
-
-	in := bufio.NewReader(os.Stdin)
 
 	clientpkg.Network = me.Send
 
