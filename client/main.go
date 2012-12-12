@@ -74,7 +74,10 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
 		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
-			Tile(viewport, Terrain, uint16(layout.Get(x-xOffset, y-yOffset)), x, y)
+			Tile(viewport, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+			for _, t := range layout.Get(x-xOffset, y-yOffset) {
+				Tile(viewport, Terrain, uint16(t), x, y)
+			}
 		}
 	}
 

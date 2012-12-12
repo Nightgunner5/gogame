@@ -51,7 +51,7 @@ func TestCheck(t *testing.T) {
 }
 
 func TestLayout(t *testing.T) {
-	assert := func(name string, tile Tile, x, y int, ok bool) {
+	assert := func(name string, tile MultiTile, x, y int, ok bool) {
 		if ok {
 			return
 		}
