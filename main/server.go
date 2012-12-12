@@ -17,24 +17,24 @@ const canServe = true
 var users = struct {
 	sync.RWMutex
 	chans map[chan packet.Packet]string
-	taken map[string]bool
+//	taken map[string]bool
 }{
 	chans: make(map[chan packet.Packet]string),
-	taken: map[string]bool{"SERVER": true, "": true},
+//	taken: map[string]bool{"SERVER": true},
 }
 
 func addUser(username string, channel chan packet.Packet) bool {
 	users.Lock()
 	defer users.Unlock()
 
-	if users.taken[username] {
-		log.Printf("Username taken: %q", username)
-		return false
-	}
+//	if users.taken[username] {
+//		log.Printf("Username taken: %q", username)
+//		return false
+//	}
 
 	log.Printf("New user %q", username)
 	users.chans[channel] = username
-	users.taken[username] = true
+//	users.taken[username] = true
 	return true
 }
 func delUser(channel chan packet.Packet) {
@@ -42,7 +42,7 @@ func delUser(channel chan packet.Packet) {
 	defer users.Unlock()
 
 	log.Printf("User signoff %q", users.chans[channel])
-	delete(users.taken, users.chans[channel])
+//	delete(users.taken, users.chans[channel])
 	delete(users.chans, channel)
 }
 func sendAll(msg packet.Packet) {
