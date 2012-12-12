@@ -27,6 +27,8 @@ const (
 	Wall1SE Tile = 19
 	Wall1SW Tile = 20
 
+	Window1 Tile = 21
+
 	Space1 Tile = 1022
 	Space2 Tile = 1023
 )
