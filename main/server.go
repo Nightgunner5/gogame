@@ -76,12 +76,12 @@ func serve(id string, client io.ReadWriteCloser) {
 
 	user := <-login
 	log.Printf("Client %q registered as %q", id, user.User)
+	defer close(user.Recv)
+
 	if !addUser(user.User, user.Recv) {
-		close(user.Recv)
 		return
 	}
 	defer delUser(user.Recv)
-	defer close(user.Recv)
 
 	player := serverpkg.NewPlayer(id, user.User, user.Recv)
 	defer player.Disconnected()
