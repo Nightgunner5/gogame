@@ -56,6 +56,13 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 			}
 			w.idToActor[id].Send <- SetLocation{coord}
 
+		case packet.Despawn:
+			if a, ok := w.idToActor[m.ID]; ok {
+				delete(w.idToActor, m.ID)
+				go w.removeHeld(a)
+				close(a.Send)
+			}
+
 		case MoveRequest:
 			if m.X == 0 && m.Y == 0 {
 				continue
@@ -89,6 +96,10 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 func (w *World) addHeld(a *actor.Actor) {
 	w.Send <- actor.AddHeld{a}
+}
+
+func (w *World) removeHeld(a *actor.Actor) {
+	w.Send <- actor.RemoveHeld{a}
 }
 
 var world = NewWorld()

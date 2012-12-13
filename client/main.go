@@ -174,6 +174,9 @@ func Handle(msg packet.Packet) {
 	case msg.Location != nil:
 		world.Send <- *msg.Location
 
+	case msg.Despawn != nil:
+		world.Send <- *msg.Despawn
+
 	default:
 		log.Fatalf("unknown packet: %#v", msg)
 	}
