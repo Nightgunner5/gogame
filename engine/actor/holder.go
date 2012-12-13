@@ -32,7 +32,7 @@ type Holder struct {
 	getHeld chan chan []*Actor
 }
 
-func (h *Holder) Initialize() (messages message.Receiver, broadcast message.Sender) {
+func (h *Holder) Initialize() (messages message.Receiver, broadcast func(message.Message)) {
 	msgIn, broadcast := h.Actor.Initialize()
 
 	messages_ := make(chan message.Message)
@@ -46,7 +46,7 @@ func (h *Holder) Initialize() (messages message.Receiver, broadcast message.Send
 	return
 }
 
-func (h *Holder) dispatch(msgIn message.Receiver, messages, broadcast message.Sender, held map[*Actor]bool) {
+func (h *Holder) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message), held map[*Actor]bool) {
 	getHeld := make(chan []*Actor)
 	for {
 		select {
@@ -59,12 +59,12 @@ func (h *Holder) dispatch(msgIn message.Receiver, messages, broadcast message.Se
 			case AddHeld:
 				if !held[m.Actor] {
 					held[m.Actor] = true
-					broadcast <- m
+					go broadcast(m)
 				}
 			case RemoveHeld:
 				if held[m.Actor] {
 					delete(held, m.Actor)
-					broadcast <- m
+					go broadcast(m)
 				}
 			default:
 				messages <- m

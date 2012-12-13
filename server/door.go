@@ -12,7 +12,7 @@ type Door struct {
 	open  bool
 }
 
-func (d *Door) Initialize() (message.Receiver, message.Sender) {
+func (d *Door) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := d.Actor.Initialize()
 
 	messages := make(chan message.Message)

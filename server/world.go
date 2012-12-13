@@ -21,7 +21,7 @@ type World struct {
 	location  map[*actor.Actor]layout.Coord
 }
 
-func (w *World) Initialize() (message.Receiver, message.Sender) {
+func (w *World) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := w.Holder.Initialize()
 
 	onConnect := make(chan chan<- packet.Packet)
@@ -37,7 +37,7 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 	return messages, broadcast
 }
 
-func (w *World) dispatch(msgIn message.Receiver, messages, broadcast message.Sender, onConnect <-chan chan<- packet.Packet) {
+func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message), onConnect <-chan chan<- packet.Packet) {
 	for {
 		select {
 		case msg, ok := <-msgIn:
@@ -58,7 +58,7 @@ func (w *World) dispatch(msgIn message.Receiver, messages, broadcast message.Sen
 					},
 				}
 
-				broadcast <- m
+				go broadcast(m)
 
 			case packet.Despawn:
 				a := w.idToActor[m.ID]

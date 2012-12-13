@@ -31,7 +31,7 @@ type Player struct {
 	out  chan<- packet.Packet
 }
 
-func (p *Player) Initialize() (message.Receiver, message.Sender) {
+func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := p.Actor.Initialize()
 
 	p.ID = <-nextPlayerID

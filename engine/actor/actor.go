@@ -12,7 +12,7 @@ type Actor struct {
 	tag    string
 }
 
-func (a *Actor) Initialize() (messages message.Receiver, broadcast message.Sender) {
+func (a *Actor) Initialize() (messages message.Receiver, broadcast func(message.Message)) {
 	send_ := make(chan message.Message)
 	a.Send = send_
 
@@ -20,7 +20,9 @@ func (a *Actor) Initialize() (messages message.Receiver, broadcast message.Sende
 	messages = messages_
 
 	broadcast_ := make(chan message.Message)
-	broadcast = broadcast_
+	broadcast = func(m message.Message) {
+		broadcast_ <- m
+	}
 
 	a.closed = make(chan struct{})
 
@@ -47,6 +49,7 @@ func (a *Actor) dispatch(send, messages, broadcast chan message.Message) {
 				close(messages)
 				return
 			}
+
 			switch m := msg.(type) {
 			case AddSubscriber:
 				subscribers[m.Subscriber] = true
@@ -66,7 +69,7 @@ func (a *Actor) dispatch(send, messages, broadcast chan message.Message) {
 }
 
 func Init(tag string, bottom *Actor, top interface {
-	Initialize() (message.Receiver, message.Sender)
+	Initialize() (message.Receiver, func(message.Message))
 },) {
 	bottom.tag = tag
 
@@ -102,7 +105,7 @@ func (a *Actor) checkAlive(isAlive chan struct{}) {
 	}
 }
 
-func (a *Actor) topLevel(messages message.Receiver, _ message.Sender) {
+func (a *Actor) topLevel(messages message.Receiver, _ func(message.Message)) {
 	isAlive := make(chan struct{}, 1)
 	go a.checkAlive(isAlive)
 	for msg := range messages {

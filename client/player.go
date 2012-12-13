@@ -14,7 +14,7 @@ type Player struct {
 	isLocalPlayer bool
 }
 
-func (p *Player) Initialize() (message.Receiver, message.Sender) {
+func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := p.Actor.Initialize()
 
 	messages := make(chan message.Message)

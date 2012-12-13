@@ -27,7 +27,7 @@ type World struct {
 	idToActor map[uint64]*actor.Actor
 }
 
-func (w *World) Initialize() (message.Receiver, message.Sender) {
+func (w *World) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := w.Holder.Initialize()
 
 	w.idToActor = make(map[uint64]*actor.Actor)
