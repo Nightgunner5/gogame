@@ -8,9 +8,9 @@ const (
 	MaxDroppedTicks = 10
 )
 
-type Ticker <-chan struct{}
+type Ticker chan struct{}
 
-func (Ticker) tick(delay time.Duration, t chan struct{}) {
+func (t Ticker) tick(delay time.Duration) {
 	skipped := 0
 	for {
 		time.Sleep(delay)
@@ -28,9 +28,9 @@ func (Ticker) tick(delay time.Duration, t chan struct{}) {
 }
 
 func Tick(delay time.Duration) Ticker {
-	c := make(chan struct{}, 1)
+	c := make(Ticker, 1)
 
-	go Ticker(c).tick(delay, c)
+	go c.tick(delay)
 
 	return c
 }

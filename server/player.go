@@ -47,7 +47,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 	defer close(messages)
 
 	var moveRequest layout.Coord
-	move := actor.Tick(time.Second / 2)
+	var move actor.Ticker
 
 	for {
 		select {
@@ -66,6 +66,10 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 			case packet.Location:
 				moveRequest = m.Coord
+				if move == nil {
+					move = actor.Tick(time.Second / 2)
+					move <- struct{}{}
+				}
 
 			default:
 				messages <- m
@@ -83,6 +87,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			dx, dy := moveRequest.X, moveRequest.Y
 
 			if dx == 0 && dy == 0 {
+				move = nil
 				continue
 			}
 
