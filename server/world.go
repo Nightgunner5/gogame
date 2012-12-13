@@ -5,7 +5,6 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"time"
 )
 
 var (
@@ -73,16 +72,19 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 			}
 
 		case c := <-onConnect:
-			go func(c SendLocation) {
-				for _, a := range w.GetHeld() {
-					select {
-					case a.Send <- c:
-					case <-time.After(10 * time.Millisecond):
-					}
-				}
-			}(SendLocation(c))
+			for _, a := range w.GetHeld() {
+				go sendSendLocation(a, SendLocation(c))
+			}
 		}
 	}
+}
+
+func sendSendLocation(a *actor.Actor, c SendLocation) {
+	// This function will only panic if a player disconnects between another
+	// player joining and the location sender being recieved. What?
+	defer recover()
+
+	a.Send <- c
 }
 
 var world = NewWorld()
