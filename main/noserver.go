@@ -1,4 +1,4 @@
-// +build noserver,!noclient
+// +build noserver,!noclient noserver,noclient,monkey
 
 package main
 
