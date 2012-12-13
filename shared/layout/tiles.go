@@ -29,8 +29,8 @@ const (
 
 	Window1 Tile = 21
 
-	Door1Closed Tile = 22
-	Door1Open   Tile = 23
+	Door1Open   Tile = 22
+	Door1Closed Tile = 23
 
 	Space1 Tile = 1022
 	Space2 Tile = 1023
@@ -42,12 +42,12 @@ func (t Tile) Space() bool {
 
 func (t Tile) Passable() bool {
 	return (t >= WhiteTile && t <= PinkTile) ||
-		(t.Door() && t&1 == 1) ||
+		(t.Door() && t&1 == 0) ||
 		(t >= Space1)
 }
 
 func (t Tile) Door() bool {
-	return (t >= Door1Closed && t <= Door1Open)
+	return (t >= Door1Open && t <= Door1Closed)
 }
 
 type MultiTile []Tile
