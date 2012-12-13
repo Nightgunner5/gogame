@@ -42,6 +42,7 @@ func (t Tile) Space() bool {
 
 func (t Tile) Passable() bool {
 	return (t >= WhiteTile && t <= PinkTile) ||
+		(t.Door() && t&1 == 1) ||
 		(t >= Space1)
 }
 
