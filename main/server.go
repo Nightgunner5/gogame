@@ -77,12 +77,6 @@ func serve(id string, client io.ReadWriteCloser) {
 	user := <-login
 	log.Printf("Client %q registered as %q", id, user.User)
 	if !addUser(user.User, user.Recv) {
-		user.Recv <- packet.Packet{
-			Chat: &packet.Chat{
-				User:    "SERVER",
-				Message: "That username is already taken.",
-			},
-		}
 		close(user.Recv)
 		return
 	}

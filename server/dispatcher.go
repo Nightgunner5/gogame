@@ -13,12 +13,6 @@ func Dispatch(player *Player, msg packet.Packet) bool {
 			player.Send <- *msg.Location
 		}
 
-	case msg.Chat != nil:
-		msg.Chat.User = player.Name
-		SendToAll <- packet.Packet{
-			Chat: msg.Chat,
-		}
-
 	default:
 		log.Printf("Client %q sent unknown packet %#v", player.id, msg)
 		return false

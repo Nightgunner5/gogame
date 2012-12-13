@@ -168,12 +168,12 @@ func Disconnected() {
 
 func Handle(msg packet.Packet) {
 	switch {
-	case msg.Chat != nil:
-		log.Printf("<%s> %s", msg.Chat.User, msg.Chat.Message)
 	case msg.Handshake != nil:
 		world.Send <- *msg.Handshake
+
 	case msg.Location != nil:
 		world.Send <- *msg.Location
+
 	default:
 		log.Fatalf("unknown packet: %#v", msg)
 	}
