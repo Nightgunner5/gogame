@@ -72,9 +72,9 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 			}
 
 		case c := <-onConnect:
-			for _, a := range w.GetHeld() {
+			w.EachHeld(func(a *actor.Actor) {
 				go sendSendLocation(a, SendLocation(c))
-			}
+			})
 		}
 	}
 }

@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/Nightgunner5/gogame/engine/message"
+	"sync"
 )
 
 var (
@@ -29,7 +30,8 @@ func (RemoveHeld) Kind() message.Kind {
 
 type Holder struct {
 	Actor
-	getHeld chan chan []*Actor
+	held map[*Actor]bool
+	lock sync.RWMutex
 }
 
 func (h *Holder) Initialize() (messages message.Receiver, broadcast func(message.Message)) {
@@ -38,16 +40,14 @@ func (h *Holder) Initialize() (messages message.Receiver, broadcast func(message
 	messages_ := make(chan message.Message)
 	messages = messages_
 
-	held := make(map[*Actor]bool)
-	h.getHeld = make(chan chan []*Actor)
+	h.held = make(map[*Actor]bool)
 
-	go h.dispatch(msgIn, messages_, broadcast, held)
+	go h.dispatch(msgIn, messages_, broadcast)
 
 	return
 }
 
-func (h *Holder) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message), held map[*Actor]bool) {
-	getHeld := make(chan []*Actor)
+func (h *Holder) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message)) {
 	for {
 		select {
 		case msg, ok := <-msgIn:
@@ -57,29 +57,45 @@ func (h *Holder) dispatch(msgIn message.Receiver, messages message.Sender, broad
 			}
 			switch m := msg.(type) {
 			case AddHeld:
-				if !held[m.Actor] {
-					held[m.Actor] = true
+				h.lock.Lock()
+				if !h.held[m.Actor] {
+					h.held[m.Actor] = true
 					go broadcast(m)
 				}
+				h.lock.Unlock()
+
 			case RemoveHeld:
-				if held[m.Actor] {
-					delete(held, m.Actor)
+				h.lock.Lock()
+				if h.held[m.Actor] {
+					delete(h.held, m.Actor)
 					go broadcast(m)
 				}
+				h.lock.Unlock()
+
 			default:
 				messages <- m
 			}
-
-		case h.getHeld <- getHeld:
-			slice := make([]*Actor, 0, len(held))
-			for a := range held {
-				slice = append(slice, a)
-			}
-			getHeld <- slice
 		}
 	}
 }
 
 func (h *Holder) GetHeld() []*Actor {
-	return <-<-h.getHeld
+	h.lock.RLock()
+	defer h.lock.RUnlock()
+
+	held := make([]*Actor, 0, len(h.held))
+	for a := range h.held {
+		held = append(held, a)
+	}
+
+	return held
+}
+
+func (h *Holder) EachHeld(f func(*Actor)) {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
+
+	for a := range h.held {
+		f(a)
+	}
 }
