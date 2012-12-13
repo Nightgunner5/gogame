@@ -1,8 +1,9 @@
 package packet
 
 type Packet struct {
-	*Chat
 	*Handshake
 	*Location
 	*Despawn
+	*MapChange
+	*MapOverride
 }

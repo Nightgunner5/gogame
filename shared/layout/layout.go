@@ -1,6 +1,15 @@
 package layout
 
+import (
+	"fmt"
+	"sync"
+)
+
 type Coord struct{ X, Y int }
+
+func (c Coord) String() string {
+	return fmt.Sprintf("[%d,%d]", c.X, c.Y)
+}
 
 var baseLayout = map[Coord]MultiTile{
 	Coord{-6, -3}: {Wall1SE},
@@ -30,7 +39,7 @@ var baseLayout = map[Coord]MultiTile{
 	Coord{-3, 0}:  {WhiteTile},
 	Coord{-3, 1}:  {WhiteTile},
 	Coord{-3, 2}:  {GrayTile},
-	Coord{-3, 3}:  {Wall1},
+	Coord{-3, 3}:  {GrayTile, Door1Closed},
 	Coord{-2, -3}: {Wall1},
 	Coord{-2, -2}: {GrayTile},
 	Coord{-2, -1}: {WhiteTile},
@@ -83,7 +92,7 @@ var baseLayout = map[Coord]MultiTile{
 	Coord{3, 1}:   {WhiteTile},
 	Coord{3, 2}:   {WhiteTile},
 	Coord{3, 3}:   {GrayTile},
-	Coord{3, 4}:   {Wall1},
+	Coord{3, 4}:   {GrayTile, Door1Open},
 	Coord{4, -4}:  {Wall1},
 	Coord{4, -3}:  {GrayTile},
 	Coord{4, -2}:  {WhiteTile},
@@ -120,19 +129,50 @@ var baseLayout = map[Coord]MultiTile{
 	Coord{7, 3}:   {Wall1NW},
 }
 
-var currentLayout map[Coord]MultiTile
-
-func init() {
-	currentLayout = make(map[Coord]MultiTile, len(baseLayout))
-	for k, v := range baseLayout {
-		currentLayout[k] = v
-	}
-}
+var (
+	currentLayout = make(map[Coord]MultiTile)
+	layoutLock    sync.RWMutex
+)
 
 var space = [...]Tile{Space1, Space2}
 
 func Get(x, y int) MultiTile {
-	return currentLayout[Coord{x, y}]
+	return GetCoord(Coord{x, y})
+}
+
+func GetCoord(coord Coord) MultiTile {
+	layoutLock.RLock()
+	defer layoutLock.RUnlock()
+
+	if t, ok := currentLayout[coord]; ok {
+		return t
+	}
+	return baseLayout[coord]
+}
+
+func GetChanges() map[Coord]MultiTile {
+	layoutLock.RLock()
+	defer layoutLock.RUnlock()
+
+	clone := make(map[Coord]MultiTile, len(currentLayout))
+	for k, v := range currentLayout {
+		clone[k] = v
+	}
+	return clone
+}
+
+func SetChanges(m map[Coord]MultiTile) {
+	layoutLock.Lock()
+	defer layoutLock.Unlock()
+
+	currentLayout = m
+}
+
+func SetCoord(coord Coord, t MultiTile) {
+	layoutLock.Lock()
+	defer layoutLock.Unlock()
+
+	currentLayout[coord] = t
 }
 
 func GetSpace(x, y int) Tile {

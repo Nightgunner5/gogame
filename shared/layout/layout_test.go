@@ -16,8 +16,8 @@ const (
  W____________W 
  W____________W 
  WW__________WW 
- WWWWWWWW___WWW 
-      WWWWWWWW  
+ WWWDWWWW___WWW 
+      WWWWDWWW  
                 `
 )
 
@@ -40,6 +40,7 @@ func TestCheck(t *testing.T) {
 			case ' ': // Space
 			case 'W': // Wall
 			case '_': // Floor
+			case 'D': // Door
 			default:
 				t.Errorf("Unexpected rune %c", r)
 			}
@@ -71,12 +72,18 @@ func TestLayout(t *testing.T) {
 			case ' ':
 				assert("space->space", tile, x, y, tile.Space())
 				assert("space->passable", tile, x, y, tile.Passable())
+				assert("space->!door", tile, x, y, !tile.Door())
 			case 'W':
 				assert("wall->!space", tile, x, y, !tile.Space())
 				assert("wall->!passable", tile, x, y, !tile.Passable())
+				assert("wall->!door", tile, x, y, !tile.Door())
 			case '_':
 				assert("floor->!space", tile, x, y, !tile.Space())
 				assert("floor->passable", tile, x, y, tile.Passable())
+				assert("floor->!door", tile, x, y, !tile.Door())
+			case 'D':
+				assert("door->!space", tile, x, y, !tile.Space())
+				assert("door->door", tile, x, y, tile.Door())
 			}
 		}
 	}

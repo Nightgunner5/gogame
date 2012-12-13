@@ -29,6 +29,9 @@ const (
 
 	Window1 Tile = 21
 
+	Door1Closed Tile = 22
+	Door1Open   Tile = 23
+
 	Space1 Tile = 1022
 	Space2 Tile = 1023
 )
@@ -40,6 +43,10 @@ func (t Tile) Space() bool {
 func (t Tile) Passable() bool {
 	return (t >= WhiteTile && t <= PinkTile) ||
 		(t >= Space1)
+}
+
+func (t Tile) Door() bool {
+	return (t >= Door1Closed && t <= Door1Open)
 }
 
 type MultiTile []Tile
@@ -60,4 +67,13 @@ func (m MultiTile) Passable() bool {
 		}
 	}
 	return true
+}
+
+func (m MultiTile) Door() bool {
+	for _, t := range m {
+		if t.Door() {
+			return true
+		}
+	}
+	return false
 }

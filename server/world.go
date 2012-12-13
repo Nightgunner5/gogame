@@ -32,12 +32,12 @@ func (w *World) Initialize() (message.Receiver, message.Sender) {
 
 	messages := make(chan message.Message)
 
-	go w.dispatch(msgIn, messages, onConnect)
+	go w.dispatch(msgIn, messages, broadcast, onConnect)
 
 	return messages, broadcast
 }
 
-func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, onConnect <-chan chan<- packet.Packet) {
+func (w *World) dispatch(msgIn message.Receiver, messages, broadcast message.Sender, onConnect <-chan chan<- packet.Packet) {
 	for {
 		select {
 		case msg, ok := <-msgIn:
@@ -57,6 +57,8 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, onConn
 						Coord: m.Coord,
 					},
 				}
+
+				broadcast <- m
 
 			case packet.Despawn:
 				a := w.idToActor[m.ID]
