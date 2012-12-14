@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"github.com/Nightgunner5/gogame/shared/packet"
 	"log"
 	"net"
 	"os"
@@ -15,9 +14,7 @@ var (
 )
 
 type Handshake struct {
-	User string
-	Send chan packet.Packet `fatchan:"request"`
-	Recv chan packet.Packet `fatchan:"reply"`
+	Monkey bool
 }
 
 func main() {

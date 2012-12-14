@@ -3,11 +3,12 @@
 package main
 
 import (
-	"github.com/Nightgunner5/fatchan"
-	clientpkg "github.com/Nightgunner5/gogame/client"
+	"encoding/gob"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
 	"log"
+
+	clientpkg "github.com/Nightgunner5/gogame/client"
 )
 
 const (
@@ -16,33 +17,51 @@ const (
 )
 
 func client(username string, server io.ReadWriteCloser) {
-	log.Printf("Connected to server")
-	defer log.Printf("Server disconnected")
+	log.Print("Connected to server")
+	defer server.Close()
+	defer log.Print("Server disconnected")
 
-	xport := fatchan.New(server, nil)
-	login := make(chan Handshake)
-	xport.FromChan(login)
-	defer close(login)
+	encode, decode := gob.NewEncoder(server), gob.NewDecoder(server)
 
-	me := Handshake{
-		User: username,
-		Send: make(chan packet.Packet),
-		Recv: make(chan packet.Packet),
+	var handshake Handshake
+	if err := encode.Encode(handshake); err != nil {
+		log.Printf("Error while sending handshake: %s", err)
+		return
 	}
-	login <- me
 
-	defer close(me.Send)
+	send := make(chan *packet.Packet)
+	defer close(send)
 
-	clientpkg.Network = me.Send
+	clientpkg.Network = send
 
-	go dispatch(me.Recv)
+	go clientEncode(encode, send)
+	go clientDecode(decode)
 
 	clientpkg.Main()
 }
 
-func dispatch(recv <-chan packet.Packet) {
-	for msg := range recv {
+func clientEncode(encode *gob.Encoder, send <-chan *packet.Packet) {
+	for msg := range send {
+		if err := encode.Encode(msg); err != nil {
+			log.Printf("Error encoding packet: %s", err)
+		}
+	}
+}
+
+func clientDecode(decode *gob.Decoder) {
+	defer clientpkg.Disconnected()
+	for {
+		msg := new(packet.Packet)
+
+		if err := decode.Decode(msg); err != nil {
+			if err == io.EOF {
+				return
+			}
+
+			log.Printf("Error decoding packet: %s", err)
+			continue
+		}
+
 		clientpkg.Handle(msg)
 	}
-	clientpkg.Disconnected()
 }

@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func Dispatch(player *Player, msg packet.Packet) bool {
+func Dispatch(player *Player, msg *packet.Packet) bool {
 	switch {
 	case msg.Location != nil:
 		dx, dy := msg.Location.Coord.X, msg.Location.Coord.Y

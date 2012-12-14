@@ -39,7 +39,7 @@ func updateMotion(keys map[string]bool) {
 		dx++
 	}
 
-	Network <- packet.Packet{
+	Network <- &packet.Packet{
 		Location: &packet.Location{
 			Coord: layout.Coord{dx, dy},
 		},

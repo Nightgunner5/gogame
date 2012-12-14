@@ -9,7 +9,7 @@ var (
 	MsgSendLocation = message.NewKind("SendLocation")
 )
 
-type SendLocation chan<- packet.Packet
+type SendLocation chan<- *packet.Packet
 
 func (SendLocation) Kind() message.Kind {
 	return MsgSendLocation

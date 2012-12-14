@@ -18,7 +18,7 @@ func GetTopLeft() (x, y int) {
 	return
 }
 
-var Network chan<- packet.Packet
+var Network chan<- *packet.Packet
 
 type World struct {
 	actor.Holder
@@ -81,7 +81,7 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 					dy = -1
 				}
 			}
-			Network <- packet.Packet{
+			Network <- &packet.Packet{
 				Location: &packet.Location{
 					Coord: layout.Coord{dx, dy},
 				},

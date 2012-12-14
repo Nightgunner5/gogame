@@ -163,7 +163,7 @@ func Disconnected() {
 	log.Fatal("Disconnected")
 }
 
-func Handle(msg packet.Packet) {
+func Handle(msg *packet.Packet) {
 	switch {
 	case msg.Handshake != nil:
 		world.Send <- *msg.Handshake

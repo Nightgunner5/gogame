@@ -3,49 +3,39 @@
 package main
 
 import (
-	"github.com/Nightgunner5/fatchan"
-	serverpkg "github.com/Nightgunner5/gogame/server"
+	"encoding/gob"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
 	"log"
 	"sync"
 	"time"
+
+	serverpkg "github.com/Nightgunner5/gogame/server"
 )
 
 const canServe = true
 
 var users = struct {
 	sync.RWMutex
-	chans map[chan packet.Packet]string
-	//	taken map[string]bool
+	chans map[chan *packet.Packet]Handshake
 }{
-	chans: make(map[chan packet.Packet]string),
-	//	taken: map[string]bool{"SERVER": true},
+	chans: make(map[chan *packet.Packet]Handshake),
 }
 
-func addUser(username string, channel chan packet.Packet) bool {
+func addUser(channel chan *packet.Packet, handshake Handshake) bool {
 	users.Lock()
 	defer users.Unlock()
 
-	//	if users.taken[username] {
-	//		log.Printf("Username taken: %q", username)
-	//		return false
-	//	}
-
-	log.Printf("New user %q", username)
-	users.chans[channel] = username
-	//	users.taken[username] = true
+	users.chans[channel] = handshake
 	return true
 }
-func delUser(channel chan packet.Packet) {
+func delUser(channel chan *packet.Packet) {
 	users.Lock()
 	defer users.Unlock()
 
-	log.Printf("User signoff %q", users.chans[channel])
-	//	delete(users.taken, users.chans[channel])
 	delete(users.chans, channel)
 }
-func sendAll(msg packet.Packet) {
+func sendAll(msg *packet.Packet) {
 	users.RLock()
 	defer users.RUnlock()
 	for ch := range users.chans {
@@ -68,27 +58,51 @@ func init() {
 
 func serve(id string, client io.ReadWriteCloser) {
 	log.Printf("Client %q connected", id)
+	defer client.Close()
 	defer log.Printf("Client %q disconnected", id)
 
-	xport := fatchan.New(client, nil)
-	login := make(chan Handshake)
-	xport.ToChan(login)
+	encode, decode := gob.NewEncoder(client), gob.NewDecoder(client)
 
-	user := <-login
-	log.Printf("Client %q registered as %q", id, user.User)
-	defer close(user.Recv)
-
-	if !addUser(user.User, user.Recv) {
+	var handshake Handshake
+	if err := decode.Decode(&handshake); err != nil {
+		log.Printf("[client:%s] decoding handshake: %s", id, err)
 		return
 	}
-	defer delUser(user.Recv)
 
-	player := serverpkg.NewPlayer(id, user.User, user.Recv)
+	send := make(chan *packet.Packet)
+
+	go serverEncode(id, encode, send)
+
+	defer close(send)
+	if !addUser(send, handshake) {
+		return
+	}
+	defer delUser(send)
+
+	player := serverpkg.NewPlayer(id, "", send) // TODO: names
 	defer player.Disconnected()
 
-	for msg := range user.Send {
+	for {
+		msg := new(packet.Packet)
+		if err := decode.Decode(msg); err != nil {
+			if err == io.EOF {
+				return
+			}
+
+			log.Printf("[client:%s] decoding packet: %s", id, err)
+			continue
+		}
 		if !serverpkg.Dispatch(player, msg) {
 			return
+		}
+	}
+}
+
+func serverEncode(id string, encode *gob.Encoder, send <-chan *packet.Packet) {
+	for msg := range send {
+		err := encode.Encode(msg)
+		if err != nil {
+			log.Printf("[client:%s] encoding packet: %s", id, err)
 		}
 	}
 }

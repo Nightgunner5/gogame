@@ -28,7 +28,7 @@ type Player struct {
 	id   string // network ID (private)
 	Name string
 	x, y int
-	out  chan<- packet.Packet
+	out  chan<- *packet.Packet
 }
 
 func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
@@ -58,7 +58,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			switch m := msg.(type) {
 			case SendLocation:
 				select {
-				case m <- packet.Packet{
+				case m <- &packet.Packet{
 					Location: &packet.Location{
 						ID:    p.ID,
 						Coord: layout.Coord{p.x, p.y},
@@ -100,19 +100,23 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 					layout.Get(p.x, p.y+dy).Passable())
 			}
 
-			// TODO: space logic
-			if canMove {
-				p.x += dx
-				p.y += dy
-
-				go func(m SetLocation) {
-					world.Send <- m
-				}(SetLocation{
-					ID:    p.ID,
-					Actor: &p.Actor,
-					Coord: layout.Coord{p.x, p.y},
-				})
+			if !canMove {
+				moveRequest.X, moveRequest.Y = 0, 0
+				move = nil
+				continue
 			}
+
+			// TODO: space logic
+			p.x += dx
+			p.y += dy
+
+			go func(m SetLocation) {
+				world.Send <- m
+			}(SetLocation{
+				ID:    p.ID,
+				Actor: &p.Actor,
+				Coord: layout.Coord{p.x, p.y},
+			})
 		}
 	}
 }
@@ -123,14 +127,14 @@ func (p *Player) Disconnected() {
 	close(p.Send)
 }
 
-func NewPlayer(id string, name string, out chan<- packet.Packet) (player *Player) {
+func NewPlayer(id string, name string, out chan<- *packet.Packet) (player *Player) {
 	player = new(Player)
 	player.id = id
 	player.Name = name
 	player.out = out
 	actor.Init("player:"+id, &player.Actor, player)
 
-	out <- packet.Packet{
+	out <- &packet.Packet{
 		Handshake: &packet.Handshake{
 			ID: player.ID,
 		},
