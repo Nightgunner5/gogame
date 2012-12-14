@@ -60,6 +60,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 			}
 
 		case <-closeDoor:
+			closeDoor = nil
 			if d.open {
 				d.open = false
 				for {
