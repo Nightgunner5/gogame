@@ -12,9 +12,9 @@ const (
       WWWWWWWW  
  WWWWWWWW___WWW 
  WW____W_____WW 
- W_____W______W 
- W_____d______W 
- W_____W______W 
+ W_____W______G 
+ W_____d______G 
+ W_____W______G 
  WW____W_____WW 
  WWWDWWWW___WWW 
       WWWWDWWW  
@@ -42,6 +42,7 @@ func TestCheck(t *testing.T) {
 			case '_': // Floor
 			case 'D': // Closed door
 			case 'd': // Open door
+			case 'G': // Window
 			default:
 				t.Errorf("Unexpected rune %c", r)
 			}
@@ -80,6 +81,11 @@ func TestLayout(t *testing.T) {
 				assert("wall->!passable", tile, x, y, !tile.Passable())
 				assert("wall->!door", tile, x, y, !tile.Door())
 				assert("wall->visblock", tile, x, y, tile.BlocksVision())
+			case 'G':
+				assert("window->!space", tile, x, y, !tile.Space())
+				assert("window->!passable", tile, x, y, !tile.Passable())
+				assert("window->!door", tile, x, y, !tile.Door())
+				assert("window->!visblock", tile, x, y, !tile.BlocksVision())
 			case '_':
 				assert("floor->!space", tile, x, y, !tile.Space())
 				assert("floor->passable", tile, x, y, tile.Passable())
