@@ -11,11 +11,11 @@ const (
 	check = `                
       WWWWWWWW  
  WWWWWWWW___WWW 
- WW__________WW 
- W____________W 
- W____________W 
- W____________W 
- WW__________WW 
+ WW____W_____WW 
+ W_____W______W 
+ W_____d______W 
+ W_____W______W 
+ WW____W_____WW 
  WWWDWWWW___WWW 
       WWWWDWWW  
                 `
@@ -40,7 +40,8 @@ func TestCheck(t *testing.T) {
 			case ' ': // Space
 			case 'W': // Wall
 			case '_': // Floor
-			case 'D': // Door
+			case 'D': // Closed door
+			case 'd': // Open door
 			default:
 				t.Errorf("Unexpected rune %c", r)
 			}
@@ -73,17 +74,27 @@ func TestLayout(t *testing.T) {
 				assert("space->space", tile, x, y, tile.Space())
 				assert("space->passable", tile, x, y, tile.Passable())
 				assert("space->!door", tile, x, y, !tile.Door())
+				assert("space->!visblock", tile, x, y, !tile.BlocksVision())
 			case 'W':
 				assert("wall->!space", tile, x, y, !tile.Space())
 				assert("wall->!passable", tile, x, y, !tile.Passable())
 				assert("wall->!door", tile, x, y, !tile.Door())
+				assert("wall->visblock", tile, x, y, tile.BlocksVision())
 			case '_':
 				assert("floor->!space", tile, x, y, !tile.Space())
 				assert("floor->passable", tile, x, y, tile.Passable())
 				assert("floor->!door", tile, x, y, !tile.Door())
+				assert("floor->!visblock", tile, x, y, !tile.BlocksVision())
 			case 'D':
 				assert("door->!space", tile, x, y, !tile.Space())
+				assert("door->!passable", tile, x, y, !tile.Passable())
 				assert("door->door", tile, x, y, tile.Door())
+				assert("door->visblock", tile, x, y, tile.BlocksVision())
+			case 'd':
+				assert("door->!space", tile, x, y, !tile.Space())
+				assert("door->passable", tile, x, y, tile.Passable())
+				assert("door->door", tile, x, y, tile.Door())
+				assert("door->!visblock", tile, x, y, !tile.BlocksVision())
 			}
 		}
 	}

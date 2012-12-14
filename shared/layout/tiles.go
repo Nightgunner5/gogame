@@ -43,7 +43,11 @@ func (t Tile) Space() bool {
 func (t Tile) Passable() bool {
 	return (t >= WhiteTile && t <= PinkTile) ||
 		(t.Door() && t&1 == 0) ||
-		(t >= Space1)
+		t.Space()
+}
+
+func (t Tile) BlocksVision() bool {
+	return !t.Passable() && t != Window1
 }
 
 func (t Tile) Door() bool {
@@ -73,6 +77,15 @@ func (m MultiTile) Passable() bool {
 func (m MultiTile) Door() bool {
 	for _, t := range m {
 		if t.Door() {
+			return true
+		}
+	}
+	return false
+}
+
+func (m MultiTile) BlocksVision() bool {
+	for _, t := range m {
+		if t.BlocksVision() {
 			return true
 		}
 	}
