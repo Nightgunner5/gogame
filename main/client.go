@@ -7,6 +7,7 @@ import (
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
 	"log"
+	"time"
 
 	clientpkg "github.com/Nightgunner5/gogame/client"
 )
@@ -37,7 +38,17 @@ func client(username string, server io.ReadWriteCloser) {
 	go clientEncode(encode, send)
 	go clientDecode(decode)
 
+	go keepAlive(send)
+
 	clientpkg.Main()
+}
+
+func keepAlive(c chan<- *packet.Packet) {
+	var keepAlive packet.Packet
+	for {
+		c <- &keepAlive
+		time.Sleep(1 * time.Minute)
+	}
 }
 
 func clientEncode(encode *gob.Encoder, send <-chan *packet.Packet) {

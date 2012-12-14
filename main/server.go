@@ -7,6 +7,7 @@ import (
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
 	"log"
+	"net"
 	"sync"
 	"time"
 
@@ -39,10 +40,7 @@ func sendAll(msg *packet.Packet) {
 	users.RLock()
 	defer users.RUnlock()
 	for ch := range users.chans {
-		select {
-		case ch <- msg:
-		case <-time.After(10 * time.Millisecond):
-		}
+		ch <- msg
 	}
 }
 
@@ -56,10 +54,10 @@ func init() {
 	go broadcastServer()
 }
 
-func serve(id string, client io.ReadWriteCloser) {
-	log.Printf("Client %q connected", id)
+func serve(id string, client net.Conn) {
+	log.Printf("[client:%s] connected", id)
 	defer client.Close()
-	defer log.Printf("Client %q disconnected", id)
+	defer log.Printf("[client:%s] disconnected", id)
 
 	encode, decode := gob.NewEncoder(client), gob.NewDecoder(client)
 
@@ -68,10 +66,11 @@ func serve(id string, client io.ReadWriteCloser) {
 		log.Printf("[client:%s] decoding handshake: %s", id, err)
 		return
 	}
+	log.Printf("[client:%s] %#v", id, handshake)
 
 	send := make(chan *packet.Packet)
 
-	go serverEncode(id, encode, send)
+	go serverEncode(id, encode, client, send)
 
 	defer close(send)
 	if !addUser(send, handshake) {
@@ -82,8 +81,10 @@ func serve(id string, client io.ReadWriteCloser) {
 	player := serverpkg.NewPlayer(id, "", send) // TODO: names
 	defer player.Disconnected()
 
+	var fastZero packet.Packet
 	for {
 		msg := new(packet.Packet)
+		client.SetReadDeadline(time.Now().Add(2 * time.Minute))
 		if err := decode.Decode(msg); err != nil {
 			if err == io.EOF {
 				return
@@ -92,14 +93,15 @@ func serve(id string, client io.ReadWriteCloser) {
 			log.Printf("[client:%s] decoding packet: %s", id, err)
 			continue
 		}
-		if !serverpkg.Dispatch(player, msg) {
+		if *msg != fastZero && !serverpkg.Dispatch(player, msg) {
 			return
 		}
 	}
 }
 
-func serverEncode(id string, encode *gob.Encoder, send <-chan *packet.Packet) {
+func serverEncode(id string, encode *gob.Encoder, client net.Conn, send <-chan *packet.Packet) {
 	for msg := range send {
+		client.SetWriteDeadline(time.Now().Add(30 * time.Second))
 		err := encode.Encode(msg)
 		if err != nil {
 			log.Printf("[client:%s] encoding packet: %s", id, err)
