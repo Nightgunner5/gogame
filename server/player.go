@@ -92,10 +92,16 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				continue
 			}
 
-			canMove := layout.Get(p.x+dx, p.y+dy).Passable()
+			target := layout.Coord{p.x + dx, p.y + dy}
+			canMove := layout.GetCoord(target).Passable()
 			if canMove && dx != 0 && dy != 0 {
 				canMove = canMove && (layout.Get(p.x+dx, p.y).Passable() ||
 					layout.Get(p.x, p.y+dy).Passable())
+			} else if !canMove && (dx == 0 || dy == 0) {
+				if layout.GetCoord(target).Door() {
+					go world.OpenDoor(p, target)
+					continue
+				}
 			}
 
 			if !canMove {

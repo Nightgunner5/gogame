@@ -75,16 +75,27 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 			w.EachHeld(func(a *actor.Actor) {
 				go sendSendLocation(a, SendLocation(c))
 			})
+			c <- &packet.Packet{MapOverride: &packet.MapOverride{layout.GetChanges()}}
 		}
 	}
 }
 
+func (w *World) OpenDoor(opener *Player, coord layout.Coord) {
+
+}
+
 func sendSendLocation(a *actor.Actor, c SendLocation) {
 	// This function will only panic if a player disconnects between another
-	// player joining and the location sender being recieved. What?
+	// player joining and the location sender being recieved.
 	defer recover()
 
 	a.Send <- c
+}
+
+func init() {
+	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
+		SendToAll <- &packet.Packet{MapChange: &packet.MapChange{c, t}}
+	}
 }
 
 var world = NewWorld()

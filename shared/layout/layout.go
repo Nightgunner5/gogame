@@ -131,9 +131,17 @@ var baseLayout = map[Coord]MultiTile{
 var (
 	currentLayout = make(map[Coord]MultiTile)
 	layoutLock    sync.RWMutex
+	version       uint64
 )
 
 var space = [...]Tile{Space1, Space2}
+
+func Version() uint64 {
+	layoutLock.RLock()
+	defer layoutLock.RUnlock()
+
+	return version
+}
 
 func Get(x, y int) MultiTile {
 	return GetCoord(Coord{x, y})
@@ -165,15 +173,29 @@ func SetChanges(m map[Coord]MultiTile) {
 	defer layoutLock.Unlock()
 
 	currentLayout = m
+	version++
 }
 
-func SetCoord(coord Coord, t MultiTile) {
+func SetCoord(coord Coord, check, t MultiTile) bool {
 	layoutLock.Lock()
 	defer layoutLock.Unlock()
 
-	currentLayout[coord] = t
+	old := currentLayout[coord]
+	if old == nil {
+		old = baseLayout[coord]
+	}
+
+	if old.equal(check) {
+		currentLayout[coord] = t
+		version++
+		OnChange(coord, t)
+		return true
+	}
+	return false
 }
 
 func GetSpace(x, y int) Tile {
 	return space[uint(x^y)%uint(len(space))]
 }
+
+var OnChange = func(Coord, MultiTile) {}

@@ -47,7 +47,7 @@ func (t Tile) Passable() bool {
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window1
+	return !t.Passable() && t != Window1 && (t < Wall1NE || t > Wall1SW)
 }
 
 func (t Tile) Door() bool {
@@ -90,4 +90,17 @@ func (m MultiTile) BlocksVision() bool {
 		}
 	}
 	return false
+}
+
+func (a MultiTile) equal(b MultiTile) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
