@@ -80,9 +80,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 		case _, ok := <-move:
 			if !ok {
-				// We missed at least 10 ticks, which means the
-				// server is lagging quite heavily. Restart the
-				// ticker as we aren't dead just yet.
+				// We missed a few ticks. No big deal.
 				move = actor.Tick(time.Second / 2)
 				continue
 			}

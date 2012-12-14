@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	MaxDroppedTicks = 10
+	MaxDroppedTicks = 2
 )
 
 type Ticker chan struct{}
