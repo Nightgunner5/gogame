@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"github.com/Nightgunner5/gogame/client/res"
+	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"github.com/skelterjohn/go.wde"
@@ -11,6 +12,8 @@ import (
 	"image/draw"
 	"image/png"
 	"log"
+	"sync"
+	"time"
 )
 
 var (
@@ -62,16 +65,6 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	xOffset, yOffset := GetTopLeft()
 
-	actors := world.GetHeld()
-	count, paint := len(actors), make(chan PaintContext, len(actors))
-	for _, actor := range actors {
-		select {
-		case actor.Send <- PaintRequest(paint):
-		default:
-			count--
-		}
-	}
-
 	for x := rect.Min.X >> TileSize; x < (rect.Max.X-1)>>TileSize+1; x++ {
 		for y := rect.Min.Y >> TileSize; y < (rect.Max.Y-1)>>TileSize+1; y++ {
 			Tile(viewport, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
@@ -81,9 +74,12 @@ func Paint(w wde.Window, rect image.Rectangle) {
 		}
 	}
 
-	for i := 0; i < count; i++ {
-		(<-paint).Paint(viewport, xOffset, yOffset)
+	paintLock.Lock()
+	for _, p := range paintContexts {
+		Tile(viewport, Actors, p.Sprite, p.Coord.X+xOffset, p.Coord.Y+yOffset)
 	}
+	paintLock.Unlock()
+
 	w.FlushImage(rect)
 }
 
@@ -105,6 +101,7 @@ func Invalidate(rect image.Rectangle) {
 func paintHandler(w wde.Window) {
 	for rect := range shouldPaint {
 		Paint(w, rect)
+		time.Sleep(16 * time.Millisecond)
 	}
 }
 
@@ -180,4 +177,14 @@ func Handle(msg packet.Packet) {
 	default:
 		log.Fatalf("unknown packet: %#v", msg)
 	}
+}
+
+var (
+	paintContexts = make(map[*actor.Actor]*PaintContext)
+	paintLock     sync.RWMutex
+)
+
+type PaintContext struct {
+	Coord  layout.Coord
+	Sprite uint16
 }

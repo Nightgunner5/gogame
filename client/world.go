@@ -5,7 +5,6 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"image/draw"
 	"sync/atomic"
 )
 
@@ -60,6 +59,7 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 			if a, ok := w.idToActor[m.ID]; ok {
 				delete(w.idToActor, m.ID)
 				go w.removeHeld(a)
+				a.Send <- m
 				close(a.Send)
 			}
 
@@ -104,33 +104,10 @@ func (w *World) removeHeld(a *actor.Actor) {
 
 var world = NewWorld()
 
-func NewWorld() (world *World) {
-	world = new(World)
+func NewWorld() *World {
+	world := new(World)
 	actor.Init("client:world", &world.Actor, world)
-	return
-}
-
-var (
-	MsgPaintRequest = message.NewKind("PaintRequest")
-)
-
-type PaintRequest chan<- PaintContext
-
-func (p PaintRequest) Reply(spriteID uint16, x, y int) {
-	p <- PaintContext{spriteID, x, y}
-}
-
-func (p PaintRequest) Kind() message.Kind {
-	return MsgPaintRequest
-}
-
-type PaintContext struct {
-	spriteID uint16
-	x, y     int
-}
-
-func (p PaintContext) Paint(viewport draw.Image, xOffset, yOffset int) {
-	Tile(viewport, Actors, p.spriteID, p.x+xOffset, p.y+yOffset)
+	return world
 }
 
 var (

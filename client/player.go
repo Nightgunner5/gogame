@@ -4,6 +4,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/packet"
 	"image"
 	"sync/atomic"
 )
@@ -12,6 +13,7 @@ type Player struct {
 	actor.Actor
 	x, y          int
 	isLocalPlayer bool
+	paint         *PaintContext
 }
 
 func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
@@ -27,19 +29,28 @@ func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
 func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 	for msg := range msgIn {
 		switch m := msg.(type) {
-		case PaintRequest:
-			m.Reply(0, p.x, p.y)
-
 		case SetLocation:
-			Invalidate(p.screenRect())
-			p.x, p.y = m.X, m.Y
-
-			if p.isLocalPlayer {
-				atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
-				atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
-			} else {
+			if p.x != m.X || p.y != m.Y {
 				Invalidate(p.screenRect())
+				p.x, p.y = m.X, m.Y
+
+				paintLock.RLock()
+				p.paint.Coord.X, p.paint.Coord.Y = p.x, p.y
+				paintLock.RUnlock()
+
+				if p.isLocalPlayer {
+					atomic.StoreInt64(&topLeftX, ViewportWidth/2-int64(p.x))
+					atomic.StoreInt64(&topLeftY, ViewportHeight/2-int64(p.y))
+				} else {
+					Invalidate(p.screenRect())
+				}
 			}
+
+		case packet.Despawn:
+			paintLock.Lock()
+			delete(paintContexts, &p.Actor)
+			paintLock.Unlock()
+			Invalidate(p.screenRect())
 
 		default:
 			messages <- m
@@ -59,11 +70,15 @@ func (p *Player) screenRect() image.Rectangle {
 
 var thePlayer = NewPlayer(true)
 
-func NewPlayer(isLocalPlayer bool) (player *Player) {
-	player = new(Player)
+func NewPlayer(isLocalPlayer bool) *Player {
+	player := new(Player)
 	player.isLocalPlayer = isLocalPlayer
+	player.paint = new(PaintContext)
+	paintLock.Lock()
+	paintContexts[&player.Actor] = player.paint
+	paintLock.Unlock()
 	actor.Init("client:player", &player.Actor, player)
-	return
+	return player
 }
 
 var (
