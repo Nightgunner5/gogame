@@ -57,11 +57,14 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			}
 			switch m := msg.(type) {
 			case SendLocation:
-				m <- packet.Packet{
+				select {
+				case m <- packet.Packet{
 					Location: &packet.Location{
 						ID:    p.ID,
 						Coord: layout.Coord{p.x, p.y},
 					},
+				}:
+				case <-time.After(20 * time.Millisecond):
 				}
 
 			case packet.Location:
