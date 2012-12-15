@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var profileCleanup chan os.Signal
+
 func init() {
 	f, err := os.Create("cpu.prof")
 	if err != nil {
@@ -20,15 +22,32 @@ func init() {
 		panic(err)
 	}
 
-	cleanup := make(chan os.Signal, 1)
+	profileCleanup = make(chan os.Signal, 1)
 
 	go func() {
 		tick := time.Tick(time.Minute)
 		for {
 			select {
-			case <-cleanup:
+			case signal := <-profileCleanup:
 				pprof.StopCPUProfile()
-				os.Exit(0)
+				for _, profile := range pprof.Profiles() {
+					f, err := os.Create(profile.Name() + ".prof")
+					if err != nil {
+						panic(err)
+					}
+					err = profile.WriteTo(f, map[string]int{
+						"threadcreate": 1,
+						"goroutine":    2,
+					}[profile.Name()])
+					if err != nil {
+						panic(err)
+					}
+					f.Close()
+				}
+				if signal == os.Interrupt {
+					os.Exit(0)
+				}
+
 			case <-tick:
 				for _, profile := range pprof.Profiles() {
 					f, err := os.Create(profile.Name() + ".prof")
@@ -48,5 +67,5 @@ func init() {
 		}
 	}()
 
-	signal.Notify(cleanup, os.Interrupt)
+	signal.Notify(profileCleanup, os.Interrupt)
 }

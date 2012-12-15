@@ -12,6 +12,7 @@ import (
 	"image/draw"
 	"image/png"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -36,6 +37,16 @@ func init() {
 }
 
 func Main() {
+	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
+		if t.Door() {
+			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+		} else {
+			xOffset, yOffset := GetTopLeft()
+			x, y := c.X+xOffset, c.Y+yOffset
+			Invalidate(image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize))
+		}
+	}
+
 	go UI()
 
 	wde.Run()
@@ -131,15 +142,6 @@ func Invalidate(rect image.Rectangle) {
 }
 
 func init() {
-	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
-		if t.Door() {
-			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
-		} else {
-			xOffset, yOffset := GetTopLeft()
-			x, y := c.X+xOffset, c.Y+yOffset
-			Invalidate(image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize))
-		}
-	}
 }
 
 func paintHandler(w wde.Window) {
@@ -198,13 +200,15 @@ func UI() {
 			Invalidate(w.Screen().Bounds())
 
 		case wde.CloseEvent:
+			Disconnected()
 			return
 		}
 	}
 }
 
-func Disconnected() {
-	log.Fatal("Disconnected")
+var Disconnected = func() {
+	wde.Stop()
+	os.Exit(0)
 }
 
 func Handle(msg *packet.Packet) {
