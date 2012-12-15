@@ -27,16 +27,16 @@ func updateMotion(keys map[string]bool) {
 	dx, dy := 0, 0
 
 	if keys[wde.KeyUpArrow] {
-		,
+		dy--
 	}
 	if keys[wde.KeyDownArrow] {
-		o
+		dy++
 	}
 	if keys[wde.KeyLeftArrow] {
-		a
+		dx--
 	}
 	if keys[wde.KeyRightArrow] {
-		e
+		dx++
 	}
 
 	Network <- &packet.Packet{
