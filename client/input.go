@@ -22,6 +22,10 @@ func init() {
 	keyDown[wde.KeyA] = updateMotion
 	keyDown[wde.KeyD] = updateMotion
 
+	keyDown[wde.KeyComma] = updateMotion
+	keyDown[wde.KeyO] = updateMotion
+	keyDown[wde.KeyE] = updateMotion
+
 	keyUp[wde.KeyUpArrow] = updateMotion
 	keyUp[wde.KeyDownArrow] = updateMotion
 	keyUp[wde.KeyLeftArrow] = updateMotion
@@ -31,6 +35,10 @@ func init() {
 	keyUp[wde.KeyS] = updateMotion
 	keyUp[wde.KeyA] = updateMotion
 	keyUp[wde.KeyD] = updateMotion
+
+	keyUp[wde.KeyComma] = updateMotion
+	keyUp[wde.KeyO] = updateMotion
+	keyUp[wde.KeyE] = updateMotion
 }
 
 func updateMotion(keys map[string]bool) {
