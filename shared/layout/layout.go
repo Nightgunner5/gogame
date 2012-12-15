@@ -198,4 +198,29 @@ func GetSpace(x, y int) Tile {
 	return space[uint(x^y)%uint(len(space))]
 }
 
+func AllTiles(f func(Coord, MultiTile)) {
+	layoutLock.Lock()
+	defer layoutLock.Unlock()
+
+	for coord := range baseLayout {
+		if t, ok := currentLayout[coord]; ok {
+			if t == nil {
+				continue
+			}
+
+			f(coord, t)
+		} else {
+			f(coord, baseLayout[coord])
+		}
+	}
+
+	for coord, tile := range currentLayout {
+		if _, ok := baseLayout[coord]; ok || tile == nil {
+			continue
+		}
+
+		f(coord, tile)
+	}
+}
+
 var OnChange = func(Coord, MultiTile) {}

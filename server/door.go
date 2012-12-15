@@ -83,6 +83,15 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 	}
 }
 
+func init() {
+	layout.AllTiles(func(coord layout.Coord, tile layout.MultiTile) {
+		if tile.Door() {
+			door := NewDoor(coord)
+			world.Send <- AddDoor{coord, &door.Actor}
+		}
+	})
+}
+
 func NewDoor(coord layout.Coord) *Door {
 	door := new(Door)
 	door.coord = coord
@@ -94,7 +103,6 @@ func NewDoor(coord layout.Coord) *Door {
 
 	actor.Init("door:"+coord.String(), &door.Actor, door)
 
-	world.Send <- AddDoor{coord, &door.Actor}
 	return door
 }
 
