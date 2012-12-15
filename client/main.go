@@ -9,7 +9,6 @@ import (
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
-	"image/color"
 	"image/draw"
 	"image/png"
 	"log"
@@ -61,100 +60,38 @@ func Tile(viewport draw.Image, base image.Image, index uint16, x, y int) {
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
-type lightStep struct {
-	layout.Coord
-	bright byte
-}
-
-func spreadLight(draw map[layout.Coord]byte, queue *[]lightStep, step lightStep) {
-	if 255-draw[step.Coord] < step.bright {
-		draw[step.Coord] = 255
-	} else {
-		draw[step.Coord] += step.bright
-	}
-
-	var lightLoss = step.bright>>1 + 1
-	if step.bright <= lightLoss {
-		return
-	}
-	step.bright -= lightLoss
-
-	blocksVision := layout.GetCoord(step.Coord).BlocksVision()
-
-	for dx := -1; dx <= 1; dx++ {
-		for dy := -1; dy <= 1; dy++ {
-			if !blocksVision || layout.Get(step.X+dx, step.Y+dy).Space() {
-				*queue = append(*queue, lightStep{layout.Coord{step.X + dx, step.Y + dy}, step.bright})
-			}
-		}
-	}
-
-	for len(*queue) > 0 {
-		step := (*queue)[0]
-		*queue = (*queue)[1:]
-		spreadLight(draw, queue, step)
-	}
-}
-
-var (
-	brightness        map[layout.Coord]byte
-	lastBrightnessX   int
-	lastBrightnessY   int
-	brightnessVersion uint64
-	brightnessReady   = make(chan struct{}, 1)
-)
-
 func Paint(w wde.Window, rect image.Rectangle) {
 	viewport := w.Screen()
 
 	xOffset, yOffset := GetTopLeft()
+	center := layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}
 
 	minX, maxX := rect.Min.X>>TileSize, (rect.Max.X-1)>>TileSize+1
 	minY, maxY := rect.Min.Y>>TileSize, (rect.Max.Y-1)>>TileSize+1
 
-	if lastBrightnessX != xOffset || lastBrightnessY != yOffset {
-		brightness = nil
-	}
-
-	if brightness == nil {
-		go func() {
-			brightness = make(map[layout.Coord]byte)
-			spreadLight(brightness, new([]lightStep), lightStep{layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}, 100})
-			brightnessReady <- struct{}{}
-		}()
-	} else {
-		brightnessReady <- struct{}{}
-	}
-
 	for x := minX; x < maxX; x++ {
 		for y := minY; y < maxY; y++ {
-			Tile(viewport, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
-			for _, t := range layout.Get(x-xOffset, y-yOffset) {
-				Tile(viewport, Terrain, uint16(t), x, y)
+			if layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
+				Tile(viewport, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+				for _, t := range layout.Get(x-xOffset, y-yOffset) {
+					Tile(viewport, Terrain, uint16(t), x, y)
+				}
+			} else {
+				Tile(viewport, image.Black, 0, x, y)
 			}
 		}
 	}
 
 	paintLock.Lock()
 	for _, p := range paintContexts {
-		x, y := p.Coord.X+xOffset, p.Coord.Y+yOffset
-		if minX <= x && x <= maxX && minY <= y && y <= maxY {
-			Tile(viewport, Actors, p.Sprite, x, y)
-		}
-	}
-	paintLock.Unlock()
-
-	<-brightnessReady
-	for x := minX; x < maxX; x++ {
-		for y := minY; y < maxY; y++ {
-			bright := brightness[layout.Coord{x - xOffset, y - yOffset}]
-			if bright < 255 && minX <= x && x <= maxX && minY <= y && y <= maxY {
-				draw.Draw(viewport,
-					image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize),
-					image.NewUniform(color.RGBA{0, 0, 0, 255 - bright}), image.Pt(0, 0), draw.Over)
+		if layout.Visible(center, p.Coord) {
+			x, y := p.Coord.X+xOffset, p.Coord.Y+yOffset
+			if minX <= x && x <= maxX && minY <= y && y <= maxY {
+				Tile(viewport, Actors, p.Sprite, x, y)
 			}
 		}
 	}
+	paintLock.Unlock()
 
 	w.FlushImage(rect)
 }
@@ -170,6 +107,18 @@ func Invalidate(rect image.Rectangle) {
 			return
 		case r2 := <-shouldPaint:
 			rect = rect.Union(r2)
+		}
+	}
+}
+
+func init() {
+	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
+		if t.Door() {
+			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+		} else {
+			xOffset, yOffset := GetTopLeft()
+			x, y := c.X+xOffset, c.Y+yOffset
+			Invalidate(image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize))
 		}
 	}
 }

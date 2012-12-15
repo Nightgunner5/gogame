@@ -174,6 +174,7 @@ func SetChanges(m map[Coord]MultiTile) {
 
 	currentLayout = m
 	version++
+	visInvalidateAll()
 }
 
 func SetCoord(coord Coord, check, t MultiTile) bool {
@@ -186,6 +187,13 @@ func SetCoord(coord Coord, check, t MultiTile) bool {
 	}
 
 	if old.equal(check) {
+		if old.BlocksVision() != t.BlocksVision() {
+			if old.Door() || t.Door() {
+				visInvalidateRecursive(coord)
+			} else {
+				visInvalidate(coord)
+			}
+		}
 		currentLayout[coord] = t
 		version++
 		OnChange(coord, t)

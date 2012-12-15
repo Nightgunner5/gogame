@@ -47,7 +47,7 @@ func (t Tile) Passable() bool {
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window1 && (t < Wall1NE || t > Wall1SW)
+	return !t.Passable() && t != Window1
 }
 
 func (t Tile) Door() bool {

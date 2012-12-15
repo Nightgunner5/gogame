@@ -9,15 +9,15 @@ const (
 	top   = -5
 	left  = -7
 	check = `                
-      GWWWWWWG  
- GWWWWWWG___GWG 
- WG____W_____GW 
+      WWWWWWWW  
+ WWWWWWWW___WWW 
+ WW____W_____WW 
  W_____W______G 
  W_____d______G 
  W_____W______G 
- WG____W_____GW 
- GWWDWWWG___GWG 
-      GWWWDWWG  
+ WW____W_____WW 
+ WWWDWWWW___WWW 
+      WWWWDWWW  
                 `
 )
 

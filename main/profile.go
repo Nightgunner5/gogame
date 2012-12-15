@@ -1,4 +1,4 @@
-// +build profile,!noserver,noclient
+// +build profile,!noserver,noclient profile,noserver,!noclient
 
 package main
 
