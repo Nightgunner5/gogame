@@ -3,7 +3,6 @@ package actor
 import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"log"
-	"time"
 )
 
 type Actor struct {
@@ -78,41 +77,8 @@ func Init(tag string, bottom *Actor, top interface {
 	go bottom.topLevel(a, b)
 }
 
-var msgAlivePing = message.NewKind("alivePing")
-
-type alivePing struct{}
-
-func (alivePing) Kind() message.Kind { return msgAlivePing }
-
-func (a *Actor) checkAlive(isAlive chan struct{}) {
-	isAlive <- struct{}{}
-	for {
-		select {
-		case _, ok := <-isAlive:
-			if !ok {
-				return
-			}
-		default:
-			panic("actor is frozen: " + a.tag)
-		}
-
-		select {
-		case _, _ = <-a.closed:
-			return
-		}
-		a.Send <- alivePing{}
-		time.Sleep(time.Second)
-	}
-}
-
 func (a *Actor) topLevel(messages message.Receiver, _ func(message.Message)) {
-	isAlive := make(chan struct{}, 1)
-	go a.checkAlive(isAlive)
 	for msg := range messages {
-		if _, ok := msg.(alivePing); ok {
-			isAlive <- struct{}{}
-			continue
-		}
 		log.Printf("unhandled message: %s", a.tag)
 		panic(msg)
 	}

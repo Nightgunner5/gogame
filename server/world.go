@@ -5,6 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
+	"sync"
 )
 
 var (
@@ -18,6 +19,9 @@ type World struct {
 
 	idToActor map[uint64]*actor.Actor
 	location  map[*actor.Actor]layout.Coord
+
+	doors   map[layout.Coord]*actor.Actor
+	doorMtx sync.Mutex
 }
 
 func (w *World) Initialize() (message.Receiver, func(message.Message)) {
@@ -67,6 +71,11 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 					Despawn: &m,
 				}
 
+			case AddDoor:
+				w.doorMtx.Lock()
+				w.doors[m.Coord] = m.Actor
+				w.doorMtx.Unlock()
+
 			default:
 				messages <- m
 			}
@@ -81,7 +90,13 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 }
 
 func (w *World) OpenDoor(opener *Player, coord layout.Coord) {
+	w.doorMtx.Lock()
+	door := w.doors[coord]
+	w.doorMtx.Unlock()
 
+	if door != nil {
+		door.Send <- OpenDoor{opener}
+	}
 }
 
 func sendSendLocation(a *actor.Actor, c SendLocation) {
