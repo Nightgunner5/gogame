@@ -35,6 +35,13 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				p.x, p.y = m.X, m.Y
 
 				paintLock.RLock()
+				if p.paint.Sprite == HumanSuit || p.paint.Sprite == HumanSuitHelm {
+					if layout.Get(p.x, p.y).Space() {
+						p.paint.Sprite = HumanSuitHelm
+					} else {
+						p.paint.Sprite = HumanSuit
+					}
+				}
 				p.paint.Coord.X, p.paint.Coord.Y = p.x, p.y
 				paintLock.RUnlock()
 
@@ -68,12 +75,17 @@ func (p *Player) screenRect() image.Rectangle {
 		(p.x+1+x)<<TileSize, (p.y+1+y)<<TileSize)
 }
 
-var thePlayer = NewPlayer(true)
+var thePlayer = NewPlayer(true, false)
 
-func NewPlayer(isLocalPlayer bool) *Player {
+func NewPlayer(isLocalPlayer, monkey bool) *Player {
 	player := new(Player)
 	player.isLocalPlayer = isLocalPlayer
 	player.paint = new(PaintContext)
+	if monkey {
+		player.paint.Sprite = Monkey
+	} else {
+		player.paint.Sprite = HumanSuit
+	}
 	paintLock.Lock()
 	paintContexts[&player.Actor] = player.paint
 	paintLock.Unlock()

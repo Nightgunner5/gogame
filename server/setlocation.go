@@ -13,6 +13,7 @@ var (
 type SetLocation struct {
 	ID    uint64
 	Actor *actor.Actor
+	Flags uint32
 	Coord layout.Coord
 }
 

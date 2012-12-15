@@ -49,7 +49,7 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 		case packet.Location:
 			id, coord := m.ID, m.Coord
 			if _, ok := w.idToActor[id]; !ok {
-				a := &NewPlayer(false).Actor
+				a := &NewPlayer(false, m.Flags&packet.FlagMonkey == packet.FlagMonkey).Actor
 				w.idToActor[id] = a
 				go w.addHeld(a)
 			}

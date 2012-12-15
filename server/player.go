@@ -24,11 +24,11 @@ func init() {
 
 type Player struct {
 	actor.Actor
-	ID   uint64 // network ID (public)
-	id   string // network ID (private)
-	Name string
-	x, y int
-	out  chan<- *packet.Packet
+	ID    uint64 // network ID (public)
+	id    string // network ID (private)
+	x, y  int
+	flags uint32
+	send  chan<- *packet.Packet
 }
 
 func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
@@ -62,6 +62,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 					Location: &packet.Location{
 						ID:    p.ID,
 						Coord: layout.Coord{p.x, p.y},
+						Flags: p.flags,
 					},
 				}:
 				case <-time.After(20 * time.Millisecond):
@@ -119,6 +120,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			}(SetLocation{
 				ID:    p.ID,
 				Actor: &p.Actor,
+				Flags: p.flags,
 				Coord: layout.Coord{p.x, p.y},
 			})
 		}
@@ -131,20 +133,20 @@ func (p *Player) Disconnected() {
 	close(p.Send)
 }
 
-func NewPlayer(id string, name string, out chan<- *packet.Packet) (player *Player) {
+func NewPlayer(id string, send chan<- *packet.Packet, flags uint32) (player *Player) {
 	player = new(Player)
 	player.id = id
-	player.Name = name
-	player.out = out
+	player.send = send
+	player.flags = flags
 	actor.Init("player:"+id, &player.Actor, player)
 
-	out <- &packet.Packet{
+	send <- &packet.Packet{
 		Handshake: &packet.Handshake{
 			ID: player.ID,
 		},
 	}
 
 	world.Send <- actor.AddHeld{&player.Actor}
-	world.onConnect <- out
+	world.onConnect <- send
 	return
 }

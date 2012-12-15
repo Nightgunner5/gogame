@@ -60,6 +60,7 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 					Location: &packet.Location{
 						ID:    m.ID,
 						Coord: m.Coord,
+						Flags: m.Flags,
 					},
 				}
 

@@ -12,7 +12,13 @@ var (
 type Location struct {
 	ID    uint64
 	Coord layout.Coord
+	Flags uint32
 }
+
+const (
+	FlagNone uint32 = (1 << iota) >> 1
+	FlagMonkey
+)
 
 func (Location) Kind() message.Kind {
 	return MsgLocation

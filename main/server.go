@@ -70,7 +70,11 @@ func serve(id string, client net.Conn) {
 
 	send := make(chan *packet.Packet)
 
-	go serverEncode(id, encode, client, send)
+	if handshake.Monkey {
+		go serverMonkeyEncode(send)
+	} else {
+		go serverEncode(id, encode, client, send)
+	}
 
 	defer close(send)
 	if !addUser(send, handshake) {
@@ -78,7 +82,13 @@ func serve(id string, client net.Conn) {
 	}
 	defer delUser(send)
 
-	player := serverpkg.NewPlayer(id, "", send) // TODO: names
+	var flags uint32
+	if handshake.Monkey {
+		flags |= packet.FlagMonkey
+	}
+
+	// TODO: names
+	player := serverpkg.NewPlayer(id, send, flags)
 	defer player.Disconnected()
 
 	var fastZero packet.Packet
@@ -96,6 +106,11 @@ func serve(id string, client net.Conn) {
 		if *msg != fastZero && !serverpkg.Dispatch(player, msg) {
 			return
 		}
+	}
+}
+
+func serverMonkeyEncode(send <-chan *packet.Packet) {
+	for _ = range send {
 	}
 }
 
