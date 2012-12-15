@@ -1,4 +1,3 @@
-/*
 package client
 
 import (
@@ -242,4 +241,3 @@ type PaintContext struct {
 	Changed time.Time
 	Sprite  uint16
 }
-*/
