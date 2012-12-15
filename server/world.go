@@ -33,6 +33,8 @@ func (w *World) Initialize() (message.Receiver, func(message.Message)) {
 	w.idToActor = make(map[uint64]*actor.Actor)
 	w.location = make(map[*actor.Actor]layout.Coord)
 
+	w.doors = make(map[layout.Coord]*actor.Actor)
+
 	messages := make(chan message.Message)
 
 	go w.dispatch(msgIn, messages, broadcast, onConnect)
