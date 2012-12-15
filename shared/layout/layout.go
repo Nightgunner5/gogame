@@ -199,8 +199,8 @@ func GetSpace(x, y int) Tile {
 }
 
 func AllTiles(f func(Coord, MultiTile)) {
-	layoutLock.Lock()
-	defer layoutLock.Unlock()
+	layoutLock.RLock()
+	defer layoutLock.RUnlock()
 
 	for coord := range baseLayout {
 		if t, ok := currentLayout[coord]; ok {
