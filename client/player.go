@@ -7,6 +7,7 @@ import (
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"image"
 	"sync/atomic"
+	"time"
 )
 
 type Player struct {
@@ -42,7 +43,9 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 						p.paint.Sprite = HumanSuit
 					}
 				}
-				p.paint.Coord.X, p.paint.Coord.Y = p.x, p.y
+				p.paint.From = p.paint.To
+				p.paint.To.X, p.paint.To.Y = p.x, p.y
+				p.paint.Changed = time.Now()
 				paintLock.RUnlock()
 
 				if p.isLocalPlayer {

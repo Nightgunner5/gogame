@@ -60,6 +60,13 @@ func Tile(viewport draw.Image, base image.Image, index uint16, x, y int) {
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
+func TileFloat(viewport draw.Image, base image.Image, index uint16, x1, y1, x2, y2 int, interp float32) {
+	x1, y1 = x1<<TileSize, y1<<TileSize
+	x2, y2 = x2<<TileSize, y2<<TileSize
+	x, y := x1+int(float32(x2-x1)*interp), y1+int(float32(y2-y1)*interp)
+	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
+}
+
 func Paint(w wde.Window, rect image.Rectangle) {
 	viewport := w.Screen()
 
@@ -82,16 +89,28 @@ func Paint(w wde.Window, rect image.Rectangle) {
 		}
 	}
 
+	hasAnimation := false
 	paintLock.Lock()
 	for _, p := range paintContexts {
-		if layout.Visible(center, p.Coord) {
-			x, y := p.Coord.X+xOffset, p.Coord.Y+yOffset
-			if minX <= x && x <= maxX && minY <= y && y <= maxY {
-				Tile(viewport, Actors, p.Sprite, x, y)
+		if layout.Visible(center, p.To) {
+			x1, y1 := p.From.X+xOffset, p.From.Y+yOffset
+			x2, y2 := p.To.X+xOffset, p.To.Y+yOffset
+
+			if minX <= x2 && x2 <= maxX && minY <= y2 && y2 <= maxY {
+				interp := float32(time.Since(p.Changed)*2) / float32(time.Second)
+				if interp > 1 {
+					Tile(viewport, Actors, p.Sprite, x2, y2)
+				} else {
+					hasAnimation = true
+					TileFloat(viewport, Actors, p.Sprite, x1, y1, x2, y2, interp)
+				}
 			}
 		}
 	}
 	paintLock.Unlock()
+	if hasAnimation {
+		Invalidate(viewport.Bounds())
+	}
 
 	w.FlushImage(rect)
 }
@@ -217,6 +236,8 @@ var (
 )
 
 type PaintContext struct {
-	Coord  layout.Coord
-	Sprite uint16
+	From    layout.Coord
+	To      layout.Coord
+	Changed time.Time
+	Sprite  uint16
 }
