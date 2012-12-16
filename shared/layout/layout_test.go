@@ -12,9 +12,9 @@ const (
       WWWWWWWW  
  WWWWWWW____WWW 
  WW___W______WW 
- W____W_______G 
  W____D_______G 
  W____W_______G 
+ W____G_______G 
  WW___W______WW 
  WWWDWWW____WWW 
       WWWWDWWW  
