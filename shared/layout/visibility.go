@@ -85,7 +85,7 @@ func visTrace(ax, ay, bx, by, off int) bool {
 	var vis bool
 	dx, dy := bx-ax, by-ay
 
-	if Get(ax, ay).BlocksVision() && (dx*dx+dy*dy != 1 || !Get(bx, by).BlocksVision()) {
+	if Get(ax, ay).BlocksVision() {
 		return false
 	}
 
