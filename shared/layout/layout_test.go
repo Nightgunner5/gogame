@@ -13,7 +13,7 @@ const (
  WWWWWWW____WWW     
  WW___W______WW     
  W____D_______G     
- W____W_______G     
+ W____W_______W     
  W____G_______G     
  WW___W______WW     
  WWWDWWW____WWW     
@@ -27,7 +27,7 @@ const (
       WW______WWGGW 
        W______WW___ 
        W______D____ 
-       G______W____ 
+       G_____WW____ 
        GGGGGGWW____ 
              WW____ 
                     `

@@ -32,6 +32,11 @@ const (
 	Door1Open   Tile = 22
 	Door1Closed Tile = 23
 
+	Light1W Tile = 24
+	Light1N Tile = 25
+	Light1E Tile = 26
+	Light1S Tile = 27
+
 	Space1 Tile = 1022
 	Space2 Tile = 1023
 )
@@ -43,6 +48,7 @@ func (t Tile) Space() bool {
 func (t Tile) Passable() bool {
 	return (t >= WhiteTile && t <= PinkTile) ||
 		(t.Door() && t&1 == 0) ||
+		(t >= Light1W && t <= Light1S) ||
 		t.Space()
 }
 
@@ -52,6 +58,13 @@ func (t Tile) BlocksVision() bool {
 
 func (t Tile) Door() bool {
 	return (t >= Door1Open && t <= Door1Closed)
+}
+
+func (t Tile) LightLevel() byte {
+	if t >= Light1W && t <= Light1S {
+		return 80
+	}
+	return 0
 }
 
 type MultiTile []Tile
@@ -90,6 +103,14 @@ func (m MultiTile) BlocksVision() bool {
 		}
 	}
 	return false
+}
+
+func (m MultiTile) LightLevel() byte {
+	var light byte
+	for _, t := range m {
+		light += t.LightLevel()
+	}
+	return light
 }
 
 func (a MultiTile) equal(b MultiTile) bool {

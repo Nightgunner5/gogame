@@ -25,15 +25,17 @@ var (
 func init() {
 	var err error
 
-	Terrain, err = png.Decode(bytes.NewReader(res.TerrainPng[:]))
+	Terrain, err = png.Decode(bytes.NewReader(res.TerrainPng))
 	if err != nil {
 		panic(err)
 	}
+	res.TerrainPng = nil
 
-	Actors, err = png.Decode(bytes.NewReader(res.ActorsPng[:]))
+	Actors, err = png.Decode(bytes.NewReader(res.ActorsPng))
 	if err != nil {
 		panic(err)
 	}
+	res.ActorsPng = nil
 }
 
 func Main() {
@@ -78,7 +80,12 @@ func TileFloat(viewport draw.Image, base image.Image, index uint16, x1, y1, x2, 
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
-var viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+var (
+	viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+	space    = image.NewRGBA(viewport.Bounds())
+	scene    = image.NewRGBA(viewport.Bounds())
+	light    = new(lighting)
+)
 
 func Paint(w wde.Window, rect image.Rectangle) {
 	xOffset, yOffset := GetTopLeft()
@@ -90,12 +97,13 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	for x := minX; x < maxX; x++ {
 		for y := minY; y < maxY; y++ {
 			if layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
-				Tile(viewport, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+				Tile(space, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+				draw.Draw(scene, image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize), image.Transparent, image.ZP, draw.Src)
 				for _, t := range layout.Get(x-xOffset, y-yOffset) {
-					Tile(viewport, Terrain, uint16(t), x, y)
+					Tile(scene, Terrain, uint16(t), x, y)
 				}
 			} else {
-				Tile(viewport, image.Black, 0, x, y)
+				Tile(scene, image.Black, 0, x, y)
 			}
 		}
 	}
@@ -110,15 +118,20 @@ func Paint(w wde.Window, rect image.Rectangle) {
 			if minX <= x2 && x2 <= maxX && minY <= y2 && y2 <= maxY {
 				interp := float32(time.Since(p.Changed)*2) / float32(time.Second)
 				if interp > 1 {
-					Tile(viewport, Actors, p.Sprite, x2, y2)
+					Tile(scene, Actors, p.Sprite, x2, y2)
 				} else {
 					hasAnimation = true
-					TileFloat(viewport, Actors, p.Sprite, x1, y1, x2, y2, interp)
+					TileFloat(scene, Actors, p.Sprite, x1, y1, x2, y2, interp)
 				}
 			}
 		}
 	}
 	paintLock.Unlock()
+
+	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
+	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
+	draw.DrawMask(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min, draw.Over)
+
 	if hasAnimation {
 		Invalidate(viewport.Bounds())
 	}
