@@ -8,17 +8,22 @@ import (
 const (
 	top   = -5
 	left  = -7
-	check = `                
-      WWWWWWWW  
- WWWWWWW____WWW 
- WW___W______WW 
- W____D_______G 
- W____W_______G 
- W____G_______G 
- WW___W______WW 
- WWWDWWW____WWW 
-      WWWWDWWW  
-                `
+	check = `                 
+      WWWWWWWW   
+ WWWWWWW____WWW  
+ WW___W______WW  
+ W____D_______G  
+ W____W_______G  
+ W____G_______G  
+ WW___W______WW  
+ WWWDWWW____WWW  
+      WWWWDWWW   
+         W_W     
+         W_W     
+     WWWWWDWWWWW 
+     WW_______WW 
+     G_________W 
+                 `
 )
 
 func getCheck() [][]rune {

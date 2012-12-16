@@ -12,6 +12,7 @@ func (c Coord) String() string {
 }
 
 var baseLayout = map[Coord]MultiTile{
+	// Arrival Ship
 	Coord{-6, -3}: {Wall1SE},
 	Coord{-6, -2}: {Wall1},
 	Coord{-6, -1}: {Wall1},
@@ -126,6 +127,47 @@ var baseLayout = map[Coord]MultiTile{
 	Coord{7, 1}:   {Window1},
 	Coord{7, 2}:   {Wall1},
 	Coord{7, 3}:   {Wall1NW},
+
+	// Arrival Wing
+	Coord{-2, 7}: {Wall1SE},
+	Coord{-2, 8}: {Wall1},
+	Coord{-2, 9}: {Window1},
+	Coord{-1, 7}: {Wall1},
+	Coord{-1, 8}: {OrangeTile, Wall1NW},
+	Coord{-1, 9}: {OrangeTile},
+	Coord{0, 7}:  {Wall1},
+	Coord{0, 8}:  {OrangeTile},
+	Coord{0, 9}:  {WhiteTile},
+	Coord{1, 7}:  {Wall1},
+	Coord{1, 8}:  {OrangeTile},
+	Coord{1, 9}:  {WhiteTile},
+	Coord{2, 5}:  {Wall1},
+	Coord{2, 6}:  {Wall1},
+	Coord{2, 7}:  {Wall1},
+	Coord{2, 8}:  {OrangeTile},
+	Coord{2, 9}:  {WhiteTile},
+	Coord{3, 5}:  {BlackTile},
+	Coord{3, 6}:  {BlackTile},
+	Coord{3, 7}:  {BlackTile, Door1Closed},
+	Coord{3, 8}:  {OrangeTile},
+	Coord{3, 9}:  {WhiteTile},
+	Coord{4, 5}:  {Wall1},
+	Coord{4, 6}:  {Wall1},
+	Coord{4, 7}:  {Wall1},
+	Coord{4, 8}:  {OrangeTile},
+	Coord{4, 9}:  {WhiteTile},
+	Coord{5, 7}:  {Wall1},
+	Coord{5, 8}:  {OrangeTile},
+	Coord{5, 9}:  {WhiteTile},
+	Coord{6, 7}:  {Wall1},
+	Coord{6, 8}:  {OrangeTile},
+	Coord{6, 9}:  {WhiteTile},
+	Coord{7, 7}:  {Wall1},
+	Coord{7, 8}:  {OrangeTile, Wall1NE},
+	Coord{7, 9}:  {OrangeTile},
+	Coord{8, 7}:  {Wall1SW},
+	Coord{8, 8}:  {Wall1},
+	Coord{8, 9}:  {Wall1},
 }
 
 var (
