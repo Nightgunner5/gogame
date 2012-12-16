@@ -162,7 +162,7 @@ func UI() {
 	}
 	defer w.Close()
 
-	w.SetTitle("GoGame")
+	w.SetTitle("Stace Spation 2½") // Yes, that is the correct spelling.
 
 	w.Show()
 

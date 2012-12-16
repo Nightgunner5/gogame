@@ -129,8 +129,8 @@ var baseLayout = map[Coord]MultiTile{
 	Coord{7, 3}:   {Wall1NW},
 
 	// Arrival Wing
-	Coord{-1, 7}:  {Wall1SE},
-	Coord{-1, 8}:  {Wall1},
+	Coord{-1, 7}:  {Window1},
+	Coord{-1, 8}:  {Window1},
 	Coord{-1, 9}:  {Wall1},
 	Coord{-1, 10}: {Wall1},
 	Coord{-1, 11}: {Wall1NE},

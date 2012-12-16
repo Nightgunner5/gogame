@@ -20,8 +20,8 @@ const (
       WWWWDWWW      
          W_W        
          W_W        
-      WGGWDWGGWW    
-      W_______WW    
+      GGGWDWGGWW    
+      G_______WW    
       W________W    
       WW_______W    
       WW______WWGGW 

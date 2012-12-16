@@ -1,4 +1,4 @@
-Also known as SpaceStation 2.5. That's a joke, by the way. If you're looking for a game named SpaceStation, you're probably looking for [SpaceStation 13](http://www.byond.com/games/Exadv1/SpaceStation13).
+Also known as Stace Spation 2½. That's a joke, by the way. If you're looking for a game named Space Station, you're probably looking for [Space Station 13](http://www.byond.com/games/Exadv1/SpaceStation13).
 
 [Build Status](http://nightgunner5.is-a-geek.net:1337/buildbot/waterfall)
 
