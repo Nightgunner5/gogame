@@ -36,17 +36,18 @@ func visInvalidateRecursive(coord Coord) {
 	defer visLock.Unlock()
 
 	for link := range visible {
-		if link[0] == coord {
+		if link[0] == coord && link[1] == coord {
+			continue
+		} else if link[0] == coord {
 			for link2 := range visible {
-				if link2[0] == link[0] || link2[1] == link[0] {
+				if link2[0] == link[1] || link2[1] == link[1] {
 					delete(visible, link2)
 				}
 			}
 			delete(visible, link)
-		}
-		if link[1] == coord {
+		} else if link[1] == coord {
 			for link2 := range visible {
-				if link2[0] == link[1] || link2[1] == link[1] {
+				if link2[0] == link[0] || link2[1] == link[0] {
 					delete(visible, link2)
 				}
 			}

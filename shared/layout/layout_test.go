@@ -10,13 +10,13 @@ const (
 	left  = -7
 	check = `                
       WWWWWWWW  
- WWWWWWWW___WWW 
- WW____W_____WW 
- W_____W______G 
- W_____d______G 
- W_____W______G 
- WW____W_____WW 
- WWWDWWWW___WWW 
+ WWWWWWW____WWW 
+ WW___W______WW 
+ W____W_______G 
+ W____D_______G 
+ W____W_______G 
+ WW___W______WW 
+ WWWDWWW____WWW 
       WWWWDWWW  
                 `
 )
