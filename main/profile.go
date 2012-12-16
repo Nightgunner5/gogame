@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-var profileCleanup chan os.Signal
+var (
+	profileCleanup = make(chan os.Signal, 1)
+	clientCanExit  = make(chan struct{})
+)
 
 func init() {
 	f, err := os.Create("cpu.prof")
@@ -21,8 +24,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
-	profileCleanup = make(chan os.Signal, 1)
 
 	go func() {
 		tick := time.Tick(time.Minute)
@@ -46,6 +47,8 @@ func init() {
 				}
 				if signal == os.Interrupt {
 					os.Exit(0)
+				} else {
+					clientCanExit <- struct{}{}
 				}
 
 			case <-tick:

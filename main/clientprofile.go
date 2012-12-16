@@ -10,6 +10,7 @@ func init() {
 	oldDisconnected := clientpkg.Disconnected
 	clientpkg.Disconnected = func() {
 		profileCleanup <- nil
+		<-clientCanExit
 		oldDisconnected()
 	}
 }

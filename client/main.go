@@ -78,9 +78,9 @@ func TileFloat(viewport draw.Image, base image.Image, index uint16, x1, y1, x2, 
 	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
 }
 
-func Paint(w wde.Window, rect image.Rectangle) {
-	viewport := w.Screen()
+var viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
 
+func Paint(w wde.Window, rect image.Rectangle) {
 	xOffset, yOffset := GetTopLeft()
 	center := layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}
 
@@ -122,6 +122,8 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	if hasAnimation {
 		Invalidate(viewport.Bounds())
 	}
+
+	w.Screen().CopyRGBA(viewport, viewport.Bounds())
 
 	w.FlushImage(rect)
 }
