@@ -1,5 +1,9 @@
 package layout
 
+import (
+	"strconv"
+)
+
 type Tile uint16
 
 // YES THESE ARE REAL COLORS NOW SHUT UP
@@ -67,6 +71,77 @@ func (t Tile) LightLevel() byte {
 	return 0
 }
 
+func (t Tile) String() string {
+	switch t {
+	case WhiteTile:
+		return "WhiteTile"
+	case GrayTile:
+		return "GrayTile"
+	case BlackTile:
+		return "BlackTile"
+	case RedTile:
+		return "RedTile"
+	case OrangeTile:
+		return "OrangeTile"
+	case RellowTile:
+		return "RellowTile"
+	case YellowTile:
+		return "YellowTile"
+	case GrellowTile:
+		return "GrellowTile"
+	case GreenTile:
+		return "GreenTile"
+	case TurquoiseTile:
+		return "TurquoiseTile"
+	case GrueTile:
+		return "GrueTile"
+	case CyanTile:
+		return "CyanTile"
+	case BlueTile:
+		return "BlueTile"
+	case IndigoTile:
+		return "IndigoTile"
+	case PurpleTile:
+		return "PurpleTile"
+	case PinkTile:
+		return "PinkTile"
+
+	case Wall1:
+		return "Wall1"
+	case Wall1NE:
+		return "Wall1NE"
+	case Wall1NW:
+		return "Wall1NW"
+	case Wall1SE:
+		return "Wall1SE"
+	case Wall1SW:
+		return "Wall1SW"
+
+	case Window1:
+		return "Window1"
+
+	case Door1Open:
+		return "Door1Open"
+	case Door1Closed:
+		return "Door1Closed"
+
+	case Light1W:
+		return "Light1W"
+	case Light1N:
+		return "Light1N"
+	case Light1E:
+		return "Light1E"
+	case Light1S:
+		return "Light1S"
+
+	case Space1:
+		return "Space1"
+	case Space2:
+		return "Space2"
+	}
+	return strconv.FormatUint(uint64(t), 10)
+}
+
 type MultiTile []Tile
 
 func (m MultiTile) Space() bool {
@@ -111,6 +186,22 @@ func (m MultiTile) LightLevel() byte {
 		light += t.LightLevel()
 	}
 	return light
+}
+
+func (a MultiTile) String() string {
+	var s []byte
+
+	s = append(s, '{')
+
+	for i, t := range a {
+		if i != 0 {
+			s = append(s, ", "...)
+		}
+		s = append(s, t.String()...)
+	}
+
+	s = append(s, '}')
+	return string(s)
 }
 
 func (a MultiTile) equal(b MultiTile) bool {
