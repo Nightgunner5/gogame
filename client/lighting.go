@@ -16,7 +16,7 @@ type lighting struct {
 
 const LightShift = 5
 
-func (l *lighting) Image(x, y int) image.Image {
+func (l *lighting) Image(x, y int) *image.RGBA {
 	if l.lightmapVersion != layout.Version() || l.lightmap == nil {
 		l.lightmap = make(map[layout.Coord]byte)
 		l.recalculateLightmap()

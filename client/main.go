@@ -130,7 +130,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
 	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
-	draw.DrawMask(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min, draw.Over)
+	drawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
 
 	if hasAnimation {
 		Invalidate(viewport.Bounds())
