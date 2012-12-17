@@ -88,6 +88,26 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 					move <- struct{}{}
 				}
 
+			case LayoutChanged:
+				if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
+					go func(m SetLocation) {
+						world.Send <- m
+					}(SetLocation{
+						ID:    p.ID,
+						Actor: &p.Actor,
+						Flags: p.flags,
+						Coord: layout.Coord{p.x, p.y},
+					})
+				}
+
+			case MoveIntoView:
+				if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
+					p.send <- &packet.Packet{
+						Location: m.Location,
+					}
+					canSee[m.ID] = true
+				}
+
 			default:
 				messages <- m
 			}
@@ -140,12 +160,30 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			if layout.Visible(layout.Coord{p.x, p.y}, msg.Location.Coord) {
 				canSee[msg.Location.ID] = true
 				p.send <- msg
+			} else if canSee[msg.Location.ID] {
+				p.send <- &packet.Packet{
+					Despawn: &packet.Despawn{
+						ID: msg.Location.ID,
+					},
+				}
+				delete(canSee, msg.Location.ID)
 			}
 
 		case msg := <-p.onmove:
 			m := msg.(SetLocation)
 			if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
-				canSee[m.ID] = true
+				if !canSee[m.ID] {
+					go func(a *actor.Actor, m MoveIntoView) {
+						a.Send <- m
+					}(m.Actor, MoveIntoView{
+						Location: &packet.Location{
+							ID:    p.ID,
+							Coord: layout.Coord{p.x, p.y},
+							Flags: p.flags,
+						},
+					})
+					canSee[m.ID] = true
+				}
 				p.send <- &packet.Packet{
 					Location: &packet.Location{
 						ID:    m.ID,

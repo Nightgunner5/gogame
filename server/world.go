@@ -58,6 +58,11 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 
 				go broadcast(m)
 
+			case LayoutChanged:
+				w.EachHeld(func(a *actor.Actor) {
+					go sendLayoutChanged(a, m)
+				})
+
 			case packet.Despawn:
 				a := w.idToActor[m.ID]
 				delete(w.idToActor, m.ID)
@@ -102,8 +107,15 @@ func sendSendLocation(a *actor.Actor, c SendLocation) {
 	a.Send <- c
 }
 
+func sendLayoutChanged(a *actor.Actor, c LayoutChanged) {
+	defer recover()
+
+	a.Send <- c
+}
+
 func init() {
 	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
+		world.Send <- LayoutChanged{c}
 		SendToAll <- &packet.Packet{MapChange: &packet.MapChange{c, t}}
 	}
 }
@@ -114,4 +126,16 @@ func NewWorld() (world *World) {
 	world = new(World)
 	actor.Init("world", &world.Actor, world)
 	return
+}
+
+var (
+	MsgLayoutChanged = message.NewKind("LayoutChanged")
+)
+
+type LayoutChanged struct {
+	layout.Coord
+}
+
+func (LayoutChanged) Kind() message.Kind {
+	return MsgLayoutChanged
 }
