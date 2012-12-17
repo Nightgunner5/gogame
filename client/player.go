@@ -43,7 +43,11 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 						p.paint.Sprite = HumanSuit
 					}
 				}
-				p.paint.From = p.paint.To
+				if p.paint.Changed.IsZero() {
+					p.paint.From.X, p.paint.From.Y = p.x, p.y
+				} else {
+					p.paint.From = p.paint.To
+				}
 				p.paint.To.X, p.paint.To.Y = p.x, p.y
 				p.paint.Changed = time.Now()
 				paintLock.RUnlock()
@@ -88,6 +92,9 @@ func NewPlayer(isLocalPlayer, monkey bool) *Player {
 		player.paint.Sprite = Monkey
 	} else {
 		player.paint.Sprite = HumanSuit
+	}
+	if isLocalPlayer {
+		player.paint.Changed = time.Now()
 	}
 	paintLock.Lock()
 	paintContexts[&player.Actor] = player.paint

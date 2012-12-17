@@ -32,12 +32,14 @@ const (
 
 type Player struct {
 	actor.Actor
-	ID    uint64 // network ID (public)
-	id    string // network ID (private)
-	x, y  int
-	flags uint32
-	perms Permission
-	send  chan<- *packet.Packet
+	ID        uint64 // network ID (public)
+	id        string // network ID (private)
+	x, y      int
+	flags     uint32
+	perms     Permission
+	send      chan<- *packet.Packet
+	onmove    <-chan message.Message
+	forcemove chan *packet.Packet
 }
 
 func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
@@ -58,6 +60,8 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 	var moveRequest layout.Coord
 	var move actor.Ticker
 
+	canSee := make(map[uint64]bool)
+
 	for {
 		select {
 		case msg, ok := <-msgIn:
@@ -67,7 +71,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			switch m := msg.(type) {
 			case SendLocation:
 				select {
-				case m <- &packet.Packet{
+				case m.forcemove <- &packet.Packet{
 					Location: &packet.Location{
 						ID:    p.ID,
 						Coord: layout.Coord{p.x, p.y},
@@ -120,7 +124,6 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				continue
 			}
 
-			// TODO: space logic
 			p.x += dx
 			p.y += dy
 
@@ -132,6 +135,32 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				Flags: p.flags,
 				Coord: layout.Coord{p.x, p.y},
 			})
+
+		case msg := <-p.forcemove:
+			if layout.Visible(layout.Coord{p.x, p.y}, msg.Location.Coord) {
+				canSee[msg.Location.ID] = true
+				p.send <- msg
+			}
+
+		case msg := <-p.onmove:
+			m := msg.(SetLocation)
+			if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
+				canSee[m.ID] = true
+				p.send <- &packet.Packet{
+					Location: &packet.Location{
+						ID:    m.ID,
+						Coord: m.Coord,
+						Flags: m.Flags,
+					},
+				}
+			} else if canSee[m.ID] {
+				p.send <- &packet.Packet{
+					Despawn: &packet.Despawn{
+						ID: m.ID,
+					},
+				}
+				delete(canSee, m.ID)
+			}
 		}
 	}
 }
@@ -159,7 +188,20 @@ func NewPlayer(id string, send chan<- *packet.Packet, flags uint32) (player *Pla
 		},
 	}
 
+	player.forcemove = make(chan *packet.Packet)
+
+	var onmove actor.Subscriber
+	onmove, player.onmove = actor.Subscribe(MsgSetLocation, 4)
+	world.Send <- actor.AddSubscriber{onmove}
+
 	world.Send <- actor.AddHeld{&player.Actor}
-	world.onConnect <- send
+	world.onConnect <- player
+	world.Send <- SetLocation{
+		ID:    player.ID,
+		Actor: &player.Actor,
+		Flags: flags,
+		Coord: layout.Coord{player.x, player.y},
+	}
+
 	return
 }

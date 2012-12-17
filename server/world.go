@@ -15,7 +15,7 @@ var (
 type World struct {
 	actor.Holder
 
-	onConnect chan<- chan<- *packet.Packet
+	onConnect chan<- *Player
 
 	idToActor map[uint64]*actor.Actor
 	location  map[*actor.Actor]layout.Coord
@@ -27,7 +27,7 @@ type World struct {
 func (w *World) Initialize() (message.Receiver, func(message.Message)) {
 	msgIn, broadcast := w.Holder.Initialize()
 
-	onConnect := make(chan chan<- *packet.Packet)
+	onConnect := make(chan *Player)
 	w.onConnect = onConnect
 
 	w.idToActor = make(map[uint64]*actor.Actor)
@@ -42,7 +42,7 @@ func (w *World) Initialize() (message.Receiver, func(message.Message)) {
 	return messages, broadcast
 }
 
-func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message), onConnect <-chan chan<- *packet.Packet) {
+func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadcast func(message.Message), onConnect <-chan *Player) {
 	for {
 		select {
 		case msg, ok := <-msgIn:
@@ -55,14 +55,6 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 			case SetLocation:
 				w.idToActor[m.ID] = m.Actor
 				w.location[m.Actor] = m.Coord
-
-				SendToAll <- &packet.Packet{
-					Location: &packet.Location{
-						ID:    m.ID,
-						Coord: m.Coord,
-						Flags: m.Flags,
-					},
-				}
 
 				go broadcast(m)
 
@@ -85,9 +77,9 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 
 		case c := <-onConnect:
 			w.EachHeld(func(a *actor.Actor) {
-				go sendSendLocation(a, SendLocation(c))
+				go sendSendLocation(a, SendLocation{c})
 			})
-			c <- &packet.Packet{MapOverride: &packet.MapOverride{layout.GetChanges()}}
+			c.send <- &packet.Packet{MapOverride: &packet.MapOverride{layout.GetChanges()}}
 		}
 	}
 }
