@@ -17,8 +17,8 @@ const (
 	YellowTile    Tile = 6
 	GrellowTile   Tile = 7
 	GreenTile     Tile = 8
-	TurquoiseTile Tile = 9
-	GrueTile      Tile = 10
+	GrueTile      Tile = 9
+	TurquoiseTile Tile = 10
 	CyanTile      Tile = 11
 	BlueTile      Tile = 12
 	IndigoTile    Tile = 13
@@ -41,6 +41,12 @@ const (
 	Light1E Tile = 26
 	Light1S Tile = 27
 
+	Door2Open   Tile = 28
+	Door2Closed Tile = 29
+
+	Computer Tile = 30
+	Safe     Tile = 31
+
 	Space1 Tile = 1022
 	Space2 Tile = 1023
 )
@@ -57,16 +63,20 @@ func (t Tile) Passable() bool {
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window1
+	return !t.Passable() && t != Window1 && t != Computer && t != Safe
 }
 
 func (t Tile) Door() bool {
-	return (t >= Door1Open && t <= Door1Closed)
+	return t == Door1Open || t == Door1Closed ||
+		t == Door2Open || t == Door2Closed
 }
 
 func (t Tile) LightLevel() byte {
 	if t >= Light1W && t <= Light1S {
 		return 80
+	}
+	if t == Computer {
+		return 45
 	}
 	return 0
 }
@@ -91,10 +101,10 @@ func (t Tile) String() string {
 		return "GrellowTile"
 	case GreenTile:
 		return "GreenTile"
-	case TurquoiseTile:
-		return "TurquoiseTile"
 	case GrueTile:
 		return "GrueTile"
+	case TurquoiseTile:
+		return "TurquoiseTile"
 	case CyanTile:
 		return "CyanTile"
 	case BlueTile:
@@ -133,6 +143,16 @@ func (t Tile) String() string {
 		return "Light1E"
 	case Light1S:
 		return "Light1S"
+
+	case Door2Open:
+		return "Door2Open"
+	case Door2Closed:
+		return "Door2Closed"
+
+	case Computer:
+		return "Computer"
+	case Safe:
+		return "Safe"
 
 	case Space1:
 		return "Space1"
@@ -181,6 +201,9 @@ func (m MultiTile) BlocksVision() bool {
 }
 
 func (m MultiTile) LightLevel() byte {
+	if m.Space() {
+		return 30
+	}
 	var light byte
 	for _, t := range m {
 		light += t.LightLevel()

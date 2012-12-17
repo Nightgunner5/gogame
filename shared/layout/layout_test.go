@@ -8,29 +8,29 @@ import (
 const (
 	top   = -5
 	left  = -7
-	check = `                    
-      WWWWWWWW      
- WWWWWWW____WWW     
- WW___W______WW     
- W____D_______G     
- W____W_______W     
- W____G_______G     
- WW___W______WW     
- WWWDWWW____WWW     
-      WWWWDWWW      
-         W_W        
-         W_W        
-      GGGWDWGGWW    
-      G_______WW    
-      W________W    
-      WW_______W    
-      WW______WWGGW 
-       W______WW___ 
-       W______D____ 
-       G_____WW____ 
-       GGGGGGWW____ 
-             WW____ 
-                    `
+	check = `                      
+      WWWWWWWW        
+ WWWWWWW____WWW       
+ WW___W______WW       
+ W____D_______G       
+ W____W_______W       
+ W____G_______G       
+ WW___W______WW       
+ WWWDWWW____WWW       
+      WWWWDWWW        
+         W_W          
+         W_W          
+      GGGWDWGGWWWWWW  
+      G_______WWGGGW  
+      W________G___D  
+      WW_______G___W  
+      WW______WWGGWW  
+       W______WW__WW  
+       W______D____W  
+       G______W____W  
+       GGGGGGWW____W  
+             WW____W  
+                      `
 )
 
 func getCheck() [][]rune {
@@ -54,7 +54,7 @@ func TestCheck(t *testing.T) {
 			case '_': // Floor
 			case 'D': // Closed door
 			case 'd': // Open door
-			case 'G': // Window
+			case 'G': // Window / gadget
 			default:
 				t.Errorf("Unexpected rune %c", r)
 			}
