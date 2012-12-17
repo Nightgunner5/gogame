@@ -44,7 +44,7 @@ func (l *lighting) initializeImage() {
 	for x := 0; x < 2<<LightShift; x++ {
 		for y := 0; y < 2<<LightShift; y++ {
 			draw.Draw(l.cachedImage, image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize),
-				image.NewUniform(color.RGBA{A: 200 - l.lightmap[layout.Coord{x + l.cachedX<<LightShift, y + l.cachedY<<LightShift}]}), image.ZP, draw.Src)
+				image.NewUniform(color.RGBA{A: 250 - l.lightmap[layout.Coord{x + l.cachedX<<LightShift, y + l.cachedY<<LightShift}]}), image.ZP, draw.Src)
 		}
 	}
 }
@@ -58,9 +58,9 @@ func (l *lighting) recalculateLightmap() {
 }
 
 func (l *lighting) spread(c layout.Coord, brightness byte) {
-	if l.lightmap[c] < 200 {
-		if 200-l.lightmap[c] < brightness {
-			l.lightmap[c] = 200
+	if l.lightmap[c] < 250 {
+		if 250-l.lightmap[c] < brightness {
+			l.lightmap[c] = 250
 		} else {
 			l.lightmap[c] += brightness
 		}
@@ -70,11 +70,11 @@ func (l *lighting) spread(c layout.Coord, brightness byte) {
 		return
 	}
 
-	const LightLoss = 15
-	if brightness <= LightLoss {
+	var lightLoss = brightness>>2 + 3
+	if brightness <= lightLoss {
 		return
 	}
-	brightness -= LightLoss
+	brightness -= lightLoss
 	l.spread(layout.Coord{c.X - 1, c.Y}, brightness)
 	l.spread(layout.Coord{c.X + 1, c.Y}, brightness)
 	l.spread(layout.Coord{c.X, c.Y - 1}, brightness)
