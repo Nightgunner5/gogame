@@ -22,12 +22,21 @@ func init() {
 	go generatePlayerIDs()
 }
 
+type Permission uint16
+
+const (
+	PermSecurity Permission = 1 << iota
+	PermEngineer
+	PermMedical
+)
+
 type Player struct {
 	actor.Actor
 	ID    uint64 // network ID (public)
 	id    string // network ID (private)
 	x, y  int
 	flags uint32
+	perms Permission
 	send  chan<- *packet.Packet
 }
 
@@ -125,6 +134,10 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			})
 		}
 	}
+}
+
+func (p *Player) HasPermissions(perm Permission) bool {
+	return p.perms&perm == perm
 }
 
 func (p *Player) Disconnected() {

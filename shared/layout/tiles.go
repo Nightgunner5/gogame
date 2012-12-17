@@ -8,22 +8,22 @@ type Tile uint16
 
 // YES THESE ARE REAL COLORS NOW SHUT UP
 const (
-	WhiteTile     Tile = 0
-	GrayTile      Tile = 1
-	BlackTile     Tile = 2
-	RedTile       Tile = 3
-	OrangeTile    Tile = 4
-	RellowTile    Tile = 5
-	YellowTile    Tile = 6
-	GrellowTile   Tile = 7
-	GreenTile     Tile = 8
-	GrueTile      Tile = 9
-	TurquoiseTile Tile = 10
-	CyanTile      Tile = 11
-	BlueTile      Tile = 12
-	IndigoTile    Tile = 13
-	PurpleTile    Tile = 14
-	PinkTile      Tile = 15
+	TileWhite     Tile = 0
+	TileGray      Tile = 1
+	TileBlack     Tile = 2
+	TileRed       Tile = 3
+	TileOrange    Tile = 4
+	TileRellow    Tile = 5
+	TileYellow    Tile = 6
+	TileGrellow   Tile = 7
+	TileGreen     Tile = 8
+	TileGrue      Tile = 9
+	TileTurquoise Tile = 10
+	TileCyan      Tile = 11
+	TileBlue      Tile = 12
+	TileIndigo    Tile = 13
+	TilePurple    Tile = 14
+	TilePink      Tile = 15
 
 	Wall1   Tile = 16
 	Wall1NE Tile = 17
@@ -31,21 +31,28 @@ const (
 	Wall1SE Tile = 19
 	Wall1SW Tile = 20
 
-	Window1 Tile = 21
+	Window Tile = 21
 
-	Door1Open   Tile = 22
-	Door1Closed Tile = 23
-
-	Light1W Tile = 24
-	Light1N Tile = 25
-	Light1E Tile = 26
-	Light1S Tile = 27
-
-	Door2Open   Tile = 28
-	Door2Closed Tile = 29
+	DoorGeneralOpen    Tile = 22
+	DoorGeneralClosed  Tile = 23
+	DoorSecurityOpen   Tile = 24
+	DoorSecurityClosed Tile = 25
+	DoorEngineerOpen   Tile = 26
+	DoorEngineerClosed Tile = 27
+	DoorMedicalOpen    Tile = 28
+	DoorMedicalClosed  Tile = 29
 
 	Computer Tile = 30
 	Safe     Tile = 31
+
+	Light1WOff Tile = 32
+	Light1WOn  Tile = 33
+	Light1NOff Tile = 34
+	Light1NOn  Tile = 35
+	Light1EOff Tile = 36
+	Light1EOn  Tile = 37
+	Light1SOff Tile = 38
+	Light1SOn  Tile = 39
 
 	Space1 Tile = 1022
 	Space2 Tile = 1023
@@ -56,65 +63,64 @@ func (t Tile) Space() bool {
 }
 
 func (t Tile) Passable() bool {
-	return (t >= WhiteTile && t <= PinkTile) ||
+	return (t >= TileWhite && t <= TilePink) ||
 		(t.Door() && t&1 == 0) ||
-		(t >= Light1W && t <= Light1S) ||
+		(t >= Light1WOff && t <= Light1SOn) ||
 		t.Space()
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window1 && t != Computer && t != Safe
+	return !t.Passable() && t != Window && t != Computer && t != Safe
 }
 
 func (t Tile) Door() bool {
-	return t == Door1Open || t == Door1Closed ||
-		t == Door2Open || t == Door2Closed
+	return t >= DoorGeneralOpen && t <= DoorMedicalClosed
 }
 
 func (t Tile) LightLevel() byte {
-	if t >= Light1W && t <= Light1S {
+	if t >= Light1WOn && t <= Light1SOn && t&1 == 1 {
 		return 80
 	}
 	if t == Computer {
-		return 45
+		return 35
 	}
 	return 0
 }
 
 func (t Tile) String() string {
 	switch t {
-	case WhiteTile:
-		return "WhiteTile"
-	case GrayTile:
-		return "GrayTile"
-	case BlackTile:
-		return "BlackTile"
-	case RedTile:
-		return "RedTile"
-	case OrangeTile:
-		return "OrangeTile"
-	case RellowTile:
-		return "RellowTile"
-	case YellowTile:
-		return "YellowTile"
-	case GrellowTile:
-		return "GrellowTile"
-	case GreenTile:
-		return "GreenTile"
-	case GrueTile:
-		return "GrueTile"
-	case TurquoiseTile:
-		return "TurquoiseTile"
-	case CyanTile:
-		return "CyanTile"
-	case BlueTile:
-		return "BlueTile"
-	case IndigoTile:
-		return "IndigoTile"
-	case PurpleTile:
-		return "PurpleTile"
-	case PinkTile:
-		return "PinkTile"
+	case TileWhite:
+		return "TileWhite"
+	case TileGray:
+		return "TileGray"
+	case TileBlack:
+		return "TileBlack"
+	case TileRed:
+		return "TileRed"
+	case TileOrange:
+		return "TileOrange"
+	case TileRellow:
+		return "TileRellow"
+	case TileYellow:
+		return "TileYellow"
+	case TileGrellow:
+		return "TileGrellow"
+	case TileGreen:
+		return "TileGreen"
+	case TileGrue:
+		return "TileGrue"
+	case TileTurquoise:
+		return "TileTurquoise"
+	case TileCyan:
+		return "TileCyan"
+	case TileBlue:
+		return "TileBlue"
+	case TileIndigo:
+		return "TileIndigo"
+	case TilePurple:
+		return "TilePurple"
+	case TilePink:
+		return "TilePink"
 
 	case Wall1:
 		return "Wall1"
@@ -127,32 +133,47 @@ func (t Tile) String() string {
 	case Wall1SW:
 		return "Wall1SW"
 
-	case Window1:
-		return "Window1"
+	case Window:
+		return "Window"
 
-	case Door1Open:
-		return "Door1Open"
-	case Door1Closed:
-		return "Door1Closed"
-
-	case Light1W:
-		return "Light1W"
-	case Light1N:
-		return "Light1N"
-	case Light1E:
-		return "Light1E"
-	case Light1S:
-		return "Light1S"
-
-	case Door2Open:
-		return "Door2Open"
-	case Door2Closed:
-		return "Door2Closed"
+	case DoorGeneralOpen:
+		return "DoorGeneralOpen"
+	case DoorGeneralClosed:
+		return "DoorGeneralClosed"
+	case DoorSecurityOpen:
+		return "DoorSecurityOpen"
+	case DoorSecurityClosed:
+		return "DoorSecurityClosed"
+	case DoorEngineerOpen:
+		return "DoorEngineerOpen"
+	case DoorEngineerClosed:
+		return "DoorEngineerClosed"
+	case DoorMedicalOpen:
+		return "DoorMedicalOpen"
+	case DoorMedicalClosed:
+		return "DoorMedicalClosed"
 
 	case Computer:
 		return "Computer"
 	case Safe:
 		return "Safe"
+
+	case Light1WOff:
+		return "Light1WOff"
+	case Light1WOn:
+		return "Light1WOn"
+	case Light1NOff:
+		return "Light1NOff"
+	case Light1NOn:
+		return "Light1NOn"
+	case Light1EOff:
+		return "Light1EOff"
+	case Light1EOn:
+		return "Light1EOn"
+	case Light1SOff:
+		return "Light1SOff"
+	case Light1SOn:
+		return "Light1SOn"
 
 	case Space1:
 		return "Space1"

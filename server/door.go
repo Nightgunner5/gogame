@@ -9,8 +9,9 @@ import (
 
 type Door struct {
 	actor.Actor
-	coord layout.Coord
-	open  bool
+	coord      layout.Coord
+	open       bool
+	permission Permission
 }
 
 func (d *Door) Initialize() (message.Receiver, func(message.Message)) {
@@ -35,7 +36,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 			switch m := msg.(type) {
 			case OpenDoor:
-				if !d.open {
+				if !d.open && m.Opener.HasPermissions(d.permission) {
 					d.open = true
 					for {
 						orig := layout.GetCoord(d.coord)
@@ -100,6 +101,18 @@ func NewDoor(coord layout.Coord) *Door {
 		panic("NewDoor on non-door coordinate")
 	}
 	door.open = tile.Passable()
+	for _, t := range tile {
+		switch t {
+		case layout.DoorGeneralClosed, layout.DoorGeneralOpen:
+			// No extra permission
+		case layout.DoorSecurityClosed, layout.DoorSecurityOpen:
+			door.permission |= PermSecurity
+		case layout.DoorEngineerClosed, layout.DoorEngineerOpen:
+			door.permission |= PermEngineer
+		case layout.DoorMedicalClosed, layout.DoorMedicalOpen:
+			door.permission |= PermMedical
+		}
+	}
 
 	actor.Init("door:"+coord.String(), &door.Actor, door)
 
