@@ -55,6 +55,18 @@ func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
 }
 
 func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
+	// If the player manages to disconnect while this function is processing
+	// one of their packets, responding to them will panic with "send on
+	// closed channel". This is a race condition that would require more
+	// work than it's worth - since the connection is already closed,
+	// just drop the player.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("panic in player:%s: %v", p.id, r)
+			p.Disconnected()
+		}
+	}()
+
 	defer close(messages)
 
 	var moveRequest layout.Coord
