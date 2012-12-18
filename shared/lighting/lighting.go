@@ -4,14 +4,13 @@ import (
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/res"
 	"image"
-	"image/color"
-	"image/draw"
+	"math"
 )
 
 type Lighting struct {
 	lightmapVersion  uint64
-	lightmap         map[layout.Coord]byte
-	cachedImage      *image.RGBA
+	lightmap         map[layout.Coord]uint8
+	cachedImage      *image.Alpha
 	cachedInvalid    bool
 	cachedX, cachedY int
 }
@@ -20,10 +19,10 @@ const (
 	lightShift = 5
 )
 
-func (l *Lighting) Image(x, y int) *image.RGBA {
+func (l *Lighting) Image(x, y int) *image.Alpha {
 	if l.lightmapVersion != layout.Version() || l.lightmap == nil {
 		l.lightmapVersion = layout.Version()
-		l.lightmap = make(map[layout.Coord]byte)
+		l.lightmap = make(map[layout.Coord]uint8)
 		l.recalculateLightmap()
 		l.cachedInvalid = true
 	}
@@ -33,9 +32,10 @@ func (l *Lighting) Image(x, y int) *image.RGBA {
 	}
 
 	if l.cachedImage == nil {
-		l.cachedImage = image.NewRGBA(image.Rect(0, 0, 2<<lightShift<<res.TileSize, 2<<lightShift<<res.TileSize))
+		l.cachedImage = image.NewAlpha(image.Rect(0, 0, 2<<lightShift<<res.TileSize, 2<<lightShift<<res.TileSize))
 	}
 
+	l.cachedInvalid = false
 	l.cachedX, l.cachedY = x>>lightShift, y>>lightShift
 	l.initializeImage()
 
@@ -47,11 +47,62 @@ func (l *Lighting) Origin(x, y int) image.Point {
 		(y&(1<<lightShift-1))<<res.TileSize)
 }
 
+func (l *Lighting) lightAt(x, y int) uint16 {
+	return uint16(220 - l.lightmap[layout.Coord{x, y}])
+}
+
 func (l *Lighting) initializeImage() {
-	for x := 0; x < 2<<lightShift; x++ {
-		for y := 0; y < 2<<lightShift; y++ {
-			draw.Draw(l.cachedImage, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize),
-				image.NewUniform(color.RGBA{A: 250 - l.lightmap[layout.Coord{x + l.cachedX<<lightShift, y + l.cachedY<<lightShift}]}), image.ZP, draw.Src)
+	const (
+		ws  = 1 + lightShift + res.TileSize
+		w   = 1 << ws
+		ts  = 1 << res.TileSize
+		tsh = res.TileSize - 1
+		tsm = 1<<tsh - 1
+	)
+	cx := l.cachedX << lightShift
+	cy := l.cachedY << lightShift
+
+	for y := 0; y < w; y += ts {
+		for x := 0; x < w; x += ts {
+			var input [3][3]uint16
+			tx, ty := x>>res.TileSize+cx, y>>res.TileSize+cy
+			input[1][1] = l.lightAt(tx, ty)
+
+			input[0][1] = l.lightAt(tx-1, ty)
+			input[2][1] = l.lightAt(tx+1, ty)
+			input[1][0] = l.lightAt(tx, ty-1)
+			input[1][2] = l.lightAt(tx, ty+1)
+
+			input[0][0] = input[0][1] + input[1][0] + l.lightAt(tx-1, ty-1)
+			input[2][0] = input[2][1] + input[1][0] + l.lightAt(tx+1, ty-1)
+			input[0][2] = input[0][1] + input[1][2] + l.lightAt(tx-1, ty+1)
+			input[2][2] = input[2][1] + input[1][2] + l.lightAt(tx+1, ty+1)
+
+			input[0][1] = (input[0][1] + input[1][1]) / 2
+			input[2][1] = (input[2][1] + input[1][1]) / 2
+			input[1][0] = (input[1][0] + input[1][1]) / 2
+			input[1][2] = (input[1][2] + input[1][1]) / 2
+
+			input[0][0] = (input[0][0] + input[1][1]) / 4
+			input[2][0] = (input[2][0] + input[1][1]) / 4
+			input[0][2] = (input[0][2] + input[1][1]) / 4
+			input[2][2] = (input[2][2] + input[1][1]) / 4
+
+			for i := uint16(0); i < ts; i++ {
+				for j := uint16(0); j < ts; j++ {
+					a11 := input[i>>tsh][j>>tsh]
+					a12 := input[i>>tsh][j>>tsh+1]
+					a21 := input[i>>tsh+1][j>>tsh]
+					a22 := input[i>>tsh+1][j>>tsh+1]
+
+					b1 := (a11*(^i&tsm) + a21*(i&tsm)) >> tsh
+					b2 := (a12*(^i&tsm) + a22*(i&tsm)) >> tsh
+
+					c := (b1*(^j&tsm) + b2*(j&tsm)) >> tsh
+
+					l.cachedImage.Pix[x|int(i)|(y|int(j))<<ws] = uint8(c)
+				}
+			}
 		}
 	}
 }
@@ -64,10 +115,18 @@ func (l *Lighting) recalculateLightmap() {
 	})
 }
 
-func (l *Lighting) spread(c layout.Coord, brightness byte) {
-	if l.lightmap[c] < 250 {
-		if 250-l.lightmap[c] < brightness {
-			l.lightmap[c] = 250
+var brightnessMap [256]uint8
+
+func init() {
+	for i := range brightnessMap {
+		brightnessMap[i] = uint8(math.Sqrt(float64(i))*2.5) + 2
+	}
+}
+
+func (l *Lighting) spread(c layout.Coord, brightness uint8) {
+	if l.lightmap[c] < 220 {
+		if 220-l.lightmap[c] < brightness {
+			l.lightmap[c] = 220
 		} else {
 			l.lightmap[c] += brightness
 		}
@@ -77,7 +136,7 @@ func (l *Lighting) spread(c layout.Coord, brightness byte) {
 		return
 	}
 
-	var lightLoss = brightness>>2 + 3
+	var lightLoss = brightnessMap[brightness]
 	if brightness <= lightLoss {
 		return
 	}

@@ -95,7 +95,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
 	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
-	lighting.DrawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
+	draw.DrawMask(viewport, rect, image.Black, image.ZP, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), draw.Over)
 
 	mouseTileLock.Lock()
 	res.DrawString(viewport, mouseTileString, color.White, res.FontSmall, 1, 1)
@@ -128,7 +128,7 @@ func Invalidate(rect image.Rectangle) {
 func paintHandler(w wde.Window) {
 	for rect := range shouldPaint {
 		Paint(w, rect)
-		time.Sleep(16 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 }
 

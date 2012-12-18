@@ -72,7 +72,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
 	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
 	if LightsOn() {
-		lighting.DrawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
+		draw.DrawMask(viewport, rect, image.Black, image.ZP, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), draw.Over)
 	}
 
 	w.Screen().CopyRGBA(viewport, viewport.Bounds())
