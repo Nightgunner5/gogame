@@ -183,6 +183,47 @@ func (t Tile) String() string {
 	return strconv.FormatUint(uint64(t), 10)
 }
 
+func (t Tile) describe() (string, bool) {
+	switch t {
+	case TileWhite, TileGray, TileBlack, TileRed, TileOrange, TileRellow, TileYellow, TileGrellow, TileGreen, TileGrue, TileTurquoise, TileCyan, TileBlue, TileIndigo, TilePurple, TilePink:
+		return "floor", false
+
+	case Wall1, Wall1NE, Wall1NW, Wall1SE, Wall1SW:
+		return "wall", true
+
+	case Window:
+		return "window", true
+
+	case DoorGeneralOpen:
+		return "door", false
+	case DoorGeneralClosed:
+		return "door", true
+	case DoorSecurityOpen:
+		return "security door", false
+	case DoorSecurityClosed:
+		return "security door", true
+	case DoorEngineerOpen:
+		return "engineering door", false
+	case DoorEngineerClosed:
+		return "engineering door", true
+	case DoorMedicalOpen:
+		return "medbay door", false
+	case DoorMedicalClosed:
+		return "medbay door", true
+
+	case Computer:
+		return "computer", false
+	case Safe:
+		return "safe", false
+
+	case Light1WOff, Light1NOff, Light1EOff, Light1SOff:
+		return "light socket", false
+	case Light1WOn, Light1NOn, Light1EOn, Light1SOn:
+		return "flourescent light", false
+	}
+	return "ERROR", false
+}
+
 type MultiTile []Tile
 
 func (m MultiTile) Space() bool {
@@ -232,12 +273,12 @@ func (m MultiTile) LightLevel() byte {
 	return light
 }
 
-func (a MultiTile) String() string {
+func (m MultiTile) String() string {
 	var s []byte
 
 	s = append(s, '{')
 
-	for i, t := range a {
+	for i, t := range m {
 		if i != 0 {
 			s = append(s, ", "...)
 		}
@@ -246,6 +287,27 @@ func (a MultiTile) String() string {
 
 	s = append(s, '}')
 	return string(s)
+}
+
+func (m MultiTile) Describe() []string {
+	if m.Space() {
+		return []string{"space"}
+	}
+
+	var description []string
+	for _, t := range m {
+		d, erase := t.describe()
+		if erase {
+			description = nil
+		}
+		description = append(description, d)
+	}
+
+	for i, j := 0, len(description)-1; i < j; i, j = i+1, j-1 {
+		description[i], description[j] = description[j], description[i]
+	}
+
+	return description
 }
 
 func (a MultiTile) equal(b MultiTile) bool {

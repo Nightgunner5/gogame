@@ -9,10 +9,12 @@ import (
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -53,6 +55,12 @@ func Main() {
 
 	wde.Run()
 }
+
+var (
+	mouseTile       layout.Coord
+	mouseTileString string
+	mouseTileLock   sync.Mutex
+)
 
 const (
 	TileSize  = 5 // 2**5 pixels by 2**5 pixels
@@ -132,6 +140,10 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
 	drawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
 
+	mouseTileLock.Lock()
+	drawString(viewport, mouseTileString, color.White, FontSmall, 1, 1)
+	mouseTileLock.Unlock()
+
 	if hasAnimation {
 		Invalidate(viewport.Bounds())
 	}
@@ -154,9 +166,6 @@ func Invalidate(rect image.Rectangle) {
 			rect = rect.Union(r2)
 		}
 	}
-}
-
-func init() {
 }
 
 func paintHandler(w wde.Window) {
@@ -188,6 +197,22 @@ func UI() {
 	for event := range w.EventChan() {
 		switch e := event.(type) {
 		case wde.MouseMovedEvent:
+			xOffset, yOffset := GetTopLeft()
+
+			mouseTile.X, mouseTile.Y = e.Where.X>>TileSize-xOffset, e.Where.Y>>TileSize-yOffset
+			if layout.Visible(layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}, mouseTile) {
+				tooltip := strings.Join(layout.GetCoord(mouseTile).Describe(), ", ")
+
+				mouseTileLock.Lock()
+				mouseTileString = tooltip
+				mouseTileLock.Unlock()
+			} else {
+				mouseTileLock.Lock()
+				mouseTileString = ""
+				mouseTileLock.Unlock()
+			}
+			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, 1<<TileSize))
+
 		case wde.MouseDownEvent:
 		case wde.MouseUpEvent:
 		case wde.MouseDraggedEvent:
