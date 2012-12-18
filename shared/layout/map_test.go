@@ -8,36 +8,36 @@ import (
 const (
 	top   = -5
 	left  = -7
-	check = `                                 
-      WWWWWWWW                   
- WWWWWWW____WWW                  
- WW___W______WW                  
- W____D_______G                  
- W____W_______G                  
- W____G_______G                  
- WW___W______WW                  
- WWWDWWW____WWW                  
-      WWWWDWWW                   
-         G_G                     
-         G_G                     
-      GGGWDWGGWWWWWW             
-      G_______WWGGGWWWWW         
-      W________G___WW_WW         
-      WW_______G___D___W         
-      WW______WWGGWW__GW         
-       W______WW__WW___WWWWWWWWW 
-       W______D____W__GWW___WWWW 
-       G______W____W___W_____WWW 
-       GGGGGGWW____WW_WW_____DWW 
-             WW____WWDWWW____WWW 
-              W________WWGGWDW_W 
-              W______________D_W 
-              W______________D_W 
-              WW_______WWGGWDW_W 
-              WWWWWWWDWWW____WWW 
-               WWWWWWWWWWW__WWWW 
-                        WWWWWW   
-                                 `
+	check = `                                   
+      WWWWWWWW                     
+ WWWWWWW____WWW                    
+ WW___W______WW                    
+ WG___D_______G                    
+ WG___W_______G                    
+ WG___G_______G                    
+ WW___W______WW                    
+ WWWDWWW____WWW                    
+      WWWWDWWW                     
+         G_G                       
+         G_G                       
+      GGGWDWGGWWWWWW               
+      G_______WWGGGWWWWW           
+      W________G___WW_WW           
+      WW_______G___D___W           
+      WW______WWGGWW__GW           
+       W______WW__WW___WWWWWWW     
+       W______D____W__GW_____WWWWW 
+       G______W____W___W_____W___W 
+       GGGGGGWW____WW_WW_____D___W 
+             WW____WWDWW_____W___W 
+              W________WWGGWDW___W 
+              W______________d___W 
+              W______________G___W 
+              WW_______WWGGWDW___W 
+              WWWWWWWDWWW____D___W 
+               WWWWWWWWWW____W___W 
+                        WWWWWWWWWW 
+                                   `
 )
 
 func getCheck() [][]rune {
