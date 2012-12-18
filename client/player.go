@@ -5,6 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
+	"github.com/Nightgunner5/gogame/shared/res"
 	"image"
 	"sync/atomic"
 	"time"
@@ -75,11 +76,11 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 func (p *Player) screenRect() image.Rectangle {
 	if p.isLocalPlayer {
-		return image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize)
+		return image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize)
 	}
 	x, y := GetTopLeft()
-	return image.Rect((p.x+x)<<TileSize, (p.y+y)<<TileSize,
-		(p.x+1+x)<<TileSize, (p.y+1+y)<<TileSize)
+	return image.Rect((p.x+x)<<res.TileSize, (p.y+y)<<res.TileSize,
+		(p.x+1+x)<<res.TileSize, (p.y+1+y)<<res.TileSize)
 }
 
 var thePlayer = NewPlayer(true, false)

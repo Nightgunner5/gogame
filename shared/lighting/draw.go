@@ -1,4 +1,4 @@
-package main
+package lighting
 
 import (
 	"image"
@@ -23,7 +23,7 @@ func clip(dst *image.RGBA, r *image.Rectangle, src *image.RGBA, sp *image.Point,
 	(*mp).Y += dy
 }
 
-func drawLightOverlay(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp image.Point, mask *image.RGBA, mp image.Point) {
+func DrawLightOverlay(dst *image.RGBA, r image.Rectangle, src *image.RGBA, sp image.Point, mask *image.RGBA, mp image.Point) {
 	clip(dst, &r, src, &sp, mask, &mp)
 
 	const m = 1<<16 - 1

@@ -1,17 +1,16 @@
 package client
 
 import (
-	"bytes"
-	"github.com/Nightgunner5/gogame/client/res"
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/lighting"
 	"github.com/Nightgunner5/gogame/shared/packet"
+	"github.com/Nightgunner5/gogame/shared/res"
 	"github.com/skelterjohn/go.wde"
 	_ "github.com/skelterjohn/go.wde/init"
 	"image"
 	"image/color"
 	"image/draw"
-	"image/png"
 	"log"
 	"os"
 	"strings"
@@ -19,35 +18,14 @@ import (
 	"time"
 )
 
-var (
-	Terrain image.Image
-	Actors  image.Image
-)
-
-func init() {
-	var err error
-
-	Terrain, err = png.Decode(bytes.NewReader(res.TerrainPng))
-	if err != nil {
-		panic(err)
-	}
-	res.TerrainPng = nil
-
-	Actors, err = png.Decode(bytes.NewReader(res.ActorsPng))
-	if err != nil {
-		panic(err)
-	}
-	res.ActorsPng = nil
-}
-
 func Main() {
 	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
 		if t.Door() {
-			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+			Invalidate(image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize))
 		} else {
 			xOffset, yOffset := GetTopLeft()
 			x, y := c.X+xOffset, c.Y+yOffset
-			Invalidate(image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize))
+			Invalidate(image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize))
 		}
 	}
 
@@ -63,55 +41,34 @@ var (
 )
 
 const (
-	TileSize  = 5 // 2**5 pixels by 2**5 pixels
-	TileShift = 5 // 2**5 tiles by 2**5 tiles
-	TileMask  = 1<<TileShift - 1
-
 	ViewportWidth  = 20
 	ViewportHeight = 15
 )
 
-func tileCoord(index uint16) (p image.Point) {
-	return image.Pt(int((index&TileMask)<<TileSize),
-		int((index>>TileShift&TileMask)<<TileSize))
-}
-
-func Tile(viewport draw.Image, base image.Image, index uint16, x, y int) {
-	x, y = x<<TileSize, y<<TileSize
-	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
-}
-
-func TileFloat(viewport draw.Image, base image.Image, index uint16, x1, y1, x2, y2 int, interp float32) {
-	x1, y1 = x1<<TileSize, y1<<TileSize
-	x2, y2 = x2<<TileSize, y2<<TileSize
-	x, y := x1+int(float32(x2-x1)*interp), y1+int(float32(y2-y1)*interp)
-	draw.Draw(viewport, image.Rect(x, y, x+1<<TileSize, y+1<<TileSize), base, tileCoord(index), draw.Over)
-}
-
 var (
-	viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<TileSize, ViewportHeight<<TileSize))
+	viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize))
 	space    = image.NewRGBA(viewport.Bounds())
 	scene    = image.NewRGBA(viewport.Bounds())
-	light    = new(lighting)
+	light    = new(lighting.Lighting)
 )
 
 func Paint(w wde.Window, rect image.Rectangle) {
 	xOffset, yOffset := GetTopLeft()
 	center := layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}
 
-	minX, maxX := rect.Min.X>>TileSize, (rect.Max.X-1)>>TileSize+1
-	minY, maxY := rect.Min.Y>>TileSize, (rect.Max.Y-1)>>TileSize+1
+	minX, maxX := rect.Min.X>>res.TileSize, (rect.Max.X-1)>>res.TileSize+1
+	minY, maxY := rect.Min.Y>>res.TileSize, (rect.Max.Y-1)>>res.TileSize+1
 
 	for x := minX; x < maxX; x++ {
 		for y := minY; y < maxY; y++ {
 			if layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
-				Tile(space, Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
-				draw.Draw(scene, image.Rect(x<<TileSize, y<<TileSize, (x+1)<<TileSize, (y+1)<<TileSize), image.Transparent, image.ZP, draw.Src)
+				res.Tile(space, res.Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+				draw.Draw(scene, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
 				for _, t := range layout.Get(x-xOffset, y-yOffset) {
-					Tile(scene, Terrain, uint16(t), x, y)
+					res.Tile(scene, res.Terrain, uint16(t), x, y)
 				}
 			} else {
-				Tile(scene, image.Black, 0, x, y)
+				res.Tile(scene, image.Black, 0, x, y)
 			}
 		}
 	}
@@ -125,11 +82,11 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 			if minX <= x2 && x2 <= maxX && minY <= y2 && y2 <= maxY {
 				interp := float32(time.Since(p.Changed)*2) / float32(time.Second)
-				if interp > 1 {
-					Tile(scene, Actors, p.Sprite, x2, y2)
+				if interp >= 1 {
+					res.Tile(scene, res.Actors, p.Sprite, x2, y2)
 				} else {
 					hasAnimation = true
-					TileFloat(scene, Actors, p.Sprite, x1, y1, x2, y2, interp)
+					res.TileFloat(scene, res.Actors, p.Sprite, x1, y1, x2, y2, interp)
 				}
 			}
 		}
@@ -138,10 +95,10 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
 	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
-	drawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
+	lighting.DrawLightOverlay(viewport, rect, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), scene, rect.Min)
 
 	mouseTileLock.Lock()
-	drawString(viewport, mouseTileString, color.White, FontSmall, 1, 1)
+	res.DrawString(viewport, mouseTileString, color.White, res.FontSmall, 1, 1)
 	mouseTileLock.Unlock()
 
 	if hasAnimation {
@@ -178,13 +135,15 @@ func paintHandler(w wde.Window) {
 func UI() {
 	defer wde.Stop()
 
-	w, err := wde.NewWindow(ViewportWidth<<TileSize, ViewportHeight<<TileSize)
+	w, err := wde.NewWindow(ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize)
 	if err != nil {
 		panic(err)
 	}
 	defer w.Close()
 
 	w.SetTitle("Stace Spation 2½") // Yes, that is the correct spelling.
+
+	w.LockSize(true)
 
 	w.Show()
 
@@ -199,7 +158,7 @@ func UI() {
 		case wde.MouseMovedEvent:
 			xOffset, yOffset := GetTopLeft()
 
-			mouseTile.X, mouseTile.Y = e.Where.X>>TileSize-xOffset, e.Where.Y>>TileSize-yOffset
+			mouseTile.X, mouseTile.Y = e.Where.X>>res.TileSize-xOffset, e.Where.Y>>res.TileSize-yOffset
 			if layout.Visible(layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}, mouseTile) {
 				tooltip := strings.Join(layout.GetCoord(mouseTile).Describe(), ", ")
 
@@ -211,7 +170,7 @@ func UI() {
 				mouseTileString = ""
 				mouseTileLock.Unlock()
 			}
-			Invalidate(image.Rect(0, 0, ViewportWidth<<TileSize, 1<<TileSize))
+			Invalidate(image.Rect(0, 0, ViewportWidth<<res.TileSize, 1<<res.TileSize))
 
 		case wde.MouseDownEvent:
 		case wde.MouseUpEvent:
@@ -235,10 +194,6 @@ func UI() {
 			}
 
 		case wde.KeyTypedEvent:
-		case wde.ResizeEvent:
-			w.SetSize(ViewportWidth<<TileSize, ViewportHeight<<TileSize)
-			Invalidate(w.Screen().Bounds())
-
 		case wde.CloseEvent:
 			Disconnected()
 			return
