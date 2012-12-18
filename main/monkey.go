@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -59,6 +60,7 @@ func clientEncode(encode *gob.Encoder, send <-chan *packet.Packet) {
 	for msg := range send {
 		if err := encode.Encode(msg); err != nil {
 			log.Printf("Error encoding packet: %s", err)
+			os.Exit(1)
 		}
 	}
 }
