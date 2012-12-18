@@ -11,9 +11,8 @@ var (
 
 func visInvalidateAll() {
 	visLock.Lock()
-	defer visLock.Unlock()
-
 	visible = make(map[[2]Coord]bool)
+	visLock.Unlock()
 }
 
 func init() {
@@ -22,19 +21,16 @@ func init() {
 
 func visInvalidate(coord Coord) {
 	visLock.Lock()
-	defer visLock.Unlock()
-
 	for link := range visible {
 		if link[0] == coord || link[1] == coord {
 			delete(visible, link)
 		}
 	}
+	visLock.Unlock()
 }
 
 func visInvalidateRecursive(coord Coord) {
 	visLock.Lock()
-	defer visLock.Unlock()
-
 	for link := range visible {
 		if link[0] == coord && link[1] == coord {
 			continue
@@ -54,6 +50,7 @@ func visInvalidateRecursive(coord Coord) {
 			delete(visible, link)
 		}
 	}
+	visLock.Unlock()
 }
 
 func Visible(a, b Coord) bool {
@@ -65,15 +62,16 @@ func Visible(a, b Coord) bool {
 	visLock.RUnlock()
 
 	visLock.Lock()
-	defer visLock.Unlock()
 	// double-check
 	if seen, ok := visible[[2]Coord{a, b}]; ok {
+		visLock.Unlock()
 		return seen
 	}
 
 	seen := visTrace(a.X, a.Y, b.X, b.Y, 1)
 
 	visible[[2]Coord{a, b}] = seen
+	visLock.Unlock()
 	return seen
 }
 

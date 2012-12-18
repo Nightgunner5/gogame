@@ -32,11 +32,11 @@ func Get(x, y int) MultiTile {
 
 func GetCoord(coord Coord) MultiTile {
 	layoutLock.RLock()
-	defer layoutLock.RUnlock()
-
 	if t, ok := currentLayout[coord]; ok {
+		layoutLock.RUnlock()
 		return t
 	}
+	layoutLock.RUnlock()
 	return baseLayout[coord]
 }
 
