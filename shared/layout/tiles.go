@@ -54,6 +54,74 @@ const (
 	Light1SOff Tile = 38
 	Light1SOn  Tile = 39
 
+	TileWhiteNW     Tile = 64
+	TileGrayNW      Tile = 65
+	TileBlackNW     Tile = 66
+	TileRedNW       Tile = 67
+	TileOrangeNW    Tile = 68
+	TileRellowNW    Tile = 69
+	TileYellowNW    Tile = 70
+	TileGrellowNW   Tile = 71
+	TileGreenNW     Tile = 72
+	TileGrueNW      Tile = 73
+	TileTurquoiseNW Tile = 74
+	TileCyanNW      Tile = 75
+	TileBlueNW      Tile = 76
+	TileIndigoNW    Tile = 77
+	TilePurpleNW    Tile = 78
+	TilePinkNW      Tile = 79
+
+	TileWhiteNE     Tile = 80
+	TileGrayNE      Tile = 81
+	TileBlackNE     Tile = 82
+	TileRedNE       Tile = 83
+	TileOrangeNE    Tile = 84
+	TileRellowNE    Tile = 85
+	TileYellowNE    Tile = 86
+	TileGrellowNE   Tile = 87
+	TileGreenNE     Tile = 88
+	TileGrueNE      Tile = 89
+	TileTurquoiseNE Tile = 90
+	TileCyanNE      Tile = 91
+	TileBlueNE      Tile = 92
+	TileIndigoNE    Tile = 93
+	TilePurpleNE    Tile = 94
+	TilePinkNE      Tile = 95
+
+	TileWhiteSW     Tile = 96
+	TileGraySW      Tile = 97
+	TileBlackSW     Tile = 98
+	TileRedSW       Tile = 99
+	TileOrangeSW    Tile = 100
+	TileRellowSW    Tile = 101
+	TileYellowSW    Tile = 102
+	TileGrellowSW   Tile = 103
+	TileGreenSW     Tile = 104
+	TileGrueSW      Tile = 105
+	TileTurquoiseSW Tile = 106
+	TileCyanSW      Tile = 107
+	TileBlueSW      Tile = 108
+	TileIndigoSW    Tile = 109
+	TilePurpleSW    Tile = 110
+	TilePinkSW      Tile = 111
+
+	TileWhiteSE     Tile = 112
+	TileGraySE      Tile = 113
+	TileBlackSE     Tile = 114
+	TileRedSE       Tile = 115
+	TileOrangeSE    Tile = 116
+	TileRellowSE    Tile = 117
+	TileYellowSE    Tile = 118
+	TileGrellowSE   Tile = 119
+	TileGreenSE     Tile = 120
+	TileGrueSE      Tile = 121
+	TileTurquoiseSE Tile = 122
+	TileCyanSE      Tile = 123
+	TileBlueSE      Tile = 124
+	TileIndigoSE    Tile = 125
+	TilePurpleSE    Tile = 126
+	TilePinkSE      Tile = 127
+
 	Space1 Tile = 1022
 	Space2 Tile = 1023
 )
@@ -64,6 +132,7 @@ func (t Tile) Space() bool {
 
 func (t Tile) Passable() bool {
 	return (t >= TileWhite && t <= TilePink) ||
+		(t >= TileWhiteNW && t <= TilePinkSE) ||
 		(t.Door() && t&1 == 0) ||
 		(t >= Light1WOff && t <= Light1SOn) ||
 		t.Space()
@@ -180,13 +249,25 @@ func (t Tile) String() string {
 	case Space2:
 		return "Space2"
 	}
+	if t&0xFFC0 == 0x0040 {
+		switch t & 0x30 {
+		case 0x00:
+			return (t & 0xF).String() + "NW"
+		case 0x10:
+			return (t & 0xF).String() + "NE"
+		case 0x20:
+			return (t & 0xF).String() + "SW"
+		case 0x30:
+			return (t & 0xF).String() + "SE"
+		}
+	}
 	return strconv.FormatUint(uint64(t), 10)
 }
 
 func (t Tile) describe() (string, bool) {
 	switch t {
 	case TileWhite, TileGray, TileBlack, TileRed, TileOrange, TileRellow, TileYellow, TileGrellow, TileGreen, TileGrue, TileTurquoise, TileCyan, TileBlue, TileIndigo, TilePurple, TilePink:
-		return "floor", false
+		return "floor", true
 
 	case Wall1, Wall1NE, Wall1NW, Wall1SE, Wall1SW:
 		return "wall", true
@@ -221,6 +302,12 @@ func (t Tile) describe() (string, bool) {
 	case Light1WOn, Light1NOn, Light1EOn, Light1SOn:
 		return "flourescent light", false
 	}
+
+	// quarter floor tiles
+	if t&0xFFC0 == 0x0040 {
+		return "floor", true
+	}
+
 	return "ERROR", false
 }
 

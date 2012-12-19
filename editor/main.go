@@ -37,7 +37,7 @@ const (
 	ViewportHeight = 15
 
 	ToolboxWidth  = 8
-	ToolboxHeight = 5
+	ToolboxHeight = 16
 )
 
 var (
