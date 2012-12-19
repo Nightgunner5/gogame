@@ -23,7 +23,6 @@ func init() {
 	keyUp[wde.KeyRightArrow] = updateMotion
 
 	keyDown[wde.KeyL] = toggleLights
-	keyUp[wde.KeyL] = toggleLights
 }
 
 func updateMotion(keys map[string]bool) {
@@ -51,10 +50,11 @@ func updateMotion(keys map[string]bool) {
 }
 
 func toggleLights(keys map[string]bool) {
-	if keys[wde.KeyL] {
-		atomic.StoreUint32(&lightsOn, 1)
-	} else {
-		atomic.StoreUint32(&lightsOn, 0)
+	for {
+		old := atomic.LoadUint32(&lightsOn)
+		if atomic.CompareAndSwapUint32(&lightsOn, old, old^1) {
+			break
+		}
 	}
 	Invalidate(viewport.Bounds())
 }

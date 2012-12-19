@@ -194,6 +194,9 @@ func UI() {
 			}
 
 		case wde.KeyTypedEvent:
+		case wde.ResizeEvent:
+			w.SetSize(ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize)
+
 		case wde.CloseEvent:
 			Disconnected()
 			return

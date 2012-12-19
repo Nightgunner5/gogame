@@ -124,7 +124,7 @@ func UI() {
 	draw.Draw(toolbox.Screen(), toolbox.Screen().Bounds(), image.White, image.ZP, draw.Src)
 	for i := 0; i < ToolboxWidth; i++ {
 		for j := 0; j < ToolboxHeight; j++ {
-			res.Tile(toolbox.Screen(), res.Terrain, uint16(i+j<<3), i, j)
+			res.Tile(toolbox.Screen(), res.Terrain, uint16(i+j*ToolboxWidth), i, j)
 		}
 	}
 	toolbox.FlushImage(toolbox.Screen().Bounds())
@@ -148,12 +148,14 @@ func UI() {
 				mouseLock.Lock()
 				switch e.Which {
 				case wde.LeftButton:
-					mouseTile = layout.Tile((e.Where.X >> res.TileSize) + (e.Where.Y>>res.TileSize)*8)
+					mouseTile = layout.Tile((e.Where.X >> res.TileSize) + (e.Where.Y>>res.TileSize)*ToolboxWidth)
 					mouseValid = true
 				case wde.RightButton:
 					mouseValid = false
 				}
 				mouseLock.Unlock()
+			case wde.ResizeEvent:
+				toolbox.SetSize(ToolboxWidth<<res.TileSize, ToolboxHeight<<res.TileSize)
 			}
 		}
 	}()
@@ -220,6 +222,9 @@ func UI() {
 			}
 
 		case wde.KeyTypedEvent:
+		case wde.ResizeEvent:
+			w.SetSize(ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize)
+
 		case wde.CloseEvent:
 			Disconnected()
 			return
