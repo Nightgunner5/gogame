@@ -54,6 +54,8 @@ const (
 	Light1SOff Tile = 38
 	Light1SOn  Tile = 39
 
+	TriggerSelectRole Tile = 40
+
 	TileWhiteNW     Tile = 64
 	TileGrayNW      Tile = 65
 	TileBlackNW     Tile = 66
@@ -127,7 +129,8 @@ const (
 )
 
 func (t Tile) Space() bool {
-	return t >= Space1
+	return (t >= Light1WOff && t <= Light1SOn) ||
+		t >= Space1
 }
 
 func (t Tile) Passable() bool {
@@ -244,6 +247,9 @@ func (t Tile) String() string {
 	case Light1SOn:
 		return "Light1SOn"
 
+	case TriggerSelectRole:
+		return "TriggerSelectRole"
+
 	case Space1:
 		return "Space1"
 	case Space2:
@@ -262,6 +268,10 @@ func (t Tile) String() string {
 		}
 	}
 	return strconv.FormatUint(uint64(t), 10)
+}
+
+func (t Tile) NoClient() bool {
+	return t == TriggerSelectRole
 }
 
 func (t Tile) describe() (string, bool) {
@@ -315,7 +325,7 @@ type MultiTile []Tile
 
 func (m MultiTile) Space() bool {
 	for _, t := range m {
-		if !t.Space() {
+		if !t.NoClient() && !t.Space() {
 			return false
 		}
 	}
@@ -324,7 +334,7 @@ func (m MultiTile) Space() bool {
 
 func (m MultiTile) Passable() bool {
 	for _, t := range m {
-		if !t.Passable() {
+		if !t.NoClient() && !t.Passable() {
 			return false
 		}
 	}
@@ -333,7 +343,7 @@ func (m MultiTile) Passable() bool {
 
 func (m MultiTile) Door() bool {
 	for _, t := range m {
-		if t.Door() {
+		if !t.NoClient() && t.Door() {
 			return true
 		}
 	}
@@ -342,7 +352,7 @@ func (m MultiTile) Door() bool {
 
 func (m MultiTile) BlocksVision() bool {
 	for _, t := range m {
-		if t.BlocksVision() {
+		if !t.NoClient() && t.BlocksVision() {
 			return true
 		}
 	}
@@ -355,7 +365,9 @@ func (m MultiTile) LightLevel() byte {
 	}
 	var light byte
 	for _, t := range m {
-		light += t.LightLevel()
+		if !t.NoClient() {
+			light += t.LightLevel()
+		}
 	}
 	return light
 }
@@ -383,11 +395,13 @@ func (m MultiTile) Describe() []string {
 
 	var description []string
 	for _, t := range m {
-		d, erase := t.describe()
-		if erase {
-			description = nil
+		if !t.NoClient() {
+			d, erase := t.describe()
+			if erase {
+				description = nil
+			}
+			description = append(description, d)
 		}
-		description = append(description, d)
 	}
 
 	for i, j := 0, len(description)-1; i < j; i, j = i+1, j-1 {

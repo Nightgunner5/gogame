@@ -33,14 +33,15 @@ const (
 
 type Player struct {
 	actor.Actor
-	ID        uint64 // network ID (public)
-	id        string // network ID (private)
-	x, y      int
-	flags     uint32
-	perms     Permission
-	send      chan<- *packet.Packet
-	onmove    <-chan message.Message
-	forcemove chan *packet.Packet
+	ID         uint64 // network ID (public)
+	id         string // network ID (private)
+	x, y       int
+	flags      uint32
+	hasSetRole bool
+	perms      Permission
+	send       chan<- *packet.Packet
+	onmove     <-chan message.Message
+	forcemove  chan *packet.Packet
 }
 
 func (p *Player) Initialize() (message.Receiver, func(message.Message)) {
@@ -140,12 +141,13 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			}
 
 			target := layout.Coord{p.x + dx, p.y + dy}
-			canMove := layout.GetCoord(target).Passable()
+			tile := layout.GetCoord(target)
+			canMove := tile.Passable()
 			if canMove && dx != 0 && dy != 0 {
 				canMove = canMove && (layout.Get(p.x+dx, p.y).Passable() ||
 					layout.Get(p.x, p.y+dy).Passable())
 			} else if !canMove && (dx == 0 || dy == 0) {
-				if layout.GetCoord(target).Door() {
+				if tile.Door() {
 					go world.OpenDoor(p, target)
 					continue
 				}
@@ -155,6 +157,18 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				moveRequest.X, moveRequest.Y = 0, 0
 				move = nil
 				continue
+			}
+
+			for _, t := range tile {
+				switch t {
+				case layout.TriggerSelectRole:
+					if !p.hasSetRole {
+						p.flags &^= packet.FlagSpriteMask
+						p.flags |= packet.FlagEngineer
+						p.perms = PermEngineer
+						p.hasSetRole = true
+					}
+				}
 			}
 
 			p.x += dx

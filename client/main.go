@@ -65,7 +65,9 @@ func Paint(w wde.Window, rect image.Rectangle) {
 				res.Tile(space, res.Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
 				draw.Draw(scene, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
 				for _, t := range layout.Get(x-xOffset, y-yOffset) {
-					res.Tile(scene, res.Terrain, uint16(t), x, y)
+					if !t.NoClient() {
+						res.Tile(scene, res.Terrain, uint16(t), x, y)
+					}
 				}
 			} else {
 				res.Tile(scene, image.Black, 0, x, y)

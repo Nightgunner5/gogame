@@ -85,6 +85,8 @@ func serve(id string, client net.Conn) {
 	var flags uint32
 	if handshake.Monkey {
 		flags |= packet.FlagMonkey
+	} else {
+		flags |= packet.FlagSuit
 	}
 
 	// TODO: names

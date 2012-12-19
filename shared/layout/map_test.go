@@ -11,11 +11,11 @@ const (
 	check = `                                   
       WWWWWWWW                     
  WWWWWWW____WWW                    
- WW___W______WW_                   
+ WW___W______WW                    
  WG___D_______G                    
  WG___W_______G                    
  WG___G_______G                    
- WW___W______WW_                   
+ WW___W______WW                    
  WWWDWWW____WWW                    
       WWWWDWWW                     
          G_G                       

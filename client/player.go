@@ -37,12 +37,9 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				p.x, p.y = m.X, m.Y
 
 				paintLock.RLock()
-				if p.paint.Sprite == HumanSuit || p.paint.Sprite == HumanSuitHelm {
-					if layout.Get(p.x, p.y).Space() {
-						p.paint.Sprite = HumanSuitHelm
-					} else {
-						p.paint.Sprite = HumanSuit
-					}
+				p.paint.Sprite = uint16(m.Flags & packet.FlagSpriteMask)
+				if p.paint.Sprite == res.HumanSuit && layout.Get(p.x, p.y).Space() {
+					p.paint.Sprite = res.HumanSuitHelm
 				}
 				if p.paint.Changed.IsZero() {
 					p.paint.From.X, p.paint.From.Y = p.x, p.y
@@ -90,9 +87,9 @@ func NewPlayer(isLocalPlayer, monkey bool) *Player {
 	player.isLocalPlayer = isLocalPlayer
 	player.paint = new(PaintContext)
 	if monkey {
-		player.paint.Sprite = Monkey
+		player.paint.Sprite = res.Monkey
 	} else {
-		player.paint.Sprite = HumanSuit
+		player.paint.Sprite = res.HumanSuit
 	}
 	if isLocalPlayer {
 		player.paint.Changed = time.Now()
@@ -110,6 +107,7 @@ var (
 
 type SetLocation struct {
 	layout.Coord
+	Flags uint32
 }
 
 func (SetLocation) Kind() message.Kind {

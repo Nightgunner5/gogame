@@ -16,8 +16,15 @@ type Location struct {
 }
 
 const (
-	FlagNone uint32 = (1 << iota) >> 1
-	FlagMonkey
+	FlagNone       uint32 = 0
+	FlagSpriteMask uint32 = 7
+	FlagSuit       uint32 = 1
+	FlagSuitHelm   uint32 = 2
+	FlagMonkey     uint32 = 3
+	FlagSecurity   uint32 = 4
+	FlagEngineer   uint32 = 5
+	FlagMedic      uint32 = 6
+	_              uint32 = 7
 )
 
 func (Location) Kind() message.Kind {

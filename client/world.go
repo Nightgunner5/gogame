@@ -49,11 +49,11 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender) {
 		case packet.Location:
 			id, coord := m.ID, m.Coord
 			if _, ok := w.idToActor[id]; !ok {
-				a := &NewPlayer(false, m.Flags&packet.FlagMonkey == packet.FlagMonkey).Actor
+				a := &NewPlayer(false, m.Flags&packet.FlagSpriteMask == packet.FlagMonkey).Actor
 				w.idToActor[id] = a
 				go w.addHeld(a)
 			}
-			w.idToActor[id].Send <- SetLocation{coord}
+			w.idToActor[id].Send <- SetLocation{coord, m.Flags}
 
 		case packet.Despawn:
 			if a, ok := w.idToActor[m.ID]; ok {

@@ -71,11 +71,7 @@ func SetCoord(coord Coord, check, t MultiTile) bool {
 
 	if old.equal(check) {
 		if old.BlocksVision() != t.BlocksVision() {
-			if old.Door() || t.Door() {
-				visInvalidateRecursive(coord)
-			} else {
-				visInvalidate(coord)
-			}
+			visInvalidateAll()
 		}
 		currentLayout[coord] = t
 		version++
