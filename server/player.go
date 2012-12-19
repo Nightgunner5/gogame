@@ -6,6 +6,7 @@ import (
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"log"
+	"math/rand"
 	"time"
 )
 
@@ -164,8 +165,17 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				case layout.TriggerSelectRole:
 					if !p.hasSetRole {
 						p.flags &^= packet.FlagSpriteMask
-						p.flags |= packet.FlagEngineer
-						p.perms = PermEngineer
+						switch rand.Intn(3) {
+						case 0:
+							p.flags |= packet.FlagSecurity
+							p.perms = PermSecurity
+						case 1:
+							p.flags |= packet.FlagEngineer
+							p.perms = PermEngineer
+						case 2:
+							p.flags |= packet.FlagMedic
+							p.perms = PermMedical
+						}
 						p.hasSetRole = true
 					}
 				}
