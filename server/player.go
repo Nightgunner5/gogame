@@ -164,17 +164,21 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				switch t {
 				case layout.TriggerSelectRole:
 					if !p.hasSetRole {
-						p.flags &^= packet.FlagSpriteMask
+						var flags uint32
 						switch rand.Intn(3) {
 						case 0:
-							p.flags |= packet.FlagSecurity
+							flags = packet.FlagSecurity
 							p.perms = PermSecurity
 						case 1:
-							p.flags |= packet.FlagEngineer
+							flags = packet.FlagEngineer
 							p.perms = PermEngineer
 						case 2:
-							p.flags |= packet.FlagMedic
+							flags = packet.FlagMedic
 							p.perms = PermMedical
+						}
+						if p.flags&packet.FlagSpriteMask != packet.FlagMonkey {
+							p.flags &^= packet.FlagSpriteMask
+							p.flags |= flags
 						}
 						p.hasSetRole = true
 					}
