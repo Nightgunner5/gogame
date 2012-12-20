@@ -35,7 +35,7 @@ func main() {
 		if monkey {
 			for {
 				go connectTo("monkey", *addr)
-				time.Sleep(time.Minute)
+				time.Sleep(time.Second)
 			}
 		}
 		connectTo(*user, *addr)
