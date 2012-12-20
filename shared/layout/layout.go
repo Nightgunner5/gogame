@@ -53,16 +53,15 @@ func GetChanges() map[Coord]MultiTile {
 
 func SetChanges(m map[Coord]MultiTile) {
 	layoutLock.Lock()
-	defer layoutLock.Unlock()
-
 	currentLayout = m
 	version++
+	layoutLock.Unlock()
+
 	visInvalidateAll()
 }
 
 func SetCoord(coord Coord, check, t MultiTile) bool {
 	layoutLock.Lock()
-	defer layoutLock.Unlock()
 
 	old := currentLayout[coord]
 	if old == nil {
@@ -70,14 +69,16 @@ func SetCoord(coord Coord, check, t MultiTile) bool {
 	}
 
 	if old.equal(check) {
+		currentLayout[coord] = t
+		version++
+		layoutLock.Unlock()
 		if old.BlocksVision() != t.BlocksVision() {
 			visInvalidateAll()
 		}
-		currentLayout[coord] = t
-		version++
 		OnChange(coord, t)
 		return true
 	}
+	layoutLock.Unlock()
 	return false
 }
 

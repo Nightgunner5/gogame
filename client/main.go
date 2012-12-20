@@ -50,6 +50,8 @@ var (
 	space    = image.NewRGBA(viewport.Bounds())
 	scene    = image.NewRGBA(viewport.Bounds())
 	light    = new(lighting.Lighting)
+
+	paints uint64
 )
 
 func Paint(w wde.Window, rect image.Rectangle) {
@@ -75,7 +77,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 		}
 	}
 
-	hasAnimation := false
+	var hasAnimation image.Rectangle
 	paintLock.Lock()
 	for _, p := range paintContexts {
 		if layout.Visible(center, p.To) {
@@ -87,7 +89,12 @@ func Paint(w wde.Window, rect image.Rectangle) {
 				if interp >= 1 {
 					res.Tile(scene, res.Actors, p.Sprite, x2, y2)
 				} else {
-					hasAnimation = true
+					toInvalidate := image.Rect(x1, y1, x1+1, y1+1).Union(image.Rect(x2, y2, x2+1, y2+1))
+					if hasAnimation.Empty() {
+						hasAnimation = toInvalidate
+					} else {
+						hasAnimation = hasAnimation.Union(toInvalidate)
+					}
 					res.TileFloat(scene, res.Actors, p.Sprite, x1, y1, x2, y2, interp)
 				}
 			}
@@ -103,9 +110,18 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	res.DrawString(viewport, mouseTileString, color.White, res.FontSmall, 1, 1)
 	mouseTileLock.Unlock()
 
-	if hasAnimation {
-		Invalidate(rect)
+	if !hasAnimation.Empty() {
+		Invalidate(image.Rectangle{hasAnimation.Min.Mul(1 << res.TileSize), hasAnimation.Max.Mul(1 << res.TileSize)})
 	}
+
+	paints++
+	/* // For debugging paints
+	res.DrawString(viewport, strconv.FormatUint(paints, 10), color.White, res.FontSmall, 300, 1)
+	draw.Draw(viewport, image.Rectangle{rect.Min, image.Pt(rect.Max.X+1, rect.Min.Y+1)}, image.White, image.ZP, draw.Src)
+	draw.Draw(viewport, image.Rectangle{image.Pt(rect.Min.X-1, rect.Max.Y-1), rect.Max}, image.White, image.ZP, draw.Src)
+	draw.Draw(viewport, image.Rectangle{rect.Min, image.Pt(rect.Min.X+1, rect.Max.Y+1)}, image.White, image.ZP, draw.Src)
+	draw.Draw(viewport, image.Rectangle{image.Pt(rect.Max.X-1, rect.Min.Y-1), rect.Max}, image.White, image.ZP, draw.Src)
+	//*/
 
 	w.Screen().CopyRGBA(viewport, viewport.Bounds())
 
@@ -160,19 +176,23 @@ func UI() {
 		case wde.MouseMovedEvent:
 			xOffset, yOffset := GetTopLeft()
 
-			mouseTile.X, mouseTile.Y = e.Where.X>>res.TileSize-xOffset, e.Where.Y>>res.TileSize-yOffset
-			if layout.Visible(layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}, mouseTile) {
-				tooltip := strings.Join(layout.GetCoord(mouseTile).Describe(), ", ")
+			newX, newY := e.Where.X>>res.TileSize-xOffset, e.Where.Y>>res.TileSize-yOffset
+			if newX != mouseTile.X || newY != mouseTile.Y {
+				mouseTile.X, mouseTile.Y = newX, newY
 
-				mouseTileLock.Lock()
-				mouseTileString = tooltip
-				mouseTileLock.Unlock()
-			} else {
-				mouseTileLock.Lock()
-				mouseTileString = ""
-				mouseTileLock.Unlock()
+				if layout.Visible(layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}, mouseTile) {
+					tooltip := strings.Join(layout.GetCoord(mouseTile).Describe(), ", ")
+
+					mouseTileLock.Lock()
+					mouseTileString = tooltip
+					mouseTileLock.Unlock()
+				} else {
+					mouseTileLock.Lock()
+					mouseTileString = ""
+					mouseTileLock.Unlock()
+				}
+				Invalidate(image.Rect(0, 0, ViewportWidth<<res.TileSize, 1<<res.TileSize))
 			}
-			Invalidate(image.Rect(0, 0, ViewportWidth<<res.TileSize, 1<<res.TileSize))
 
 		case wde.MouseDownEvent:
 		case wde.MouseUpEvent:
