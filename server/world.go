@@ -102,13 +102,13 @@ func (w *World) OpenDoor(opener *Player, coord layout.Coord) {
 func sendSendLocation(a *actor.Actor, c SendLocation) {
 	// This function will only panic if a player disconnects between another
 	// player joining and the location sender being recieved.
-	defer recover()
+	defer func() { recover() }()
 
 	a.Send <- c
 }
 
 func sendLayoutChanged(a *actor.Actor, c LayoutChanged) {
-	defer recover()
+	defer func() { recover() }()
 
 	a.Send <- c
 }
