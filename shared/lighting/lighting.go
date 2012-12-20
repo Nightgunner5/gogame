@@ -2,6 +2,7 @@ package lighting
 
 import (
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/power"
 	"github.com/Nightgunner5/gogame/shared/res"
 	"image"
 	"math"
@@ -109,7 +110,7 @@ func (l *Lighting) initializeImage() {
 
 func (l *Lighting) recalculateLightmap() {
 	layout.AllTiles(func(c layout.Coord, t layout.MultiTile) {
-		if brightness := t.LightLevel(); brightness != 0 {
+		if brightness := t.LightLevel(); brightness != 0 && power.Powered(c.X, c.Y) {
 			l.spread(c, brightness)
 		}
 	})

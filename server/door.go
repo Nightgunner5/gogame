@@ -4,6 +4,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/power"
 	"time"
 )
 
@@ -36,7 +37,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 			switch m := msg.(type) {
 			case OpenDoor:
-				if !d.open && m.Opener.HasPermissions(d.permission) {
+				if !d.open && power.Powered(d.coord.X, d.coord.Y) && m.Opener.HasPermissions(d.permission) {
 					d.open = true
 					for {
 						orig := layout.GetCoord(d.coord)
@@ -62,7 +63,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 		case <-closeDoor:
 			closeDoor = nil
-			if d.open {
+			if d.open && power.Powered(d.coord.X, d.coord.Y) {
 				d.open = false
 				for {
 					orig := layout.GetCoord(d.coord)

@@ -382,9 +382,6 @@ func (m MultiTile) BlocksVision() bool {
 }
 
 func (m MultiTile) LightLevel() byte {
-	if m.Space() {
-		return 30
-	}
 	var light byte
 	for _, t := range m {
 		if !t.NoClient() {
@@ -411,11 +408,12 @@ func (m MultiTile) String() string {
 }
 
 func (m MultiTile) Describe() []string {
+	var description []string
+
 	if m.Space() {
-		return []string{"space"}
+		description = append(description, "space")
 	}
 
-	var description []string
 	for _, t := range m {
 		if !t.NoClient() {
 			d, erase := t.describe()
