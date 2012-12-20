@@ -23,6 +23,8 @@ func init() {
 	keyUp[wde.KeyRightArrow] = updateMotion
 
 	keyDown[wde.KeyL] = toggleLights
+	keyDown[wde.KeyW] = toggleWires
+	keyDown[wde.KeyV] = toggleVisibility
 }
 
 func updateMotion(keys map[string]bool) {
@@ -51,8 +53,28 @@ func updateMotion(keys map[string]bool) {
 
 func toggleLights(keys map[string]bool) {
 	for {
-		old := atomic.LoadUint32(&lightsOn)
-		if atomic.CompareAndSwapUint32(&lightsOn, old, old^1) {
+		old := atomic.LoadUint32(&viewFlags)
+		if atomic.CompareAndSwapUint32(&viewFlags, old, old^1) {
+			break
+		}
+	}
+	Invalidate(viewport.Bounds())
+}
+
+func toggleWires(keys map[string]bool) {
+	for {
+		old := atomic.LoadUint32(&viewFlags)
+		if atomic.CompareAndSwapUint32(&viewFlags, old, old^2) {
+			break
+		}
+	}
+	Invalidate(viewport.Bounds())
+}
+
+func toggleVisibility(keys map[string]bool) {
+	for {
+		old := atomic.LoadUint32(&viewFlags)
+		if atomic.CompareAndSwapUint32(&viewFlags, old, old^4) {
 			break
 		}
 	}
@@ -64,11 +86,19 @@ var (
 	topLeftDx, topLeftDy      int64 = 0, 0
 	updateLocationImmediately       = make(chan struct{}, 1)
 
-	lightsOn uint32
+	viewFlags uint32
 )
 
 func LightsOn() bool {
-	return atomic.LoadUint32(&lightsOn) != 0
+	return atomic.LoadUint32(&viewFlags)&1 != 0
+}
+
+func WireView() bool {
+	return atomic.LoadUint32(&viewFlags)&2 != 0
+}
+
+func VisibilityOn() bool {
+	return atomic.LoadUint32(&viewFlags)&4 != 0
 }
 
 func GetTopLeft() (x, y int) {

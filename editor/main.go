@@ -53,12 +53,23 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	minX, maxX := rect.Min.X>>res.TileSize, (rect.Max.X-1)>>res.TileSize+1
 	minY, maxY := rect.Min.Y>>res.TileSize, (rect.Max.Y-1)>>res.TileSize+1
 
+	center := layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}
 	for x := minX; x < maxX; x++ {
 		for y := minY; y < maxY; y++ {
 			res.Tile(space, res.Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
 			draw.Draw(scene, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
-			for _, t := range layout.Get(x-xOffset, y-yOffset) {
-				res.Tile(scene, res.Terrain, uint16(t), x, y)
+			if WireView() {
+				tile := layout.Get(x-xOffset, y-yOffset)
+				for i := len(tile) - 1; i >= 0; i-- {
+					res.Tile(scene, res.Terrain, uint16(tile[i]), x, y)
+				}
+			} else {
+				for _, t := range layout.Get(x-xOffset, y-yOffset) {
+					res.Tile(scene, res.Terrain, uint16(t), x, y)
+				}
+			}
+			if VisibilityOn() && !layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
+				res.Tile(scene, image.Black, 0, x, y)
 			}
 		}
 	}
@@ -176,7 +187,22 @@ func UI() {
 			case wde.LeftButton:
 				mouseLock.Lock()
 				if mouseValid {
-					for !layout.SetCoord(mouseCoord, layout.GetCoord(mouseCoord), append(append(layout.MultiTile{}, layout.GetCoord(mouseCoord)...), mouseTile)) {
+					for {
+						old := layout.GetCoord(mouseCoord)
+						var changed layout.MultiTile
+
+						if WireView() {
+							changed = append(changed, mouseTile)
+							changed = append(changed, old...)
+						} else {
+							changed = append(changed, old...)
+
+							changed = append(changed, mouseTile)
+						}
+
+						if layout.SetCoord(mouseCoord, old, changed) {
+							break
+						}
 					}
 				} else {
 					for {
@@ -184,8 +210,12 @@ func UI() {
 						if len(tile) == 0 {
 							break
 						}
-						if layout.SetCoord(mouseCoord, tile, tile[:len(tile)-1]) {
-							mouseTile = tile[len(tile)-1]
+						t, removed := tile[len(tile)-1], tile[:len(tile)-1]
+						if WireView() {
+							t, removed = tile[0], tile[1:]
+						}
+						if layout.SetCoord(mouseCoord, tile, removed) {
+							mouseTile = t
 							mouseValid = true
 							break
 						}

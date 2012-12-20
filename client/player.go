@@ -11,6 +11,22 @@ import (
 	"time"
 )
 
+var (
+	topLeftX    int64 = ViewportWidth / 2
+	topLeftY    int64 = ViewportHeight / 2
+	playerFlags uint32
+)
+
+func GetTopLeft() (x, y int) {
+	x = int(atomic.LoadInt64(&topLeftX))
+	y = int(atomic.LoadInt64(&topLeftY))
+	return
+}
+
+func GetPlayerFlags() uint32 {
+	return atomic.LoadUint32(&playerFlags)
+}
+
 type Player struct {
 	actor.Actor
 	x, y          int
@@ -35,6 +51,8 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			if p.x != m.X || p.y != m.Y {
 				Invalidate(p.screenRect())
 				p.x, p.y = m.X, m.Y
+
+				atomic.StoreUint32(&playerFlags, m.Flags)
 
 				paintLock.RLock()
 				p.paint.Sprite = uint16(m.Flags & packet.FlagSpriteMask)

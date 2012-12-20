@@ -5,18 +5,7 @@ import (
 	"github.com/Nightgunner5/gogame/engine/message"
 	"github.com/Nightgunner5/gogame/shared/layout"
 	"github.com/Nightgunner5/gogame/shared/packet"
-	"sync/atomic"
 )
-
-var (
-	topLeftX, topLeftY int64 = ViewportWidth / 2, ViewportHeight / 2
-)
-
-func GetTopLeft() (x, y int) {
-	x = int(atomic.LoadInt64(&topLeftX))
-	y = int(atomic.LoadInt64(&topLeftY))
-	return
-}
 
 var Network chan<- *packet.Packet
 
