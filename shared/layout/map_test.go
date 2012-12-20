@@ -35,8 +35,10 @@ const (
               W______________G___W 
               WW_______WWGGWDW___W 
               WWWWWWWDWWW____D___W 
-               WWWWWWWWWW____W___W 
-                        WWWWWWWWWW 
+              WGG_______W____W___W 
+              WGG_______WWWWWWWWWW 
+              W_________WWW        
+              WWWWWWWWWWWW         
                                    `
 )
 
