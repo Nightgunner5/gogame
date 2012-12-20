@@ -104,10 +104,10 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	mouseTileLock.Unlock()
 
 	if hasAnimation {
-		Invalidate(viewport.Bounds())
+		Invalidate(rect)
 	}
 
-	w.Screen().CopyRGBA(viewport, viewport.Bounds())
+	w.Screen().CopyRGBA(viewport.SubImage(rect).(*image.RGBA), rect)
 
 	w.FlushImage(rect)
 }

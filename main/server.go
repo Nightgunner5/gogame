@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/gob"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
@@ -59,7 +60,8 @@ func serve(id string, client net.Conn) {
 	defer client.Close()
 	defer log.Printf("[client:%s] disconnected", id)
 
-	encode, decode := gob.NewEncoder(client), gob.NewDecoder(client)
+	bufclient := bufio.NewWriter(client)
+	encode, decode := gob.NewEncoder(bufclient), gob.NewDecoder(client)
 
 	var handshake Handshake
 	if err := decode.Decode(&handshake); err != nil {
@@ -70,11 +72,7 @@ func serve(id string, client net.Conn) {
 
 	send := make(chan *packet.Packet)
 
-	if handshake.Monkey {
-		go serverMonkeyEncode(send)
-	} else {
-		go serverEncode(id, encode, client, send)
-	}
+	go serverEncode(id, bufclient, encode, client, send)
 
 	defer close(send)
 	if !addUser(send, handshake) {
@@ -111,17 +109,25 @@ func serve(id string, client net.Conn) {
 	}
 }
 
-func serverMonkeyEncode(send <-chan *packet.Packet) {
-	for _ = range send {
-	}
-}
+func serverEncode(id string, bufclient *bufio.Writer, encode *gob.Encoder, client net.Conn, send <-chan *packet.Packet) {
+	tick := time.NewTicker(time.Second / 20)
+	defer tick.Stop()
 
-func serverEncode(id string, encode *gob.Encoder, client net.Conn, send <-chan *packet.Packet) {
-	for msg := range send {
-		client.SetWriteDeadline(time.Now().Add(30 * time.Second))
-		err := encode.Encode(msg)
-		if err != nil {
-			log.Printf("[client:%s] encoding packet: %s", id, err)
+	for {
+		select {
+		case msg, ok := <-send:
+			if !ok {
+				return
+			}
+			if err := encode.Encode(msg); err != nil {
+				log.Printf("[client:%s] encoding packet: %s", id, err)
+			}
+
+		case <-tick.C:
+			client.SetWriteDeadline(time.Now().Add(30 * time.Second))
+			if err := bufclient.Flush(); err != nil {
+				log.Printf("[client:%s] sending buffer: %s", id, err)
+			}
 		}
 	}
 }

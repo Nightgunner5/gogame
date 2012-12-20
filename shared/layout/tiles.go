@@ -56,6 +56,12 @@ const (
 
 	TriggerSelectRole Tile = 40
 
+	Generator Tile = 41
+	WireW     Tile = 42
+	WireN     Tile = 43
+	WireE     Tile = 44
+	WireS     Tile = 45
+
 	TileWhiteNW     Tile = 64
 	TileGrayNW      Tile = 65
 	TileBlackNW     Tile = 66
@@ -130,6 +136,7 @@ const (
 
 func (t Tile) Space() bool {
 	return (t >= Light1WOff && t <= Light1SOn) ||
+		(t >= WireW && t <= WireS) ||
 		t >= Space1
 }
 
@@ -137,12 +144,11 @@ func (t Tile) Passable() bool {
 	return (t >= TileWhite && t <= TilePink) ||
 		(t >= TileWhiteNW && t <= TilePinkSE) ||
 		(t.Door() && t&1 == 0) ||
-		(t >= Light1WOff && t <= Light1SOn) ||
 		t.Space()
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window && t != Computer && t != Safe
+	return !t.Passable() && t != Window && t != Computer && t != Safe && t != Generator
 }
 
 func (t Tile) Door() bool {
@@ -153,7 +159,7 @@ func (t Tile) LightLevel() byte {
 	if t >= Light1WOn && t <= Light1SOn && t&1 == 1 {
 		return 80
 	}
-	if t == Computer {
+	if t == Computer || t == Generator {
 		return 35
 	}
 	return 0
@@ -250,6 +256,17 @@ func (t Tile) String() string {
 	case TriggerSelectRole:
 		return "TriggerSelectRole"
 
+	case Generator:
+		return "Generator"
+	case WireW:
+		return "WireW"
+	case WireN:
+		return "WireN"
+	case WireE:
+		return "WireE"
+	case WireS:
+		return "WireS"
+
 	case Space1:
 		return "Space1"
 	case Space2:
@@ -311,6 +328,11 @@ func (t Tile) describe() (string, bool) {
 		return "light socket", false
 	case Light1WOn, Light1NOn, Light1EOn, Light1SOn:
 		return "flourescent light", false
+
+	case Generator:
+		return "generator", false
+	case WireW, WireN, WireE, WireS:
+		return "wire", true
 	}
 
 	// quarter floor tiles

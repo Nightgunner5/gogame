@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/gob"
 	"github.com/Nightgunner5/gogame/shared/packet"
 	"io"
@@ -22,7 +23,8 @@ func client(username string, server io.ReadWriteCloser) {
 	defer server.Close()
 	defer log.Print("Server disconnected")
 
-	encode, decode := gob.NewEncoder(server), gob.NewDecoder(server)
+	buf := bufio.NewWriter(server)
+	encode, decode := gob.NewEncoder(buf), gob.NewDecoder(server)
 
 	var handshake Handshake
 	if err := encode.Encode(handshake); err != nil {
@@ -35,7 +37,7 @@ func client(username string, server io.ReadWriteCloser) {
 
 	clientpkg.Network = send
 
-	go clientEncode(encode, send)
+	go clientEncode(encode, buf, send)
 	go clientDecode(decode)
 
 	go keepAlive(send)
@@ -51,10 +53,13 @@ func keepAlive(c chan<- *packet.Packet) {
 	}
 }
 
-func clientEncode(encode *gob.Encoder, send <-chan *packet.Packet) {
+func clientEncode(encode *gob.Encoder, buf *bufio.Writer, send <-chan *packet.Packet) {
 	for msg := range send {
 		if err := encode.Encode(msg); err != nil {
 			log.Printf("Error encoding packet: %s", err)
+		}
+		if err := buf.Flush(); err != nil {
+			log.Printf("Error writing buffer: %s", err)
 		}
 	}
 }
