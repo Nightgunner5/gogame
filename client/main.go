@@ -107,7 +107,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 		Invalidate(rect)
 	}
 
-	w.Screen().CopyRGBA(viewport.SubImage(rect).(*image.RGBA), rect)
+	w.Screen().CopyRGBA(viewport, viewport.Bounds())
 
 	w.FlushImage(rect)
 }
