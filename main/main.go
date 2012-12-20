@@ -13,6 +13,8 @@ var (
 	server = flag.Bool("server", DefaultServer, "Start in server mode")
 	addr   = flag.String("addr", DefaultAddr, "Address to listen on or connect to")
 	user   = flag.String("user", os.Getenv("USER"), "Username (ignored in server mode)")
+
+	monkey = false
 )
 
 type Handshake struct {
@@ -30,6 +32,12 @@ func main() {
 	if *server {
 		listenAndServe(*addr)
 	} else {
+		if monkey {
+			for {
+				go connectTo("monkey", *addr)
+				time.Sleep(time.Minute)
+			}
+		}
 		connectTo(*user, *addr)
 	}
 }

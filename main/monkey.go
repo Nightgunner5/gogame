@@ -20,6 +20,10 @@ const (
 	DefaultServer = false
 )
 
+func init() {
+	monkey = true
+}
+
 func client(username string, server io.ReadWriteCloser) {
 	log.Print("Connected to server")
 	defer server.Close()
