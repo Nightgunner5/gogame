@@ -15,7 +15,7 @@ type SendLocation struct {
 }
 
 type MoveIntoView struct {
-	*packet.Location
+	*packet.Packet
 }
 
 func (SendLocation) Kind() message.Kind {

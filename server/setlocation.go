@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/Nightgunner5/gogame/engine/actor"
 	"github.com/Nightgunner5/gogame/engine/message"
-	"github.com/Nightgunner5/gogame/shared/layout"
+	"github.com/Nightgunner5/gogame/shared/packet"
 )
 
 var (
@@ -11,10 +11,8 @@ var (
 )
 
 type SetLocation struct {
-	ID    uint64
 	Actor *actor.Actor
-	Flags uint32
-	Coord layout.Coord
+	*packet.Packet
 }
 
 func (SetLocation) Kind() message.Kind {

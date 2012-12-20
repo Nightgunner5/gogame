@@ -36,7 +36,7 @@ type Player struct {
 	actor.Actor
 	ID         uint64 // network ID (public)
 	id         string // network ID (private)
-	x, y       int
+	coord      layout.Coord
 	flags      uint32
 	hasSetRole bool
 	perms      Permission
@@ -89,7 +89,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				case m.forcemove <- &packet.Packet{
 					Location: &packet.Location{
 						ID:    p.ID,
-						Coord: layout.Coord{p.x, p.y},
+						Coord: p.coord,
 						Flags: p.flags,
 					},
 				}:
@@ -104,23 +104,25 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				}
 
 			case LayoutChanged:
-				if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
+				if layout.Visible(p.coord, m.Coord) {
 					go func(m SetLocation) {
 						world.Send <- m
 					}(SetLocation{
-						ID:    p.ID,
 						Actor: &p.Actor,
-						Flags: p.flags,
-						Coord: layout.Coord{p.x, p.y},
+						Packet: &packet.Packet{
+							Location: &packet.Location{
+								ID:    p.ID,
+								Coord: p.coord,
+								Flags: p.flags,
+							},
+						},
 					})
 				}
 
 			case MoveIntoView:
-				if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
-					p.send <- &packet.Packet{
-						Location: m.Location,
-					}
-					canSee[m.ID] = true
+				if layout.Visible(p.coord, m.Location.Coord) {
+					p.send <- m.Packet
+					canSee[m.Location.ID] = true
 				}
 
 			default:
@@ -141,12 +143,13 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				continue
 			}
 
-			target := layout.Coord{p.x + dx, p.y + dy}
+			x, y := p.coord.X, p.coord.Y
+			target := layout.Coord{x + dx, y + dy}
 			tile := layout.GetCoord(target)
 			canMove := tile.Passable()
 			if canMove && dx != 0 && dy != 0 {
-				canMove = canMove && (layout.Get(p.x+dx, p.y).Passable() ||
-					layout.Get(p.x, p.y+dy).Passable())
+				canMove = canMove && (layout.Get(x+dx, y).Passable() ||
+					layout.Get(x, y+dy).Passable())
 			} else if !canMove && (dx == 0 || dy == 0) {
 				if tile.Door() {
 					go world.OpenDoor(p, target)
@@ -185,20 +188,24 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				}
 			}
 
-			p.x += dx
-			p.y += dy
+			p.coord.X += dx
+			p.coord.Y += dy
 
 			go func(m SetLocation) {
 				world.Send <- m
 			}(SetLocation{
-				ID:    p.ID,
 				Actor: &p.Actor,
-				Flags: p.flags,
-				Coord: layout.Coord{p.x, p.y},
+				Packet: &packet.Packet{
+					Location: &packet.Location{
+						ID:    p.ID,
+						Coord: p.coord,
+						Flags: p.flags,
+					},
+				},
 			})
 
 		case msg := <-p.forcemove:
-			if layout.Visible(layout.Coord{p.x, p.y}, msg.Location.Coord) {
+			if layout.Visible(p.coord, msg.Location.Coord) {
 				canSee[msg.Location.ID] = true
 				p.send <- msg
 			} else if canSee[msg.Location.ID] {
@@ -212,33 +219,23 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 		case msg := <-p.onmove:
 			m := msg.(SetLocation)
-			if layout.Visible(layout.Coord{p.x, p.y}, m.Coord) {
-				if !canSee[m.ID] {
+			if layout.Visible(p.coord, m.Location.Coord) {
+				if !canSee[m.Location.ID] {
 					go func(a *actor.Actor, m MoveIntoView) {
 						a.Send <- m
 					}(m.Actor, MoveIntoView{
-						Location: &packet.Location{
-							ID:    p.ID,
-							Coord: layout.Coord{p.x, p.y},
-							Flags: p.flags,
-						},
+						Packet: m.Packet,
 					})
-					canSee[m.ID] = true
+					canSee[m.Location.ID] = true
 				}
-				p.send <- &packet.Packet{
-					Location: &packet.Location{
-						ID:    m.ID,
-						Coord: m.Coord,
-						Flags: m.Flags,
-					},
-				}
-			} else if canSee[m.ID] {
+				p.send <- m.Packet
+			} else if canSee[m.Location.ID] {
 				p.send <- &packet.Packet{
 					Despawn: &packet.Despawn{
-						ID: m.ID,
+						ID: m.Location.ID,
 					},
 				}
-				delete(canSee, m.ID)
+				delete(canSee, m.Location.ID)
 			}
 		}
 	}
@@ -276,10 +273,14 @@ func NewPlayer(id string, send chan<- *packet.Packet, flags uint32) (player *Pla
 	world.Send <- actor.AddHeld{&player.Actor}
 	world.onConnect <- player
 	world.Send <- SetLocation{
-		ID:    player.ID,
 		Actor: &player.Actor,
-		Flags: flags,
-		Coord: layout.Coord{player.x, player.y},
+		Packet: &packet.Packet{
+			Location: &packet.Location{
+				ID:    player.ID,
+				Coord: player.coord,
+				Flags: flags,
+			},
+		},
 	}
 
 	return

@@ -53,8 +53,8 @@ func (w *World) dispatch(msgIn message.Receiver, messages message.Sender, broadc
 
 			switch m := msg.(type) {
 			case SetLocation:
-				w.idToActor[m.ID] = m.Actor
-				w.location[m.Actor] = m.Coord
+				w.idToActor[m.Location.ID] = m.Actor
+				w.location[m.Actor] = m.Location.Coord
 
 				go broadcast(m)
 
