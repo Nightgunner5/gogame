@@ -222,6 +222,10 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			if layout.Visible(p.coord, m.Location.Coord) {
 				if !canSee[m.Location.ID] {
 					go func(a *actor.Actor, m MoveIntoView) {
+						defer func() {
+							recover()
+						}()
+
 						a.Send <- m
 					}(m.Actor, MoveIntoView{
 						Packet: m.Packet,
