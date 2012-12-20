@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"net"
 	"os"
+	"time"
 )
 
 var (
@@ -22,6 +24,8 @@ func main() {
 	if *addr == "" {
 		log.Fatalf("error: must specify -addr. see -help for arguments.")
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	if *server {
 		listenAndServe(*addr)

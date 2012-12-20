@@ -43,7 +43,6 @@ func client(username string, server io.ReadWriteCloser) {
 	go clientEncode(encode, buf, send)
 	go io.Copy(ioutil.Discard, server)
 
-	rand.Seed(time.Now().UnixNano())
 	for {
 		send <- &packet.Packet{
 			Location: &packet.Location{
