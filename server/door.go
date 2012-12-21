@@ -80,6 +80,8 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 						break
 					}
 				}
+			} else if d.open {
+				closeDoor = time.After(10 * time.Second)
 			}
 		}
 	}

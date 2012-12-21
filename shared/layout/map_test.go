@@ -28,16 +28,16 @@ const (
        W______WW__WW___WWWDWWW     
        W______D____W__GW_____WWWWW 
        G______W____W___W_____W___W 
-       GGGGGGWW____WW_WW_____D___W 
-             WW____WWDWW_____W___W 
-              W________WWGGWDW___W 
-              W______________d___W 
+       GGGGGWGW____WW_WW_____D___W 
+            WGW____WWDWW_____W___W 
+            WWW________WWGGWDW___W 
+             WW______________d___W 
               W______________G___W 
               WW_______WWGGWDW___W 
               WWWWWWWDWWW____D___W 
-              WGG_______W____W___W 
-              WGG_______WWWWWWWWWW 
-              W_________WWW        
+              WW_______GW____W___W 
+              WW________WWWWWWWWWW 
+              WW________WWW        
               WWWWWWWWWWWW         
                                    `
 )

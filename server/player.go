@@ -103,6 +103,39 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 					move <- struct{}{}
 				}
 
+			case packet.Interact:
+				dx, dy := p.coord.X-m.X, p.coord.Y-m.Y
+				if dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1 {
+					tile := layout.GetCoord(m.Coord)
+					if tile.Door() {
+						world.OpenDoor(p, m.Coord)
+						goto doneInteract
+					}
+					if p.perms&PermSecurity == PermSecurity {
+					}
+					if p.perms&PermEngineer == PermEngineer {
+						for i, t := range tile {
+							if t == layout.Generator {
+								newTile := make(layout.MultiTile, len(tile))
+								copy(newTile, tile)
+								newTile[i] = layout.GeneratorOff
+								layout.SetCoord(m.Coord, tile, newTile) // If it fails, it fails.
+								goto doneInteract
+							} else if t == layout.GeneratorOff {
+								newTile := make(layout.MultiTile, len(tile))
+								copy(newTile, tile)
+								newTile[i] = layout.Generator
+								layout.SetCoord(m.Coord, tile, newTile) // If it fails, it fails.
+								goto doneInteract
+							}
+						}
+					}
+					if p.perms&PermMedical == PermMedical {
+					}
+				}
+			doneInteract:
+				continue
+
 			case LayoutChanged:
 				if layout.Visible(p.coord, m.Coord) {
 					go func(m SetLocation) {

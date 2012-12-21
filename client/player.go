@@ -52,7 +52,9 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 				Invalidate(p.screenRect())
 				p.x, p.y = m.X, m.Y
 
-				atomic.StoreUint32(&playerFlags, m.Flags)
+				if p.isLocalPlayer {
+					atomic.StoreUint32(&playerFlags, m.Flags)
+				}
 
 				paintLock.RLock()
 				p.paint.Sprite = uint16(m.Flags & packet.FlagSpriteMask)

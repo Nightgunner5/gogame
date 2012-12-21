@@ -13,6 +13,9 @@ func Dispatch(player *Player, msg *packet.Packet) bool {
 			player.Send <- *msg.Location
 		}
 
+	case msg.Interact != nil:
+		player.Send <- *msg.Interact
+
 	default:
 		log.Printf("Client %q sent unknown packet %#v", player.id, msg)
 		return false

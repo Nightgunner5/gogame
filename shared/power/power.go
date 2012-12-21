@@ -44,12 +44,12 @@ func recomputeAll() {
 			switch t {
 			case layout.Generator:
 				g = getTile(c.X, c.Y)
-				g.energydiff += 10000
+				g.energydiff += 2000
 				powerRoots = append(powerRoots, g)
 
 			case layout.Computer:
 				g = getTile(c.X, c.Y)
-				g.energydiff -= 200
+				g.energydiff -= 250
 
 			case layout.DoorGeneralClosed, layout.DoorGeneralOpen,
 				layout.DoorSecurityClosed, layout.DoorSecurityOpen,
@@ -60,7 +60,7 @@ func recomputeAll() {
 
 			case layout.Light1WOn, layout.Light1NOn, layout.Light1EOn, layout.Light1SOn:
 				g = getTile(c.X, c.Y)
-				g.energydiff -= 20
+				g.energydiff -= 50
 
 			case layout.WireW:
 				g = getTile(c.X, c.Y)

@@ -20,13 +20,7 @@ import (
 
 func Main() {
 	layout.OnChange = func(c layout.Coord, t layout.MultiTile) {
-		if t.Door() {
-			Invalidate(image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize))
-		} else {
-			xOffset, yOffset := GetTopLeft()
-			x, y := c.X+xOffset, c.Y+yOffset
-			Invalidate(image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize))
-		}
+		Invalidate(viewport.Bounds())
 	}
 
 	go UI()
@@ -212,6 +206,12 @@ func UI() {
 			}
 
 		case wde.MouseDownEvent:
+			Network <- &packet.Packet{
+				Interact: &packet.Interact{
+					Coord: mouseTile,
+				},
+			}
+
 		case wde.MouseUpEvent:
 		case wde.MouseDraggedEvent:
 		case wde.MouseEnteredEvent:

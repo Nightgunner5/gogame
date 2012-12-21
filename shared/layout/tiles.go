@@ -56,11 +56,12 @@ const (
 
 	TriggerSelectRole Tile = 40
 
-	Generator Tile = 41
-	WireW     Tile = 42
-	WireN     Tile = 43
-	WireE     Tile = 44
-	WireS     Tile = 45
+	Generator    Tile = 41
+	WireW        Tile = 42
+	WireN        Tile = 43
+	WireE        Tile = 44
+	WireS        Tile = 45
+	GeneratorOff Tile = 46
 
 	TileWhiteNW     Tile = 64
 	TileGrayNW      Tile = 65
