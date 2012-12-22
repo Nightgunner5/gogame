@@ -66,7 +66,8 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("panic in player:%s: %v", p.id, r)
-			p.Disconnected()
+			world.Send <- packet.Despawn{ID: p.ID}
+			world.Send <- actor.RemoveHeld{&p.Actor}
 		}
 	}()
 
