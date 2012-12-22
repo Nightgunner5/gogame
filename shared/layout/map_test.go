@@ -6,40 +6,19 @@ import (
 )
 
 const (
-	top   = -5
-	left  = -7
-	check = `                                   
-      WWWWWWWW                     
- WWWWWWW____WWW                    
- WW___W______WW                    
- WG___D_______G                    
- WG___W_______G                    
- WG___G_______G                    
- WW___W______WW                    
- WWWDWWW____WWW                    
-      WWWWDWWW                     
-         G_G                       
-         G_G                       
-      GGGWDWGGWWWWWW               
-      G_______WWGGGWWWWW           
-      W________G___WWGWWWWW        
-      WW_______G___D___WWGWW       
-      WW______WWGGWW_______WW      
-       W______WW__WW___WWWDWWW     
-       W______D____W__GW_____WWWWW 
-       G______W____W___W_____W___W 
-       GGGGGWGW____WW_WW_____D___W 
-            WGW____WWDWW_____W___W 
-            WWW________WWGGWDW___W 
-             WW______________d___W 
-              W______________G___W 
-              WW_______WWGGWDW___W 
-              WWWWWWWDWWW____D___W 
-              WW_______GW____W___W 
-              WW________WWWWWWWWWW 
-              WW________WWW        
-              WWWWWWWWWWWW         
-                                   `
+	top   = -3
+	left  = -3
+	check = `          
+ WWWWW    
+ WG__W    
+ WG__W W  
+ W___WW_W 
+ W___GW_W 
+ W____D_W 
+ W____W_W 
+ WWWWWW_W 
+      WW  
+          `
 )
 
 func getCheck() [][]rune {

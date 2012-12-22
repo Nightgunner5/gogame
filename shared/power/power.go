@@ -2,131 +2,71 @@ package power
 
 import (
 	"github.com/Nightgunner5/gogame/shared/layout"
+	"sort"
 	"sync"
 )
 
-type graph struct {
-	location   layout.Coord
-	neighbors  []*graph
-	energydiff int16
-	powered    bool
+type sortableCoord []layout.Coord
+
+func (s sortableCoord) Less(i, j int) bool {
+	return s[i].X < s[j].X || (s[i].X == s[j].X && s[i].Y < s[j].Y)
 }
 
-func (g *graph) isPowered() bool {
-	return g != nil && g.powered
+func (s sortableCoord) Len() int {
+	return len(s)
+}
+
+func (s sortableCoord) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
 
 var (
-	powered      map[layout.Coord]*graph
+	powerNetwork *network
 	powerVersion uint64
-	powerRoots   []*graph
 	powerLock    sync.RWMutex
 )
 
-func getTile(x, y int) *graph {
-	if g, ok := powered[layout.Coord{x, y}]; ok {
-		return g
-	}
-	g := new(graph)
-	g.location = layout.Coord{x, y}
-	powered[g.location] = g
-	return g
-}
-
 func recomputeAll() {
-	powered = make(map[layout.Coord]*graph)
+	powerNetwork = new(network)
 	powerVersion = layout.Version()
-	powerRoots = nil
+
+	var roots sortableCoord
 
 	layout.AllTiles(func(c layout.Coord, tile layout.MultiTile) {
-		var g *graph
 		for _, t := range tile {
-			switch t {
-			case layout.Generator:
-				g = getTile(c.X, c.Y)
-				g.energydiff += 2000
-				powerRoots = append(powerRoots, g)
-
-			case layout.Computer:
-				g = getTile(c.X, c.Y)
-				g.energydiff -= 250
-
-			case layout.DoorGeneralClosed, layout.DoorGeneralOpen,
-				layout.DoorSecurityClosed, layout.DoorSecurityOpen,
-				layout.DoorEngineerClosed, layout.DoorEngineerOpen,
-				layout.DoorMedicalClosed, layout.DoorMedicalOpen:
-				g = getTile(c.X, c.Y)
-				g.energydiff -= 500
-
-			case layout.Light1WOn, layout.Light1NOn, layout.Light1EOn, layout.Light1SOn:
-				g = getTile(c.X, c.Y)
-				g.energydiff -= 50
-
-			case layout.WireW:
-				g = getTile(c.X, c.Y)
-				g.neighbors = append(g.neighbors, getTile(c.X-1, c.Y))
-				g.energydiff--
-
-			case layout.WireN:
-				g = getTile(c.X, c.Y)
-				g.neighbors = append(g.neighbors, getTile(c.X, c.Y-1))
-				g.energydiff--
-
-			case layout.WireE:
-				g = getTile(c.X, c.Y)
-				g.neighbors = append(g.neighbors, getTile(c.X+1, c.Y))
-				g.energydiff--
-
-			case layout.WireS:
-				g = getTile(c.X, c.Y)
-				g.neighbors = append(g.neighbors, getTile(c.X, c.Y+1))
-				g.energydiff--
-
+			if t == layout.Generator {
+				roots = append(roots, c)
 			}
 		}
 	})
 
-	for _, g := range powerRoots {
-		visit(g, make(map[*graph]bool), 0)
+	sort.Sort(roots)
+
+	for _, root := range roots {
+		powerNetwork.construct(root)
 	}
+
+	powerNetwork.compute()
 }
 
-func visit(root *graph, visited map[*graph]bool, current int16) int16 {
-	if visited[root] {
-		return current
-	}
-	visited[root] = true
-
-	if !root.powered {
-		if current+root.energydiff < 0 {
-			return current
-		}
-		current += root.energydiff
-		root.powered = true
-	}
-	if current == 0 {
-		return 0
-	}
-
-	for _, g := range root.neighbors {
-		current = visit(g, visited, current)
-	}
-	return current
-}
-
-func Powered(x, y int) bool {
+func Powered(x, y int, tile layout.Tile) bool {
 	powerLock.RLock()
-	if powerVersion != layout.Version() || powered == nil {
+	if powerVersion == layout.Version() && powerNetwork != nil {
+		result := powerNetwork.get(x, y, tile)
 		powerLock.RUnlock()
-		powerLock.Lock()
-		if powerVersion != layout.Version() || powered == nil {
-			recomputeAll()
-		}
-		isPowered := powered[layout.Coord{x, y}].isPowered()
-		powerLock.Unlock()
-		return isPowered
+		return result
 	}
-	isPowered := powered[layout.Coord{x, y}].isPowered()
 	powerLock.RUnlock()
-	return isPowered
+
+	powerLock.Lock()
+	if powerVersion == layout.Version() && powerNetwork != nil {
+		result := powerNetwork.get(x, y, tile)
+		powerLock.Unlock()
+		return result
+	}
+
+	recomputeAll()
+	result := powerNetwork.get(x, y, tile)
+	powerLock.Unlock()
+	return result
 }

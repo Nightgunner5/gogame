@@ -109,9 +109,11 @@ func (l *Lighting) initializeImage() {
 }
 
 func (l *Lighting) recalculateLightmap() {
-	layout.AllTiles(func(c layout.Coord, t layout.MultiTile) {
-		if brightness := t.LightLevel(); brightness != 0 && power.Powered(c.X, c.Y) {
-			l.spread(c, brightness)
+	layout.AllTiles(func(c layout.Coord, tile layout.MultiTile) {
+		for _, t := range tile {
+			if brightness := t.LightLevel(); brightness != 0 && power.Powered(c.X, c.Y, t) {
+				l.spread(c, brightness)
+			}
 		}
 	})
 }

@@ -56,12 +56,13 @@ const (
 
 	TriggerSelectRole Tile = 40
 
-	Generator    Tile = 41
+	Plating      Tile = 41
 	WireW        Tile = 42
 	WireN        Tile = 43
 	WireE        Tile = 44
 	WireS        Tile = 45
-	GeneratorOff Tile = 46
+	Generator    Tile = 46
+	GeneratorOff Tile = 47
 
 	TileWhiteNW     Tile = 64
 	TileGrayNW      Tile = 65
@@ -144,12 +145,13 @@ func (t Tile) Space() bool {
 func (t Tile) Passable() bool {
 	return (t >= TileWhite && t <= TilePink) ||
 		(t >= TileWhiteNW && t <= TilePinkSE) ||
+		t == Plating ||
 		(t.Door() && t&1 == 0) ||
 		t.Space()
 }
 
 func (t Tile) BlocksVision() bool {
-	return !t.Passable() && t != Window && t != Computer && t != Safe && t != Generator
+	return !t.Passable() && t != Window && t != Computer && t != Safe && t != Generator && t != GeneratorOff
 }
 
 func (t Tile) Door() bool {
