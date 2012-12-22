@@ -77,13 +77,14 @@ func Paint(w wde.Window, rect image.Rectangle) {
 
 		switch GetPlayerFlags() & packet.FlagSpriteMask {
 		case packet.FlagEngineer:
-			for x := center.X - 3; x <= center.X+3; x++ {
-				for y := center.Y + 3; y <= center.Y+3; y++ {
-					dist := (x-center.X)*(x-center.X) + (y-center.Y)*(y-center.Y)
-					if dist <= 3*3 && layout.Visible(center, layout.Coord{x, y}) {
-						for _, t := range layout.Get(x, y) {
+			for x := 0; x <= ViewportWidth; x++ {
+				for y := 0; y <= ViewportHeight; y++ {
+					dx, dy := x-ViewportWidth/2, y-ViewportHeight/2
+					dist := dx*dx + dy*dy
+					if dist <= 3*3 && layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
+						for _, t := range layout.Get(x-xOffset, y-yOffset) {
 							if t >= layout.WireW && t <= layout.WireS {
-								res.Tile(terrain, res.Terrain, uint16(t), x+xOffset, y+xOffset)
+								res.Tile(terrain, res.Terrain, uint16(t), x, y)
 							}
 						}
 					}
