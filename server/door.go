@@ -64,7 +64,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 		case <-closeDoor:
 			closeDoor = nil
-			if d.open && power.Powered(d.coord.X, d.coord.Y, d.tile) {
+			if d.open && power.Powered(d.coord.X, d.coord.Y, d.tile&^1) {
 				d.open = false
 				for {
 					orig := layout.GetCoord(d.coord)
