@@ -107,7 +107,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 			x2, y2 := p.To.X+xOffset, p.To.Y+yOffset
 
 			if minX <= x2 && x2 <= maxX && minY <= y2 && y2 <= maxY {
-				interp := float32(time.Since(p.Changed)*2) / float32(time.Second)
+				interp := float32(time.Since(p.Changed)*5) / float32(time.Second)
 				if interp >= 1 {
 					res.Tile(sprites, res.Actors, p.Sprite, x2, y2)
 				} else {

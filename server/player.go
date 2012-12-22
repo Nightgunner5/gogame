@@ -100,7 +100,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 			case packet.Location:
 				moveRequest = m.Coord
 				if move == nil {
-					move = actor.Tick(time.Second / 2)
+					move = actor.Tick(time.Second / 5)
 					move <- struct{}{}
 				}
 
@@ -166,7 +166,7 @@ func (p *Player) dispatch(msgIn message.Receiver, messages message.Sender) {
 		case _, ok := <-move:
 			if !ok {
 				// We missed a few ticks. No big deal.
-				move = actor.Tick(time.Second / 2)
+				move = actor.Tick(time.Second / 5)
 				continue
 			}
 
