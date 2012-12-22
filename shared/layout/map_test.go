@@ -10,7 +10,7 @@ const (
 	left  = -3
 	check = `           
  WWWWW     
- WG_GW     
+ WG_GWWGDG 
  WG_GWW___ 
  W___WW___ 
  W___GW___ 

@@ -192,12 +192,13 @@ func UI() {
 						var changed layout.MultiTile
 
 						if WireView() {
-							if len(old) == 0 {
-								old = layout.MultiTile{layout.Plating}
+							old_ := old
+							if len(old_) == 0 {
+								old_ = layout.MultiTile{layout.Plating}
 							}
-							changed = append(changed, old[0])
+							changed = append(changed, old_[0])
 							changed = append(changed, mouseTile)
-							changed = append(changed, old[1:]...)
+							changed = append(changed, old_[1:]...)
 						} else {
 							changed = append(changed, old...)
 
