@@ -41,8 +41,8 @@ const (
 
 var (
 	viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize))
-	space    = image.NewRGBA(viewport.Bounds())
-	scene    = image.NewRGBA(viewport.Bounds())
+	space    = image.NewRGBA(viewport.Bounds().Add(image.Pt(1<<res.TileSize, 1<<res.TileSize)))
+	scene    = image.NewRGBA(viewport.Bounds().Add(image.Pt(1<<res.TileSize, 1<<res.TileSize)))
 	light    = new(lighting.Lighting)
 
 	paints uint64
@@ -88,6 +88,8 @@ func Paint(w wde.Window, rect image.Rectangle) {
 		}
 	}
 
+	var pixOffset image.Point
+
 	var hasAnimation image.Rectangle
 	paintLock.Lock()
 	for _, p := range paintContexts {
@@ -106,6 +108,11 @@ func Paint(w wde.Window, rect image.Rectangle) {
 					} else {
 						hasAnimation = hasAnimation.Union(toInvalidate)
 					}
+					if p == thePlayer.paint {
+						pixOffset.X = int(float32((x1-x2)<<res.TileSize) * (1 - interp))
+						pixOffset.Y = int(float32((y1-y2)<<res.TileSize) * (1 - interp))
+						hasAnimation = viewport.Bounds()
+					}
 					res.TileFloat(scene, res.Actors, p.Sprite, x1, y1, x2, y2, interp)
 				}
 			}
@@ -113,13 +120,15 @@ func Paint(w wde.Window, rect image.Rectangle) {
 	}
 	paintLock.Unlock()
 
-	draw.Draw(viewport, rect, space, rect.Min, draw.Src)
-	draw.Draw(viewport, rect, scene, rect.Min, draw.Over)
-	draw.DrawMask(viewport, rect, image.Black, image.ZP, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)), draw.Over)
+	draw.Draw(viewport, rect, space, rect.Min.Add(pixOffset), draw.Src)
+	draw.Draw(viewport, rect, scene, rect.Min.Add(pixOffset), draw.Over)
+	draw.DrawMask(viewport, rect, image.Black, image.ZP, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)).Add(pixOffset), draw.Over)
 
-	mouseTileLock.Lock()
-	res.DrawString(viewport, mouseTileString, color.White, res.FontSmall, 1, 1)
-	mouseTileLock.Unlock()
+	if image.Rect(0, 0, 1, 1).Overlaps(rect) {
+		mouseTileLock.Lock()
+		res.DrawString(viewport, mouseTileString, color.White, res.FontSmall, 1, 1)
+		mouseTileLock.Unlock()
+	}
 
 	if !hasAnimation.Empty() {
 		Invalidate(image.Rectangle{hasAnimation.Min.Mul(1 << res.TileSize), hasAnimation.Max.Mul(1 << res.TileSize)})
