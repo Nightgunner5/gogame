@@ -41,52 +41,61 @@ const (
 
 var (
 	viewport = image.NewRGBA(image.Rect(0, 0, ViewportWidth<<res.TileSize, ViewportHeight<<res.TileSize))
-	space    = image.NewRGBA(viewport.Bounds().Add(image.Pt(1<<res.TileSize, 1<<res.TileSize)))
-	scene    = image.NewRGBA(viewport.Bounds().Add(image.Pt(1<<res.TileSize, 1<<res.TileSize)))
+	terrain  = image.NewRGBA(image.Rect(0, 0, (ViewportWidth+1)<<res.TileSize, (ViewportHeight+1)<<res.TileSize))
+	sprites  = image.NewRGBA(image.Rect(0, 0, (ViewportWidth+1)<<res.TileSize, (ViewportHeight+1)<<res.TileSize))
 	light    = new(lighting.Lighting)
 
 	paints uint64
+
+	oldCenter  layout.Coord
+	oldVersion = ^uint64(0)
 )
 
 func Paint(w wde.Window, rect image.Rectangle) {
 	xOffset, yOffset := GetTopLeft()
 	center := layout.Coord{ViewportWidth/2 - xOffset, ViewportHeight/2 - yOffset}
 
-	minX, maxX := rect.Min.X>>res.TileSize, (rect.Max.X-1)>>res.TileSize+1
-	minY, maxY := rect.Min.Y>>res.TileSize, (rect.Max.Y-1)>>res.TileSize+1
+	if center != oldCenter || layout.Version() != oldVersion {
+		oldCenter = center
+		oldVersion = layout.Version()
 
-	for x := minX; x < maxX; x++ {
-		for y := minY; y < maxY; y++ {
-			if layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
-				res.Tile(space, res.Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
-				draw.Draw(scene, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
-				for _, t := range layout.Get(x-xOffset, y-yOffset) {
-					if !t.NoClient() {
-						res.Tile(scene, res.Terrain, uint16(t), x, y)
+		for x := 0; x <= ViewportWidth; x++ {
+			for y := 0; y <= ViewportHeight; y++ {
+				if layout.Visible(center, layout.Coord{x - xOffset, y - yOffset}) {
+					res.Tile(terrain, res.Terrain, uint16(layout.GetSpace(x-xOffset, y-yOffset)), x, y)
+					draw.Draw(terrain, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
+					for _, t := range layout.Get(x-xOffset, y-yOffset) {
+						if !t.NoClient() {
+							res.Tile(terrain, res.Terrain, uint16(t), x, y)
+						}
 					}
+				} else {
+					res.Tile(terrain, image.Black, 0, x, y)
 				}
-			} else {
-				res.Tile(scene, image.Black, 0, x, y)
 			}
 		}
-	}
 
-	switch GetPlayerFlags() & packet.FlagSpriteMask {
-	case packet.FlagEngineer:
-		for x := minX; x < maxX; x++ {
-			for y := minY; y < maxY; y++ {
-				coord := layout.Coord{x - xOffset, y - yOffset}
-				dist := (coord.X-center.X)*(coord.X-center.X) + (coord.Y-center.Y)*(coord.Y-center.Y)
-				if dist < 3*3 && layout.Visible(center, coord) {
-					for _, t := range layout.GetCoord(coord) {
-						if t >= layout.WireW && t <= layout.WireS {
-							res.Tile(scene, res.Terrain, uint16(t), x, y)
+		switch GetPlayerFlags() & packet.FlagSpriteMask {
+		case packet.FlagEngineer:
+			for x := center.X - 3; x <= center.X+3; x++ {
+				for y := center.Y + 3; y <= center.Y+3; y++ {
+					dist := (x-center.X)*(x-center.X) + (y-center.Y)*(y-center.Y)
+					if dist <= 3*3 && layout.Visible(center, layout.Coord{x, y}) {
+						for _, t := range layout.Get(x, y) {
+							if t >= layout.WireW && t <= layout.WireS {
+								res.Tile(terrain, res.Terrain, uint16(t), x+xOffset, y+xOffset)
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+
+	minX, maxX := rect.Min.X>>res.TileSize, (rect.Max.X-1)>>res.TileSize+1
+	minY, maxY := rect.Min.Y>>res.TileSize, (rect.Max.Y-1)>>res.TileSize+1
+
+	draw.Draw(sprites, sprites.Bounds(), image.Transparent, image.ZP, draw.Src)
 
 	var pixOffset image.Point
 
@@ -100,7 +109,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 			if minX <= x2 && x2 <= maxX && minY <= y2 && y2 <= maxY {
 				interp := float32(time.Since(p.Changed)*2) / float32(time.Second)
 				if interp >= 1 {
-					res.Tile(scene, res.Actors, p.Sprite, x2, y2)
+					res.Tile(sprites, res.Actors, p.Sprite, x2, y2)
 				} else {
 					toInvalidate := image.Rect(x1, y1, x1+1, y1+1).Union(image.Rect(x2, y2, x2+1, y2+1))
 					if hasAnimation.Empty() {
@@ -113,15 +122,15 @@ func Paint(w wde.Window, rect image.Rectangle) {
 						pixOffset.Y = int(float32((y1-y2)<<res.TileSize) * (1 - interp))
 						hasAnimation = viewport.Bounds()
 					}
-					res.TileFloat(scene, res.Actors, p.Sprite, x1, y1, x2, y2, interp)
+					res.TileFloat(sprites, res.Actors, p.Sprite, x1, y1, x2, y2, interp)
 				}
 			}
 		}
 	}
 	paintLock.Unlock()
 
-	draw.Draw(viewport, rect, space, rect.Min.Add(pixOffset), draw.Src)
-	draw.Draw(viewport, rect, scene, rect.Min.Add(pixOffset), draw.Over)
+	draw.Draw(viewport, rect, terrain, rect.Min.Add(pixOffset), draw.Src)
+	draw.Draw(viewport, rect, sprites, rect.Min.Add(pixOffset), draw.Over)
 	draw.DrawMask(viewport, rect, image.Black, image.ZP, light.Image(-xOffset, -yOffset), rect.Min.Add(light.Origin(-xOffset, -yOffset)).Add(pixOffset), draw.Over)
 
 	if image.Rect(0, 0, 1, 1).Overlaps(rect) {
