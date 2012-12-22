@@ -60,7 +60,7 @@ func Paint(w wde.Window, rect image.Rectangle) {
 			draw.Draw(scene, image.Rect(x<<res.TileSize, y<<res.TileSize, (x+1)<<res.TileSize, (y+1)<<res.TileSize), image.Transparent, image.ZP, draw.Src)
 			if WireView() {
 				tile := layout.Get(x-xOffset, y-yOffset)
-				for i := len(tile) - 1; i >= 0; i-- {
+				for i := len(tile) - 1; i > 0; i-- {
 					res.Tile(scene, res.Terrain, uint16(tile[i]), x, y)
 				}
 			} else {
@@ -192,8 +192,12 @@ func UI() {
 						var changed layout.MultiTile
 
 						if WireView() {
+							if len(old) == 0 {
+								old = layout.MultiTile{layout.Plating}
+							}
+							changed = append(changed, old[0])
 							changed = append(changed, mouseTile)
-							changed = append(changed, old...)
+							changed = append(changed, old[1:]...)
 						} else {
 							changed = append(changed, old...)
 
@@ -212,7 +216,11 @@ func UI() {
 						}
 						t, removed := tile[len(tile)-1], tile[:len(tile)-1]
 						if WireView() {
-							t, removed = tile[0], tile[1:]
+							if len(tile) == 1 {
+								break
+							}
+							t = tile[1]
+							removed = append(layout.MultiTile{tile[0]}, tile[2:]...)
 						}
 						if layout.SetCoord(mouseCoord, tile, removed) {
 							mouseTile = t

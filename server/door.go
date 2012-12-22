@@ -11,6 +11,7 @@ import (
 type Door struct {
 	actor.Actor
 	coord      layout.Coord
+	tile       layout.Tile
 	open       bool
 	permission Permission
 }
@@ -37,7 +38,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 			switch m := msg.(type) {
 			case OpenDoor:
-				if !d.open && power.Powered(d.coord.X, d.coord.Y) && m.Opener.HasPermissions(d.permission) {
+				if !d.open && power.Powered(d.coord.X, d.coord.Y, d.tile) && m.Opener.HasPermissions(d.permission) {
 					d.open = true
 					for {
 						orig := layout.GetCoord(d.coord)
@@ -63,7 +64,7 @@ func (d *Door) dispatch(msgIn message.Receiver, messages message.Sender) {
 
 		case <-closeDoor:
 			closeDoor = nil
-			if d.open && power.Powered(d.coord.X, d.coord.Y) {
+			if d.open && power.Powered(d.coord.X, d.coord.Y, d.tile) {
 				d.open = false
 				for {
 					orig := layout.GetCoord(d.coord)
@@ -114,7 +115,10 @@ func NewDoor(coord layout.Coord) *Door {
 			door.permission |= PermEngineer
 		case layout.DoorMedicalClosed, layout.DoorMedicalOpen:
 			door.permission |= PermMedical
+		default:
+			continue
 		}
+		door.tile = t
 	}
 
 	actor.Init("door:"+coord.String(), &door.Actor, door)
